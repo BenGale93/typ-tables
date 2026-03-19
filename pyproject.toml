@@ -1,0 +1,69 @@
+[project]
+name = "typ-tables"
+dynamic = ["version"]
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+license = "MIT"
+authors = [{ name = "Benjamin Askew-Gale" }]
+
+[dependency-groups]
+dev = [
+  { include-group = "lint" },
+  { include-group = "test" },
+  { include-group = "typing" },
+]
+lint = ["ruff>=0.15.6"]
+test = ["pytest>=9.0.2", "pytest-randomly>=4.0.1", "pytest-cov>=7.0.0"]
+typing = ["pyrefly>=0.57.0"]
+typing-test = [{ include-group = "test" }, { include-group = "typing" }]
+
+[project.scripts]
+
+[build-system]
+requires = ["pdm-backend==2.4.7"]
+build-backend = "pdm.backend"
+
+[tool.pdm.version]
+source = "scm"
+
+[tool.uv]
+resolution = "lowest-direct"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["COM812", "ISC001", "ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore all directories named `tests`.
+"tests/**" = ["D", "S", "ANN"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.coverage.report]
+exclude_also = [
+  "if t.TYPE_CHECKING",
+  "@t.overload",
+  "@abstractmethod",
+  "if TYPE_CHECKING",
+]
+show_missing = true
+
+[tool.coverage.run]
+branch = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=src/ --cov-report="
+filterwarnings = [
+  "ignore::DeprecationWarning::",              # ignore deprecations from all modules
+  "default::DeprecationWarning:typ-tables.*:", # except from mymodule
+]
