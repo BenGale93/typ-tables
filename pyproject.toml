@@ -3,7 +3,7 @@ name = "typ-tables"
 dynamic = ["version"]
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["narwhals>=2.0.0"]
 license = "MIT"
 authors = [{ name = "Benjamin Askew-Gale" }]
@@ -40,7 +40,7 @@ resolution = "lowest-direct"
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.format]
 docstring-code-format = true
