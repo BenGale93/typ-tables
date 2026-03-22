@@ -17,7 +17,7 @@ class TestBasic:
         table = TypTable(df)
         result = table.to_typst()
 
-        assert result == external("uuid:9eac4f23-101f-4a93-806c-685fbe1c333d.typ")
+        assert result == external("uuid:dfe29286-a9ca-477b-be00-4ffd55201fc1.typ")
 
         warnings = table_check(result)
 
@@ -48,7 +48,7 @@ class TestBasic:
         table = TypTable(df)
         result = table.to_typst()
 
-        assert result == external("uuid:9eac4f23-101f-4a93-806c-685fbe1c333d.typ")
+        assert result == external("uuid:f944eeb4-ed3d-44aa-ad20-0e29e69356cc.typ")
 
         warnings = table_check(result)
 
