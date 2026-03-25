@@ -1,5 +1,6 @@
 #table(
   columns: 3,
+  align: (auto, auto, auto),
   table.header(
     [string], [int], [float]
   ),

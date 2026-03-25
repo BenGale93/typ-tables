@@ -132,3 +132,23 @@ class TestFString:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestAlignColumns:
+    def test_align_numeric_columns_right(self, table_check):
+        df = pl.DataFrame(
+            {
+                "string": ["a", "b", "c", None],
+                "int": [10, 10000, 1000000, None],
+                "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
+            }
+        )
+
+        table = TypTable(df).cols_align(align="right", columns=ncs.numeric())
+        result = table.to_typst()
+
+        assert result == external("uuid:560ef812-0edd-4fc6-bb68-5c1f626a4662.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
