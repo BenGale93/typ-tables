@@ -1,14 +1,18 @@
 """Module for resolving which cells to apply formatters, stylers etc. to."""
 
-from narwhals import DataFrame, Expr
+from contextlib import suppress
+
+import narwhals as nw
 from narwhals import selectors as ncs
-from narwhals.typing import IntoDataFrameT
+
+from typ_tables import ttypes
+from typ_tables.constants import ROW_INDEX
 
 ColumnSelector = ncs.Selector | list[str] | str | list[int] | int
-RowSelector = Expr | list[int] | int
+RowSelector = nw.Expr | list[int] | int
 
 
-def resolve_columns(data: DataFrame[IntoDataFrameT], selector: ColumnSelector) -> list[tuple[str, int]]:
+def resolve_columns(data: ttypes.Data, selector: ColumnSelector | None = None) -> list[str]:
     """Resolve the column names and positions based on the selection expression."""
     if isinstance(selector, int):
         selector = [selector]
@@ -20,21 +24,25 @@ def resolve_columns(data: DataFrame[IntoDataFrameT], selector: ColumnSelector) -
                 new_selector.append(data.columns[s])
             else:
                 new_selector.append(s)
+    elif selector is None:
+        new_selector = nw.all()
     else:
         new_selector = selector
 
     sub_data = data.select(new_selector)
 
-    final_columns = sub_data.columns
+    columns = sub_data.columns
+    with suppress(ValueError):
+        columns.remove(ROW_INDEX)
+    return columns
 
-    col_pos = {k: i for i, k in enumerate(data.columns)}
-    return [(col, col_pos[col]) for col in final_columns]
 
-
-def resolve_rows(data: DataFrame[IntoDataFrameT], selector: RowSelector) -> list[int]:
+def resolve_rows(data: ttypes.Data, selector: RowSelector | None = None) -> list[int]:
     """Resolve the rows the selector expression is selecting."""
     if isinstance(selector, int):
         return [selector]
     if isinstance(selector, list):
         return selector
+    if selector is None:
+        return data.with_row_index()["index"].to_list()
     return data.with_row_index().filter(selector)["index"].to_list()
