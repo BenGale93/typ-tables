@@ -152,3 +152,23 @@ class TestAlignColumns:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestHideColumns:
+    def test_hide_given_columns(self, table_check):
+        df = pl.DataFrame(
+            {
+                "string": ["a", "b", "c", None],
+                "int": [10, 10000, 1000000, None],
+                "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
+            }
+        )
+
+        table = TypTable(df).cols_hide("string")
+        result = table.to_typst()
+
+        assert result == external("uuid:23b96023-753e-4f75-8646-d315756f2cfd.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0

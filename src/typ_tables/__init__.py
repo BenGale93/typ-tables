@@ -7,6 +7,7 @@ import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
 from typ_tables import ttypes
+from typ_tables.boxhead import Boxhead, ColInfo
 from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import escape_value
 from typ_tables.formats import Formatter, FString, SubMissing, fmt
@@ -17,14 +18,14 @@ from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 class TypData:
     """Class that holds all the formatters, stylers etc."""
 
-    align: dict[str, ttypes.Auto | ttypes.Alignment]
+    boxhead: Boxhead
     formats: list[Formatter]
     substitute: list[Formatter]
 
     @classmethod
-    def from_data(cls, _df: ttypes.Data) -> t.Self:
+    def from_data(cls, df: ttypes.Data) -> t.Self:
         """Initialise based on the given dataset."""
-        return cls(align={}, formats=[], substitute=[])
+        return cls(boxhead=Boxhead.from_data(df), formats=[], substitute=[])
 
     def format_df(self, df: ttypes.Data) -> ttypes.Data:
         """Format the given dataset."""
@@ -35,26 +36,27 @@ class TypData:
             new_df = f.fmt(new_df)
         return new_df
 
-    def alignment(self, columns: list[str]) -> str:
+    def alignment(self, columns: list[ColInfo]) -> str:
         """Returns the alignment of each column."""
-        alignment_elements = [self.align.get(col, "auto") for col in columns]
+        alignment_elements = [col.column_align for col in columns]
         joined_alignments = ", ".join(alignment_elements)
         return f"({joined_alignments})"
 
-    def columns(self, columns: list[str]) -> str:
+    def columns(self, columns: list[ColInfo]) -> str:
         """Return the width of the columns."""
         return str(len(columns))
 
-    def header(self, columns: list[str]) -> str:
+    def header(self, columns: list[ColInfo]) -> str:
         """Returns the header element."""
-        header = ", ".join(f"[{escape_value(name)}]" for name in columns)
+        header = ", ".join(f"[{escape_value(col.name)}]" for col in columns)
         return f"table.header(\n    {header}\n  )"
 
-    def body(self, data: ttypes.Data) -> str:
+    def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
         """Returns the body of the table."""
         rows = []
-        for row_content in data.iter_rows():
-            row = " ".join(f"[{escape_value(content)}]," for content in row_content)
+        for row_content in data.iter_rows(named=True):
+            desired_content = [row_content[col.var] for col in columns]
+            row = " ".join(f"[{escape_value(content)}]," for content in desired_content)
             rows.append(row)
 
         return "\n  ".join(rows)
@@ -74,10 +76,12 @@ def create_elements(original_data: ttypes.Data, typ: TypData) -> TableElements:
     """Creates the elements of the Typst table."""
     data = typ.format_df(original_data).drop(ROW_INDEX)
 
-    columns = typ.columns(data.columns)
-    alignment = typ.alignment(data.columns)
-    header = typ.header(data.columns)
-    body = typ.body(data)
+    final_columns = typ.boxhead.final_columns()
+
+    columns = typ.columns(final_columns)
+    alignment = typ.alignment(final_columns)
+    header = typ.header(final_columns)
+    body = typ.body(data, final_columns)
 
     return TableElements(
         columns=columns,
@@ -124,6 +128,13 @@ class TypTable:
         return self
 
     def cols_align(self, align: ttypes.Alignment = "left", columns: ColumnSelector | None = None) -> t.Self:
-        for col in resolve_columns(self._df, columns):
-            self._typ_data.align[col] = align
+        """Align the columns to the given direction."""
+        columns_to_align = resolve_columns(self._df, columns)
+        self._typ_data.boxhead.set_cols_align(columns_to_align, align)
+        return self
+
+    def cols_hide(self, columns: ColumnSelector | None = None) -> t.Self:
+        """Hide the columns in the final table."""
+        columns_to_hide = resolve_columns(self._df, columns)
+        self._typ_data.boxhead.set_cols_hidden(columns_to_hide)
         return self
