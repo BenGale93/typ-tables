@@ -3,6 +3,7 @@ from inline_snapshot import external
 from narwhals import selectors as ncs
 
 from typ_tables import TypTable
+from typ_tables.escape import Typst
 
 
 class TestBasic:
@@ -57,16 +58,8 @@ class TestBasic:
 
 
 class TestSubMissing:
-    def test_to_typst_string_int_float_with_missing(self, table_check) -> None:
-        df = pl.DataFrame(
-            {
-                "string": ["a", "b", "c", None],
-                "int": [10, 10000, 1000000, None],
-                "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
-            }
-        )
-
-        table = TypTable(df).sub_missing(missing_text="Missing")
+    def test_to_typst_string_int_float_with_missing(self, table_check, basic_data) -> None:
+        table = TypTable(basic_data).sub_missing(missing_text="Missing")
         result = table.to_typst()
 
         assert result == external("uuid:e8d0edad-ae47-441a-940a-82555cbed295.typ")
@@ -75,17 +68,9 @@ class TestSubMissing:
 
         assert len(warnings) == 0
 
-    def test_to_typst_missing_two_variants(self, table_check) -> None:
-        df = pl.DataFrame(
-            {
-                "string": ["a", "b", "c", None],
-                "int": [10, 10000, 1000000, None],
-                "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
-            }
-        )
-
+    def test_to_typst_missing_two_variants(self, table_check, basic_data) -> None:
         table = (
-            TypTable(df)
+            TypTable(basic_data)
             .sub_missing(missing_text="Missing", columns=ncs.numeric())
             .sub_missing(missing_text="-", columns="string")
         )
@@ -135,16 +120,8 @@ class TestFString:
 
 
 class TestAlignColumns:
-    def test_align_numeric_columns_right(self, table_check):
-        df = pl.DataFrame(
-            {
-                "string": ["a", "b", "c", None],
-                "int": [10, 10000, 1000000, None],
-                "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
-            }
-        )
-
-        table = TypTable(df).cols_align(align="right", columns=ncs.numeric())
+    def test_align_numeric_columns_right(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_align(align="right", columns=ncs.numeric())
         result = table.to_typst()
 
         assert result == external("uuid:560ef812-0edd-4fc6-bb68-5c1f626a4662.typ")
@@ -155,19 +132,39 @@ class TestAlignColumns:
 
 
 class TestHideColumns:
-    def test_hide_given_columns(self, table_check):
-        df = pl.DataFrame(
-            {
-                "string": ["a", "b", "c", None],
-                "int": [10, 10000, 1000000, None],
-                "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
-            }
-        )
-
-        table = TypTable(df).cols_hide("string")
+    def test_hide_given_columns(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_hide("string")
         result = table.to_typst()
 
         assert result == external("uuid:23b96023-753e-4f75-8646-d315756f2cfd.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
+class TestLabelColumns:
+    def test_label_with_string(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_label(cases={"string": "String"}, int="Integer")
+        result = table.to_typst()
+
+        assert result == external("uuid:ab19ec62-2064-42f5-9b21-2e9a681e828a.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_label_with_raw_typst(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_label(
+            cases={
+                "string": Typst("#strong[String]"),
+            },
+            int=Typst("#underline[Integer]"),
+            float=Typst("$pi r^2$"),
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:10644c46-4d17-402c-b326-1aef158b9111.typ")
 
         warnings = table_check(result)
 

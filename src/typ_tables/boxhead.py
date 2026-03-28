@@ -3,7 +3,7 @@
 import typing as t
 from dataclasses import dataclass
 
-from typ_tables import constants, ttypes
+from typ_tables import constants, escape, ttypes
 
 ColType = t.Literal["default", "stub", "row_group", "hidden"]
 
@@ -14,14 +14,14 @@ class ColInfo:
 
     var: str
     col_type: ColType
-    column_label: str | None = None
+    column_label: str | escape.Typst | None = None
     column_align: ttypes.Alignment | ttypes.Auto = "auto"
     column_width: str | None = None
 
     @property
     def name(self) -> str:
         """Return the name of the column the table should use."""
-        return self.column_label or self.var
+        return escape.escape_value(self.column_label or self.var)
 
 
 class Boxhead(list[ColInfo]):
@@ -38,6 +38,13 @@ class Boxhead(list[ColInfo]):
         for col in self:
             if col.var in col_names:
                 col.column_align = align
+
+    def set_cols_label(self, col_labels: dict[str, str | escape.Typst]) -> None:
+        """Sets the labels of the columns using the given map."""
+        for col in self:
+            new_label = col_labels.get(col.var)
+            if new_label is not None:
+                col.column_label = new_label
 
     def final_columns(self) -> list[ColInfo]:
         """Get the final order of the columns."""

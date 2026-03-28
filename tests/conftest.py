@@ -1,6 +1,7 @@
 import typing as t
 from pathlib import Path
 
+import polars as pl
 import pytest
 import typst
 from inline_snapshot import Format, TextDiff, register_format
@@ -36,3 +37,14 @@ def table_check(tmp_path: Path, request: pytest.FixtureRequest) -> t.Callable[[s
         return warnings
 
     return compile_with_warnings
+
+
+@pytest.fixture
+def basic_data() -> pl.DataFrame:
+    return pl.DataFrame(
+        {
+            "string": ["a", "b", "c", None],
+            "int": [10, 10000, 1000000, None],
+            "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
+        }
+    )

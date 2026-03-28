@@ -9,7 +9,7 @@ from narwhals.typing import IntoDataFrame
 from typ_tables import ttypes
 from typ_tables.boxhead import Boxhead, ColInfo
 from typ_tables.constants import ROW_INDEX
-from typ_tables.escape import escape_value
+from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 
@@ -48,7 +48,7 @@ class TypData:
 
     def header(self, columns: list[ColInfo]) -> str:
         """Returns the header element."""
-        header = ", ".join(f"[{escape_value(col.name)}]" for col in columns)
+        header = ", ".join(f"[{col.name}]" for col in columns)
         return f"table.header(\n    {header}\n  )"
 
     def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
@@ -137,4 +137,10 @@ class TypTable:
         """Hide the columns in the final table."""
         columns_to_hide = resolve_columns(self._df, columns)
         self._typ_data.boxhead.set_cols_hidden(columns_to_hide)
+        return self
+
+    def cols_label(self, cases: dict[str, str | Typst] | None = None, **kwargs: str | Typst) -> t.Self:
+        """Relabel one or more columns."""
+        cases = cases | kwargs if cases else kwargs
+        self._typ_data.boxhead.set_cols_label(cases)
         return self
