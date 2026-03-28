@@ -10,7 +10,7 @@ from typ_tables import ttypes
 from typ_tables.boxhead import Boxhead, ColInfo
 from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import Typst, escape_value
-from typ_tables.formats import Formatter, FString, SubMissing, fmt
+from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 
 
@@ -112,19 +112,71 @@ class TypTable:
 """
 
     def sub_missing(
-        self, missing_text: str = "", columns: ColumnSelector | None = None, rows: RowSelector | None = None
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        missing_text: str = "",
     ) -> t.Self:
         """Substitutes Null and NaN values with the given missing text."""
         self._typ_data.substitute.append(fmt(self._df, SubMissing(missing_text=missing_text), columns, rows))
         return self
 
-    def fmt(self, f_string: str, columns: ColumnSelector | None = None, rows: RowSelector | None = None) -> t.Self:
+    def fmt(
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        f_string: str,
+    ) -> t.Self:
         """Set a column format with a narwhals style f-string.
 
         Note:
             Currently only accepts 1 placeholder.
         """
         self._typ_data.formats.append(fmt(self._df, FString(f_string), columns, rows))
+        return self
+
+    def fmt_number(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        decimals: int = 2,
+        n_sigfig: int | None = None,
+        drop_trailing_zeros: bool = False,
+        drop_trailing_dec_mark: bool = True,
+        use_seps: bool = True,
+        accounting: bool = False,
+        scale_by: float = 1,
+        compact: bool = False,
+        pattern: str = "{x}",
+        dec_mark: str = ".",
+        sep_mark: str = ",",
+        force_sign: bool = False,
+    ) -> t.Self:
+        """Format numeric values."""
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Numeric(
+                    decimals=decimals,
+                    n_sigfig=n_sigfig,
+                    drop_trailing_zeros=drop_trailing_zeros,
+                    drop_trailing_dec_mark=drop_trailing_dec_mark,
+                    use_seps=use_seps,
+                    accounting=accounting,
+                    scale_by=scale_by,
+                    compact=compact,
+                    pattern=pattern,
+                    dec_mark=dec_mark,
+                    sep_mark=sep_mark,
+                    force_sign=force_sign,
+                ),
+                columns,
+                rows,
+            )
+        )
         return self
 
     def cols_align(self, align: ttypes.Alignment = "left", columns: ColumnSelector | None = None) -> t.Self:
