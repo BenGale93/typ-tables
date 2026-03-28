@@ -144,3 +144,10 @@ class TypTable:
         cases = cases | kwargs if cases else kwargs
         self._typ_data.boxhead.set_cols_label(cases)
         return self
+
+    def cols_label_with(self, fn: t.Callable[[str], str | Typst], columns: ColumnSelector | None = None) -> t.Self:
+        """Relabel one or more columns using a function."""
+        columns_to_relabel = resolve_columns(self._df, columns)
+        new_labels = {col: fn(col) for col in columns_to_relabel}
+        self._typ_data.boxhead.set_cols_label(new_labels)
+        return self

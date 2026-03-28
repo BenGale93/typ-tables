@@ -169,3 +169,25 @@ class TestLabelColumns:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestLabelColumnsWith:
+    def test_label_upper(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_label_with(str.upper)
+        result = table.to_typst()
+
+        assert result == external("uuid:d2909bac-35bc-4711-80a1-47e641781530.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_label_with_raw_typst_func(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_label_with(lambda x: Typst(f"#underline[{x}]"), columns=ncs.numeric())
+        result = table.to_typst()
+
+        assert result == external("uuid:b4b1d349-8c99-488d-9bde-a553cb59dff6.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
