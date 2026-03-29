@@ -16,8 +16,11 @@ from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 
+HEADER_STROKE = "1.2pt"
+
 TITLE_TEMPLATE = Template(
-    """table.header(
+    f"""table.hline(stroke: {HEADER_STROKE}),
+    table.header(
     table.cell(
       colspan: $n_col,
       align: center,
@@ -26,6 +29,7 @@ TITLE_TEMPLATE = Template(
       ]
     )
   ),
+  table.hline(stroke: {HEADER_STROKE}),
   """
 )
 
@@ -127,7 +131,7 @@ class TypData:
 
         formatted_title = self.heading.to_typst(n_col)
 
-        return f"{formatted_title}table.header(\n    {header}\n  )"
+        return f"{formatted_title}table.header(\n    {header}\n  ),\ntable.hline(stroke: {HEADER_STROKE})"
 
     def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
         """Returns the body of the table."""
@@ -135,13 +139,14 @@ class TypData:
         for row_content in data.iter_rows(named=True):
             desired_content = [row_content[col.var] for col in columns]
             row = " ".join(f"[{escape_value(content)}]," for content in desired_content)
-            rows.append(row)
+            rows.extend((row, "table.hline(stroke: 0.6pt),"))
 
         return "\n  ".join(rows)
 
 
 TABLE_TEMPLATE = Template("""#table(
   columns: $columns,
+  stroke: none,
   align: $alignment,
   $header,
   $body
