@@ -31,6 +31,25 @@ class TestSubMissing:
 
         assert len(warnings) == 0
 
+    def test_to_typst_format_float_with_missing(self, table_check, basic_data) -> None:
+        table = TypTable(basic_data).fmt_number().sub_missing(missing_text="Missing")
+        result = table.to_typst()
+
+        assert result == external("uuid:f7450830-7a1b-440f-bc59-221a534372a5.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+        from_pandas_table = TypTable(basic_data.to_pandas()).fmt_number().sub_missing(missing_text="Missing")
+        pandas_result = from_pandas_table.to_typst()
+
+        assert pandas_result == external("uuid:4e42ced7-d53a-44bc-b9e2-266b334abed2.typ")
+
+        warnings = table_check(pandas_result)
+
+        assert len(warnings) == 0
+
 
 class TestFString:
     def test_add_text(self, table_check):
@@ -104,6 +123,9 @@ def test_numeric(table_check, args, result):
                 -1.3572354,
                 -1.0,
                 -10000000,
+                float("NaN"),
+                float("inf"),
+                float("-inf"),
             ],
         }
     )

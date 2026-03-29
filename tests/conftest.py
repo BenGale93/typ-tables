@@ -43,8 +43,8 @@ def table_check(tmp_path: Path, request: pytest.FixtureRequest) -> t.Callable[[s
 def basic_data() -> pl.DataFrame:
     return pl.DataFrame(
         {
-            "string": ["a", "b", "c", None],
-            "int": [10, 10000, 1000000, None],
-            "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374],
+            "string": ["a", "b", "c", "random-letters", None],
+            "int": [10, 10000, 1000000, 568282638583, None],
+            "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374, None],
         }
     )

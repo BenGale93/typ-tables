@@ -66,7 +66,7 @@ class SubMissing:
             if data.select(nw.col(col)).schema[col].is_numeric():
                 cond = nw.col(col).is_null() | nw.col(col).is_nan()
             else:
-                cond = nw.col(col).is_null()
+                cond = nw.col(col).is_null() | (nw.col(col) == nw.lit("nan"))
 
             when = _create_when(col, rows, nw.lit(self.missing_text), cond)
             whens.append(when)
@@ -130,11 +130,23 @@ class Numeric:
 
 def fmt_number(value: float, config: Numeric) -> str:
     """Formats the given number using the config."""
+    nan = False
+    inf = False
+    try:
+        # NaN and Inf fails here.
+        int(value)
+    except ValueError:
+        nan = True
+    except OverflowError:
+        inf = True
+
     value = value * config.scale_by
 
     is_negative = value < 0
 
-    if config.compact:
+    if nan or inf:
+        x_formatted = str(value)
+    elif config.compact:
         x_formatted = _format_number_compactly(value=value, config=config)
     else:
         x_formatted = _value_to_decimal_notation(value=value, config=config)

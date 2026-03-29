@@ -1,0 +1,12 @@
+#table(
+  columns: 3,
+  align: (auto, auto, auto),
+  table.header(
+    [string], [int], [float]
+  ),
+  [a], [10.00], [Missing],
+  [b], [10,000.00], [0.00],
+  [c], [1,000,000.00], [0.14],
+  [random\-letters], [568,282,638,583.00], [163,985.84],
+  [Missing], [Missing], [Missing],
+)

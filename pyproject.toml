@@ -23,6 +23,7 @@ test = [
   "polars>=1.39.2",
   "typst>=0.14.8",
   "pandas>=3.0.0",
+  "pyarrow>=20.0.0",
 ]
 typing = ["pyrefly>=0.57.0"]
 typing-test = [{ include-group = "test" }, { include-group = "typing" }]
