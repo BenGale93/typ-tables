@@ -23,3 +23,7 @@ class Typst:
     def __str__(self) -> str:
         """String representation."""
         return self.text
+
+    def __bool__(self) -> bool:
+        """Return the truthiness of the underlying text."""
+        return bool(self.text)

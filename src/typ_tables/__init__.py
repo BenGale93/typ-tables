@@ -2,6 +2,9 @@
 
 import typing as t
 from dataclasses import dataclass
+from functools import cached_property
+from string import Template
+from textwrap import indent
 
 import narwhals as nw
 from narwhals.typing import IntoDataFrame
@@ -13,6 +16,75 @@ from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 
+TITLE_TEMPLATE = Template(
+    """table.header(
+    table.cell(
+      colspan: $n_col,
+      align: center,
+      [
+        == $title_contents
+      ]
+    )
+  ),
+  """
+)
+
+
+@dataclass(frozen=True)
+class Heading:
+    """Container class that holds the title and subtitle."""
+
+    _title: str | Typst | None = None
+    _subtitle: str | Typst | None = None
+
+    @cached_property
+    def title(self) -> str | Typst | None:
+        """The escaped title text."""
+        if self._title is None:
+            return self._title
+        return escape_value(self._title)
+
+    @cached_property
+    def subtitle(self) -> str | Typst | None:
+        """The escaped subtitle text."""
+        if self._subtitle is None:
+            return self._subtitle
+        return escape_value(self._subtitle)
+
+    def to_typst(self, n_col: int) -> str:
+        """Converts the heading into a Typst table header block."""
+        if not self.title:
+            return ""
+        if not self.subtitle:  # noqa: SIM108
+            title_contents = self.title
+        else:
+            title_contents = f"{self.title} \\\n        {self.subtitle}"
+
+        return TITLE_TEMPLATE.substitute(n_col=n_col, title_contents=title_contents)
+
+
+@dataclass(frozen=True)
+class Figure:
+    """Container class that holds the figure arguments."""
+
+    _caption: str | Typst | None = None
+
+    @cached_property
+    def caption(self) -> str | Typst | None:
+        """The escaped subtitle text."""
+        if self._caption is None:
+            return self._caption
+        return escape_value(self._caption)
+
+    def add_figure_args(self, table_str: str) -> str:
+        """Adds a figure wrapper to the table string, if required."""
+        if caption := self.caption:
+            table_str = table_str.removeprefix("#")
+            table_str = indent(table_str, "  ").rstrip()
+            table_str = f"#figure(\n{table_str},\n  caption: [{caption}],\n)"
+
+        return table_str
+
 
 @dataclass(kw_only=True)
 class TypData:
@@ -21,11 +93,13 @@ class TypData:
     boxhead: Boxhead
     formats: list[Formatter]
     substitute: list[Formatter]
+    heading: Heading
+    figure: Figure
 
     @classmethod
     def from_data(cls, df: ttypes.Data) -> t.Self:
         """Initialise based on the given dataset."""
-        return cls(boxhead=Boxhead.from_data(df), formats=[], substitute=[])
+        return cls(boxhead=Boxhead.from_data(df), formats=[], substitute=[], heading=Heading(), figure=Figure())
 
     def format_df(self, df: ttypes.Data) -> ttypes.Data:
         """Format the given dataset."""
@@ -49,7 +123,11 @@ class TypData:
     def header(self, columns: list[ColInfo]) -> str:
         """Returns the header element."""
         header = ", ".join(f"[{col.name}]" for col in columns)
-        return f"table.header(\n    {header}\n  )"
+        n_col = len(columns)
+
+        formatted_title = self.heading.to_typst(n_col)
+
+        return f"{formatted_title}table.header(\n    {header}\n  )"
 
     def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
         """Returns the body of the table."""
@@ -62,18 +140,17 @@ class TypData:
         return "\n  ".join(rows)
 
 
-@dataclass
-class TableElements:
-    """Container class for the elements of a Typst table."""
+TABLE_TEMPLATE = Template("""#table(
+  columns: $columns,
+  align: $alignment,
+  $header,
+  $body
+)
+""")
 
-    columns: str
-    alignment: str
-    header: str
-    body: str
 
-
-def create_elements(original_data: ttypes.Data, typ: TypData) -> TableElements:
-    """Creates the elements of the Typst table."""
+def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
+    """Creates the final Typst table."""
     data = typ.format_df(original_data).drop(ROW_INDEX)
 
     final_columns = typ.boxhead.final_columns()
@@ -83,12 +160,13 @@ def create_elements(original_data: ttypes.Data, typ: TypData) -> TableElements:
     header = typ.header(final_columns)
     body = typ.body(data, final_columns)
 
-    return TableElements(
+    table_str = TABLE_TEMPLATE.substitute(
         columns=columns,
         alignment=alignment,
         header=header,
         body=body,
     )
+    return typ.figure.add_figure_args(table_str)
 
 
 class TypTable:
@@ -101,16 +179,20 @@ class TypTable:
 
     def to_typst(self) -> str:
         """Convert the table to a Typst string."""
-        typ_element = create_elements(self._df, self._typ_data)
+        return create_table_string(self._df, self._typ_data)
 
-        return f"""#table(
-  columns: {typ_element.columns},
-  align: {typ_element.alignment},
-  {typ_element.header},
-  {typ_element.body}
-)
-"""
+    # Modifying parts of a Table Methods ----
+    def tab_header(self, title: str | Typst, subtitle: str | Typst | None = None) -> t.Self:
+        """Add a table header."""
+        self._typ_data.heading = Heading(title, subtitle)
+        return self
 
+    def tab_figure(self, caption: str | Typst | None = None) -> t.Self:
+        """Add a figure wrapper."""
+        self._typ_data.figure = Figure(caption)
+        return self
+
+    # Formatting Methods ----
     def sub_missing(
         self,
         columns: ColumnSelector | None = None,
@@ -179,6 +261,7 @@ class TypTable:
         )
         return self
 
+    # Modifying Columns Methods ----
     def cols_align(self, align: ttypes.Alignment = "left", columns: ColumnSelector | None = None) -> t.Self:
         """Align the columns to the given direction."""
         columns_to_align = resolve_columns(self._df, columns)
