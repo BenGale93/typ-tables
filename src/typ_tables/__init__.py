@@ -59,7 +59,7 @@ class Heading:
         """Converts the heading into a Typst table header block."""
         if not self.title:
             return ""
-        if not self.subtitle:  # noqa: SIM108
+        if not self.subtitle:
             title_contents = self.title
         else:
             title_contents = f"{self.title} \\\n        {self.subtitle}"
@@ -103,7 +103,13 @@ class TypData:
     @classmethod
     def from_data(cls, df: ttypes.Data) -> t.Self:
         """Initialise based on the given dataset."""
-        return cls(boxhead=Boxhead.from_data(df), formats=[], substitute=[], heading=Heading(), figure=Figure())
+        return cls(
+            boxhead=Boxhead.from_data(df),
+            formats=[],
+            substitute=[],
+            heading=Heading(),
+            figure=Figure(),
+        )
 
     def format_df(self, df: ttypes.Data) -> ttypes.Data:
         """Format the given dataset."""
@@ -131,7 +137,10 @@ class TypData:
 
         formatted_title = self.heading.to_typst(n_col)
 
-        return f"{formatted_title}table.header(\n    {header}\n  ),\ntable.hline(stroke: {HEADER_STROKE})"
+        return (
+            f"{formatted_title}table.header(\n    {header}\n  ),"
+            f"\ntable.hline(stroke: {HEADER_STROKE})"
+        )
 
     def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
         """Returns the body of the table."""
@@ -206,7 +215,9 @@ class TypTable:
         missing_text: str = "",
     ) -> t.Self:
         """Substitutes Null and NaN values with the given missing text."""
-        self._typ_data.substitute.append(fmt(self._df, SubMissing(missing_text=missing_text), columns, rows))
+        self._typ_data.substitute.append(
+            fmt(self._df, SubMissing(missing_text=missing_text), columns, rows)
+        )
         return self
 
     def fmt(
@@ -267,7 +278,9 @@ class TypTable:
         return self
 
     # Modifying Columns Methods ----
-    def cols_align(self, align: ttypes.Alignment = "left", columns: ColumnSelector | None = None) -> t.Self:
+    def cols_align(
+        self, align: ttypes.Alignment = "left", columns: ColumnSelector | None = None
+    ) -> t.Self:
         """Align the columns to the given direction."""
         columns_to_align = resolve_columns(self._df, columns)
         self._typ_data.boxhead.set_cols_align(columns_to_align, align)
@@ -279,13 +292,17 @@ class TypTable:
         self._typ_data.boxhead.set_cols_hidden(columns_to_hide)
         return self
 
-    def cols_label(self, cases: dict[str, str | Typst] | None = None, **kwargs: str | Typst) -> t.Self:
+    def cols_label(
+        self, cases: dict[str, str | Typst] | None = None, **kwargs: str | Typst
+    ) -> t.Self:
         """Relabel one or more columns."""
         cases = cases | kwargs if cases else kwargs
         self._typ_data.boxhead.set_cols_label(cases)
         return self
 
-    def cols_label_with(self, fn: t.Callable[[str], str | Typst], columns: ColumnSelector | None = None) -> t.Self:
+    def cols_label_with(
+        self, fn: t.Callable[[str], str | Typst], columns: ColumnSelector | None = None
+    ) -> t.Self:
         """Relabel one or more columns using a function."""
         columns_to_relabel = resolve_columns(self._df, columns)
         new_labels = {col: fn(col) for col in columns_to_relabel}

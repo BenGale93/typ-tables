@@ -51,8 +51,8 @@ def value_to_decimal_notation(value: float, config: "Numeric") -> str:
 
     if config.n_sigfig:
         # If there is a value provided to `n_sigfig` then number formatting proceeds through the
-        # significant digits pathway, which ignores `decimals` and any removal of trailing zero values
-        # in the decimal portion of the value
+        # significant digits pathway, which ignores `decimals` and any removal of trailing zero
+        # values in the decimal portion of the value
         result = format_number_n_sigfig(
             value=value,
             n_sigfig=config.n_sigfig,
@@ -96,7 +96,9 @@ def format_number_n_sigfig(
 ) -> str:
     sig_digits, power, is_negative = get_number_profile(value, n_sigfig)
 
-    formatted_value = ("-" if is_negative else "") + insert_decimal_mark(digits=sig_digits, power=power, dec_mark=".")
+    formatted_value = ("-" if is_negative else "") + insert_decimal_mark(
+        digits=sig_digits, power=power, dec_mark="."
+    )
 
     # Get integer and decimal parts
     # Split number at `.` and obtain the integer and decimal parts

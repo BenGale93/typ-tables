@@ -28,7 +28,9 @@ class TypstFormat(TextDiff, Format[str]):
 
 
 @pytest.fixture
-def table_check(tmp_path: Path, request: pytest.FixtureRequest) -> t.Callable[[str], list[TypstWarning]]:
+def table_check(
+    tmp_path: Path, request: pytest.FixtureRequest
+) -> t.Callable[[str], list[TypstWarning]]:
     def compile_with_warnings(result: str) -> list[TypstWarning]:
         pdf_bytes, warnings = typst.compile_with_warnings(result.encode())
 

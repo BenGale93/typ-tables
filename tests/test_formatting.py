@@ -41,7 +41,9 @@ class TestSubMissing:
 
         assert len(warnings) == 0
 
-        from_pandas_table = TypTable(basic_data.to_pandas()).fmt_number().sub_missing(missing_text="Missing")
+        from_pandas_table = (
+            TypTable(basic_data.to_pandas()).fmt_number().sub_missing(missing_text="Missing")
+        )
         pandas_result = from_pandas_table.to_typst()
 
         assert pandas_result == external("uuid:4e42ced7-d53a-44bc-b9e2-266b334abed2.typ")
@@ -95,7 +97,10 @@ class TestFString:
         ({"decimals": 5}, external("uuid:five-decimals.typ")),
         ({"n_sigfig": 3}, external("uuid:three-sigfig.typ")),
         ({"drop_trailing_zeros": True}, external("uuid:drop-trailing-zeros.typ")),
-        ({"drop_trailing_dec_mark": False, "decimals": 0}, external("uuid:drop-trailing-dec-mark.typ")),
+        (
+            {"drop_trailing_dec_mark": False, "decimals": 0},
+            external("uuid:drop-trailing-dec-mark.typ"),
+        ),
         ({"use_seps": False}, external("uuid:no-separators.typ")),
         ({"accounting": True}, external("uuid:accounting-floats.typ")),
         ({"scale_by": 10}, external("uuid:scale-by-ten.typ")),

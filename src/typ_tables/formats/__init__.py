@@ -109,7 +109,10 @@ class Numeric:
         for col in cols:
             new_col = nw.new_series(
                 name=col,
-                values=[self.fmt_value(value) if i in unique_rows else str(value) for i, value in enumerate(data[col])],
+                values=[
+                    self.fmt_value(value) if i in unique_rows else str(value)
+                    for i, value in enumerate(data[col])
+                ],
                 backend=data.implementation,
             )
             new_cols.append(new_col)

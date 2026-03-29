@@ -121,7 +121,9 @@ class TestLabelColumnsWith:
         assert len(warnings) == 0
 
     def test_label_with_raw_typst_func(self, table_check, basic_data):
-        table = TypTable(basic_data).cols_label_with(lambda x: Typst(f"#underline[{x}]"), columns=ncs.numeric())
+        table = TypTable(basic_data).cols_label_with(
+            lambda x: Typst(f"#underline[{x}]"), columns=ncs.numeric()
+        )
         result = table.to_typst()
 
         assert result == external("uuid:b4b1d349-8c99-488d-9bde-a553cb59dff6.typ")
