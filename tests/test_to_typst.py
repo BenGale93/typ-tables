@@ -1,4 +1,5 @@
 import polars as pl
+import pytest
 from inline_snapshot import external
 from narwhals import selectors as ncs
 
@@ -7,6 +8,12 @@ from typ_tables.escape import Typst
 
 
 class TestBasic:
+    def test_to_typst_empty(self) -> None:
+        df = pl.DataFrame({})
+
+        with pytest.raises(ValueError, match=r"Data must have at least one column."):
+            TypTable(df)
+
     def test_to_typst_string_int_float(self, table_check) -> None:
         df = pl.DataFrame(
             {
@@ -51,6 +58,60 @@ class TestBasic:
         result = table.to_typst()
 
         assert result == external("uuid:f944eeb4-ed3d-44aa-ad20-0e29e69356cc.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_rowname_col_reorders_columns(self, table_check) -> None:
+        df = pl.DataFrame(
+            {
+                "int": [10, 10000, 1000000],
+                "float": [0.000001, 0.1368753, 163985.8374],
+                "string": ["a", "b", "c"],
+            }
+        )
+
+        table = TypTable(df, rowname_col="string")
+        result = table.to_typst()
+
+        assert result == external("uuid:c6ef5a0d-192b-4311-9f2b-c60ebb17cc3d.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_rowname_col_with_title(self, table_check) -> None:
+        df = pl.DataFrame(
+            {
+                "int": [10, 10000, 1000000],
+                "float": [0.000001, 0.1368753, 163985.8374],
+                "string": ["a", "b", "c"],
+            }
+        )
+
+        table = TypTable(df, rowname_col="string").tab_header(title="Title Here")
+        result = table.to_typst()
+
+        assert result == external("uuid:0fa6495c-840e-4777-a51c-45a54abd27a4.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_rowname_col_with_stubhead(self, table_check) -> None:
+        df = pl.DataFrame(
+            {
+                "int": [10, 10000, 1000000],
+                "float": [0.000001, 0.1368753, 163985.8374],
+                "string": ["a", "b", "c"],
+            }
+        )
+
+        table = TypTable(df, rowname_col="string").tab_stubhead(label="Test")
+        result = table.to_typst()
+
+        assert result == external("uuid:5a710293-3fba-423e-a890-1e7cfcc0c0c6.typ")
 
         warnings = table_check(result)
 

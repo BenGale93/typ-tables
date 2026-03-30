@@ -15,6 +15,7 @@ from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
+from typ_tables.stub import Stub
 
 HEADER_STROKE = "1.2pt"
 
@@ -95,16 +96,24 @@ class TypData:
     """Class that holds all the formatters, stylers etc."""
 
     boxhead: Boxhead
+    stub: Stub
     formats: list[Formatter]
     substitute: list[Formatter]
     heading: Heading
     figure: Figure
+    stubhead: str | Typst | None = None
 
     @classmethod
-    def from_data(cls, df: ttypes.Data) -> t.Self:
+    def from_data(
+        cls, df: ttypes.Data, rowname_col: str | None, groupname_col: str | None
+    ) -> t.Self:
         """Initialise based on the given dataset."""
+        stub = Stub.from_data(df, rowname_col=rowname_col, groupname_col=groupname_col)
+        boxhead = Boxhead.from_data(df)
+        boxhead.set_stub_cols(rowname_col, groupname_col)
         return cls(
-            boxhead=Boxhead.from_data(df),
+            boxhead=boxhead,
+            stub=stub,
             formats=[],
             substitute=[],
             heading=Heading(),
@@ -132,22 +141,43 @@ class TypData:
 
     def header(self, columns: list[ColInfo]) -> str:
         """Returns the header element."""
-        header = ", ".join(f"[{col.name}]" for col in columns)
+        headers = []
+        for col in columns:
+            if col.col_type == "stub":
+                header_cell = f"[{self.stubhead}]" if self.stubhead else "[]"
+            else:
+                header_cell = f"[{col.name}]"
+            headers.append(header_cell)
+
+        header = ", ".join(headers)
+
         n_col = len(columns)
 
         formatted_title = self.heading.to_typst(n_col)
 
+        if columns[0].col_type == "stub":
+            start_num = 2 if formatted_title else 1
+            vline = f"table.vline(x: 1, start: {start_num}),\n"
+        else:
+            vline = ""
+
         return (
-            f"{formatted_title}table.header(\n    {header}\n  ),"
+            f"{formatted_title}{vline}table.header(\n    {header}\n  ),"
             f"\ntable.hline(stroke: {HEADER_STROKE})"
         )
 
     def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
         """Returns the body of the table."""
         rows = []
-        for row_content in data.iter_rows(named=True):
-            desired_content = [row_content[col.var] for col in columns]
-            row = " ".join(f"[{escape_value(content)}]," for content in desired_content)
+        ordered_index = self.stub.group_indices_map()
+        for i, _ in ordered_index:
+            body_cells = []
+            for col in columns:
+                cell_content = data[i][col.var].item()
+                cell_str = f"[{escape_value(cell_content)}],"
+                body_cells.append(cell_str)
+
+            row = " ".join(body_cells)
             rows.extend((row, "table.hline(stroke: 0.6pt),"))
 
         return "\n  ".join(rows)
@@ -186,10 +216,15 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
 class TypTable:
     """A Table to format into a Typst table."""
 
-    def __init__(self, df: IntoDataFrame) -> None:
+    def __init__(
+        self, df: IntoDataFrame, rowname_col: str | None = None, groupname_col: str | None = None
+    ) -> None:
         """Initialise with the DataFrame to visualise as a typst table.."""
+        if not len(df.columns):
+            msg = "Data must have at least one column."
+            raise ValueError(msg)
         self._df = nw.from_native(df, eager_only=True).with_row_index(ROW_INDEX)
-        self._typ_data = TypData.from_data(self._df)
+        self._typ_data = TypData.from_data(self._df, rowname_col, groupname_col)
 
     def to_typst(self) -> str:
         """Convert the table to a Typst string."""
@@ -204,6 +239,11 @@ class TypTable:
     def tab_figure(self, caption: str | Typst | None = None) -> t.Self:
         """Add a figure wrapper."""
         self._typ_data.figure = Figure(caption)
+        return self
+
+    def tab_stubhead(self, label: str | Typst) -> t.Self:
+        """Add label text to the stubhead."""
+        self._typ_data.stubhead = label
         return self
 
     # Formatting Methods ----

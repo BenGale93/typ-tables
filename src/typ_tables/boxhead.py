@@ -27,6 +27,16 @@ class ColInfo:
 class Boxhead(list[ColInfo]):
     """Represents the boxhead of the table."""
 
+    def set_stub_cols(self, rowname_col: str | None, groupname_col: str | None) -> None:
+        """Sets the columns in the boxhead that will be in the stub."""
+        for col in self:
+            if col.var == rowname_col:
+                col.col_type = "stub"
+            elif col.var == groupname_col:
+                col.col_type = "row_group"
+            elif col.col_type in {"stub", "row_group"}:
+                col.col_type = "default"
+
     def set_cols_hidden(self, col_names: t.Iterable[str]) -> None:
         """Sets the columns as hidden."""
         for col in self:
@@ -48,7 +58,11 @@ class Boxhead(list[ColInfo]):
 
     def final_columns(self) -> list[ColInfo]:
         """Get the final order of the columns."""
-        return [*self._get_columns_of_type("default")]
+        return [
+            *self._get_columns_of_type("row_group"),
+            *self._get_columns_of_type("stub"),
+            *self._get_columns_of_type("default"),
+        ]
 
     def _get_columns_of_type(self, col_type: ColType) -> list[ColInfo]:
         return [c for c in self if c.col_type == col_type]
