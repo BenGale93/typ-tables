@@ -10,7 +10,7 @@ import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
 from typ_tables import ttypes
-from typ_tables.boxhead import Boxhead, ColInfo
+from typ_tables.boxhead import Boxhead
 from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
@@ -109,8 +109,7 @@ class TypData:
     ) -> t.Self:
         """Initialise based on the given dataset."""
         stub = Stub.from_data(df, rowname_col=rowname_col, groupname_col=groupname_col)
-        boxhead = Boxhead.from_data(df)
-        boxhead.set_stub_cols(rowname_col, groupname_col)
+        boxhead = Boxhead.from_data(df, rowname_col, groupname_col)
         return cls(
             boxhead=boxhead,
             stub=stub,
@@ -129,18 +128,21 @@ class TypData:
             new_df = f.fmt(new_df)
         return new_df
 
-    def alignment(self, columns: list[ColInfo]) -> str:
+    def alignment(self) -> str:
         """Returns the alignment of each column."""
-        alignment_elements = [col.column_align for col in columns]
+        alignment_elements = [
+            col.column_align for col in self.boxhead.get_stub_and_default_columns()
+        ]
         joined_alignments = ", ".join(alignment_elements)
         return f"({joined_alignments})"
 
-    def columns(self, columns: list[ColInfo]) -> str:
+    def columns(self) -> str:
         """Return the width of the columns."""
-        return str(len(columns))
+        return str(len(self.boxhead))
 
-    def header(self, columns: list[ColInfo]) -> str:
+    def header(self) -> str:
         """Returns the header element."""
+        columns = self.boxhead.get_stub_and_default_columns()
         headers = []
         for col in columns:
             if col.col_type == "stub":
@@ -166,11 +168,25 @@ class TypData:
             f"\ntable.hline(stroke: {HEADER_STROKE})"
         )
 
-    def body(self, data: ttypes.Data, columns: list[ColInfo]) -> str:
+    def body(self, data: ttypes.Data) -> str:
         """Returns the body of the table."""
+        columns = self.boxhead.get_stub_and_default_columns()
+        n_cols = len(columns)
         rows = []
+        prev_group_info = None
         ordered_index = self.stub.group_indices_map()
-        for i, _ in ordered_index:
+        for i, group_info in ordered_index:
+            if group_info is not None and group_info is not prev_group_info:
+                group_row = " ".join(
+                    [
+                        "table.hline(stroke: 1pt),\n",
+                        f"table.cell(colspan: {n_cols}, [{escape_value(group_info.name)}]),\n",
+                        "table.hline(stroke : 1pt),\n",
+                    ]
+                )
+                rows.append(group_row)
+                prev_group_info = group_info
+
             body_cells = []
             for col in columns:
                 cell_content = data[i][col.var].item()
@@ -197,12 +213,10 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
     """Creates the final Typst table."""
     data = typ.format_df(original_data).drop(ROW_INDEX)
 
-    final_columns = typ.boxhead.final_columns()
-
-    columns = typ.columns(final_columns)
-    alignment = typ.alignment(final_columns)
-    header = typ.header(final_columns)
-    body = typ.body(data, final_columns)
+    columns = typ.columns()
+    alignment = typ.alignment()
+    header = typ.header()
+    body = typ.body(data)
 
     table_str = TABLE_TEMPLATE.substitute(
         columns=columns,
@@ -222,6 +236,9 @@ class TypTable:
         """Initialise with the DataFrame to visualise as a typst table.."""
         if not len(df.columns):
             msg = "Data must have at least one column."
+            raise ValueError(msg)
+        if rowname_col is None and groupname_col is not None:
+            msg = "If groupname_col is provided, so must rowname_col."
             raise ValueError(msg)
         self._df = nw.from_native(df, eager_only=True).with_row_index(ROW_INDEX)
         self._typ_data = TypData.from_data(self._df, rowname_col, groupname_col)

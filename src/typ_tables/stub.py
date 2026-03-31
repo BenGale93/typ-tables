@@ -40,14 +40,18 @@ class GroupRows(list[GroupRowInfo]):
     @classmethod
     def from_data(cls, data: ttypes.Data, group_key: str) -> t.Self:
         """Create an instance from the underlying data."""
-        groups = data.group_by(group_key).agg(nw.col(constants.ROW_INDEX))
+        group_map: dict[t.Any, list[int]] = {}
+        unique_values = data.select(nw.col(group_key).unique())
+        for group in unique_values[group_key]:
+            row_indices = data.filter(nw.col(group_key) == nw.lit(group))[
+                constants.ROW_INDEX
+            ].to_list()
+            group_map[group] = row_indices
 
         return cls(
             [
-                GroupRowInfo(group_id=group_id, indices=ind)
-                for group_id, ind in zip(
-                    groups[group_key].to_list(), groups[constants.ROW_INDEX].to_list(), strict=False
-                )
+                GroupRowInfo(group_id=str(group_id), indices=ind)
+                for group_id, ind in group_map.items()
             ]
         )
 

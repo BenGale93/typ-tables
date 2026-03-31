@@ -81,6 +81,16 @@ class TestBasic:
 
         assert len(warnings) == 0
 
+    def test_to_typst_groupname_col(self, table_check, group_data) -> None:
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+        result = table.to_typst()
+
+        assert result == external("uuid:3929626d-bdef-4d46-a714-4f1317e59368.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
     def test_to_typst_rowname_col_with_title(self, table_check) -> None:
         df = pl.DataFrame(
             {
@@ -188,6 +198,39 @@ class TestLabelColumnsWith:
         result = table.to_typst()
 
         assert result == external("uuid:b4b1d349-8c99-488d-9bde-a553cb59dff6.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
+class TestEdgeCases:
+    def test_group_column_with_align_set(self, table_check, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        with pytest.warns(
+            UserWarning, match=r"Setting alignment on the row group column, this will do nothing."
+        ):
+            table = table.cols_align("right", columns="group")
+        result = table.to_typst()
+
+        assert result == external("uuid:7b3effea-cf1a-4eb4-bd9f-77e626389c12.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_group_column_no_rowname_col(self, group_data):
+        with pytest.raises(ValueError, match=r"If groupname_col is provided, so must rowname_col."):
+            _ = TypTable(group_data, groupname_col="group")
+
+    def test_group_column_with_stubhead(self, table_check, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        table = table.tab_stubhead("Fruits")
+        result = table.to_typst()
+
+        assert result == external("uuid:e00d6285-8d9c-4ce6-8eb5-a9cce90e5f67.typ")
 
         warnings = table_check(result)
 

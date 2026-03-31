@@ -50,3 +50,14 @@ def basic_data() -> pl.DataFrame:
             "float": [float("NaN"), 0.000001, 0.1368753, 163985.8374, None],
         }
     )
+
+
+@pytest.fixture
+def group_data() -> pl.DataFrame:
+    return pl.DataFrame(
+        {
+            "group": ["group_a", "group_b", "group_a", "group_b"],
+            "fruit": ["apple", "pear", "banana", "kiwi"],
+            "count": [10, 73, 3, 477],
+        }
+    )
