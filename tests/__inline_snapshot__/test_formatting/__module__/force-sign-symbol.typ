@@ -2,10 +2,8 @@
   columns: 1,
   stroke: none,
   align: (auto),
-  table.header(
-    [float]
-  ),
-table.hline(stroke: 1.2pt),
+  table.header([float]),
+  table.hline(stroke: 1.2pt),
   [0.00],
   table.hline(stroke: 0.6pt),
   [\+100.00],

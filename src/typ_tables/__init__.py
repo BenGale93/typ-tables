@@ -1,7 +1,7 @@
 """Package for creating Typst Tables from DataFrames."""
 
 import typing as t
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from string import Template
 from textwrap import indent
@@ -9,26 +9,21 @@ from textwrap import indent
 import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
-from typ_tables import ttypes
+from typ_tables import locators, ttypes
 from typ_tables.boxhead import Boxhead
 from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables.stub import Stub
+from typ_tables.style import CellStyle, StyleHolder, TextStyle
 
 HEADER_STROKE = "1.2pt"
 
 TITLE_TEMPLATE = Template(
     f"""table.hline(stroke: {HEADER_STROKE}),
-    table.header(
-    table.cell(
-      colspan: $n_col,
-      align: center,
-      [
-        == $title_contents
-      ]
-    )
+  table.header(
+$cell_block
   ),
   table.hline(stroke: {HEADER_STROKE}),
   """
@@ -37,52 +32,85 @@ TITLE_TEMPLATE = Template(
 
 @dataclass(frozen=True)
 class Heading:
-    """Container class that holds the title and subtitle."""
+    """Table heading metadata rendered above the main header row.
+
+    Attributes:
+        _title: Optional heading title text or raw Typst.
+        _subtitle: Optional heading subtitle text or raw Typst.
+    """
+
+    DEFAULT_STYLE = StyleHolder(cell=CellStyle(align="center"))
 
     _title: str | Typst | None = None
     _subtitle: str | Typst | None = None
 
     @cached_property
     def title(self) -> str | Typst | None:
-        """The escaped title text."""
+        """Return the escaped title text."""
         if self._title is None:
             return self._title
         return escape_value(self._title)
 
     @cached_property
     def subtitle(self) -> str | Typst | None:
-        """The escaped subtitle text."""
+        """Return the escaped subtitle text."""
         if self._subtitle is None:
             return self._subtitle
         return escape_value(self._subtitle)
 
-    def to_typst(self, n_col: int) -> str:
-        """Converts the heading into a Typst table header block."""
+    def to_typst(self, n_col: int, styles: StyleHolder) -> str:
+        """Render heading content as Typst header rows.
+
+        Args:
+            n_col: Number of table columns to span.
+            styles: Additional styles applied to the heading cell.
+
+        Returns:
+            A Typst string for the heading block, or an empty string when no
+            title is set.
+        """
         if not self.title:
             return ""
         if not self.subtitle:
             title_contents = self.title
         else:
-            title_contents = f"{self.title} \\\n        {self.subtitle}"
+            title_contents = Typst(
+                f"== {escape_value(self.title)} \\\n  {escape_value(self.subtitle)}"
+            )
 
-        return TITLE_TEMPLATE.substitute(n_col=n_col, title_contents=title_contents)
+        cell_block = (self.DEFAULT_STYLE | styles).to_typst(title_contents, n_col)
+        cell_block = indent(cell_block, " " * 4)
+
+        return TITLE_TEMPLATE.substitute(title_contents=title_contents, cell_block=cell_block)
 
 
 @dataclass(frozen=True)
 class Figure:
-    """Container class that holds the figure arguments."""
+    """Figure metadata used to optionally wrap the table in `#figure`.
+
+    Attributes:
+        _caption: Optional figure caption text or raw Typst.
+    """
 
     _caption: str | Typst | None = None
 
     @cached_property
     def caption(self) -> str | Typst | None:
-        """The escaped subtitle text."""
+        """Return the escaped figure caption text."""
         if self._caption is None:
             return self._caption
         return escape_value(self._caption)
 
     def add_figure_args(self, table_str: str) -> str:
-        """Adds a figure wrapper to the table string, if required."""
+        """Wrap a Typst table in a figure block when a caption is set.
+
+        Args:
+            table_str: Typst table string beginning with `#table`.
+
+        Returns:
+            The original table string when no caption is present, otherwise a
+            `#figure(...)` wrapper containing the table and caption.
+        """
         if caption := self.caption:
             table_str = table_str.removeprefix("#")
             table_str = indent(table_str, "  ").rstrip()
@@ -91,9 +119,33 @@ class Figure:
         return table_str
 
 
+@dataclass
+class StyleInfo:
+    """Associates a locator with style settings.
+
+    Attributes:
+        locname: Locator describing where the style should apply.
+        style: Style configuration to apply at the locator.
+    """
+
+    locname: locators.Loc
+    style: StyleHolder
+
+
 @dataclass(kw_only=True)
 class TypData:
-    """Class that holds all the formatters, stylers etc."""
+    """Internal container with table structure, formatting, and styling state.
+
+    Attributes:
+        boxhead: Column definitions and presentation metadata.
+        stub: Row stub and grouping metadata.
+        formats: Ordered value formatters.
+        substitute: Ordered substitution formatters.
+        heading: Heading metadata.
+        figure: Figure metadata.
+        styles: Style rules keyed by locators.
+        stubhead: Optional label for the stub header cell.
+    """
 
     boxhead: Boxhead
     stub: Stub
@@ -101,13 +153,23 @@ class TypData:
     substitute: list[Formatter]
     heading: Heading
     figure: Figure
+    styles: list[StyleInfo] = field(default_factory=list)
     stubhead: str | Typst | None = None
 
     @classmethod
     def from_data(
         cls, df: ttypes.Data, rowname_col: str | None, groupname_col: str | None
     ) -> t.Self:
-        """Initialise based on the given dataset."""
+        """Build `TypData` initialized from a source dataset.
+
+        Args:
+            df: Source DataFrame with row index column already attached.
+            rowname_col: Optional column used as the stub row label.
+            groupname_col: Optional column used for row grouping.
+
+        Returns:
+            A `TypData` instance with default formatting, figure, and styles.
+        """
         stub = Stub.from_data(df, rowname_col=rowname_col, groupname_col=groupname_col)
         boxhead = Boxhead.from_data(df, rowname_col, groupname_col)
         return cls(
@@ -120,7 +182,14 @@ class TypData:
         )
 
     def format_df(self, df: ttypes.Data) -> ttypes.Data:
-        """Format the given dataset."""
+        """Apply all registered formatters to a dataset in order.
+
+        Args:
+            df: DataFrame to format.
+
+        Returns:
+            The formatted DataFrame.
+        """
         new_df = df
         for f in self.formats:
             new_df = f.fmt(new_df)
@@ -129,7 +198,11 @@ class TypData:
         return new_df
 
     def alignment(self) -> str:
-        """Returns the alignment of each column."""
+        """Return Typst alignment tuple for visible table columns.
+
+        Returns:
+            A Typst tuple expression like `"(left, right, right)"`.
+        """
         alignment_elements = [
             col.column_align for col in self.boxhead.get_stub_and_default_columns()
         ]
@@ -137,11 +210,20 @@ class TypData:
         return f"({joined_alignments})"
 
     def columns(self) -> str:
-        """Return the width of the columns."""
+        """Return the number of visible table columns as a string.
+
+        Returns:
+            Column count represented as a string for Typst templates.
+        """
         return str(len(self.boxhead))
 
     def header(self) -> str:
-        """Returns the header element."""
+        """Render table header rows, including optional title and stub divider.
+
+        Returns:
+            Typst header block containing heading rows, column labels, and
+            header rules.
+        """
         columns = self.boxhead.get_stub_and_default_columns()
         headers = []
         for col in columns:
@@ -155,7 +237,12 @@ class TypData:
 
         n_col = len(columns)
 
-        formatted_title = self.heading.to_typst(n_col)
+        header_style = StyleHolder()
+        for style_info in self.styles:
+            if isinstance(style_info.locname, locators.LocHeader):
+                header_style = style_info.style
+
+        formatted_title = self.heading.to_typst(n_col, header_style)
 
         if columns[0].col_type == "stub":
             start_num = 2 if formatted_title else 1
@@ -164,12 +251,20 @@ class TypData:
             vline = ""
 
         return (
-            f"{formatted_title}{vline}table.header(\n    {header}\n  ),"
-            f"\ntable.hline(stroke: {HEADER_STROKE})"
+            f"{formatted_title}{vline}table.header({header}),\n"
+            f"  table.hline(stroke: {HEADER_STROKE})"
         )
 
     def body(self, data: ttypes.Data) -> str:
-        """Returns the body of the table."""
+        """Render Typst rows for table body data.
+
+        Args:
+            data: Formatted data with table row index intact.
+
+        Returns:
+            Typst string containing data rows and horizontal rules, including
+            optional group heading rows.
+        """
         columns = self.boxhead.get_stub_and_default_columns()
         n_cols = len(columns)
         rows = []
@@ -210,7 +305,15 @@ TABLE_TEMPLATE = Template("""#table(
 
 
 def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
-    """Creates the final Typst table."""
+    """Render a complete Typst table string from data and table state.
+
+    Args:
+        original_data: Source data with internal row index column.
+        typ: Table state containing formatting, labels, and style rules.
+
+    Returns:
+        A complete Typst table string, optionally wrapped in `#figure`.
+    """
     data = typ.format_df(original_data).drop(ROW_INDEX)
 
     columns = typ.columns()
@@ -228,12 +331,22 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
 
 
 class TypTable:
-    """A Table to format into a Typst table."""
+    """User-facing builder for converting DataFrames into Typst tables."""
 
     def __init__(
         self, df: IntoDataFrame, rowname_col: str | None = None, groupname_col: str | None = None
     ) -> None:
-        """Initialise with the DataFrame to visualise as a typst table.."""
+        """Initialize a `TypTable` from a DataFrame-like object.
+
+        Args:
+            df: Input DataFrame supported by Narwhals.
+            rowname_col: Optional column used as row labels (stub column).
+            groupname_col: Optional column used to group rows.
+
+        Raises:
+            ValueError: If `df` has zero columns.
+            ValueError: If `groupname_col` is set without `rowname_col`.
+        """
         if not len(df.columns):
             msg = "Data must have at least one column."
             raise ValueError(msg)
@@ -244,23 +357,67 @@ class TypTable:
         self._typ_data = TypData.from_data(self._df, rowname_col, groupname_col)
 
     def to_typst(self) -> str:
-        """Convert the table to a Typst string."""
+        """Render the configured table as Typst markup.
+
+        Returns:
+            Complete Typst string representing the table.
+        """
         return create_table_string(self._df, self._typ_data)
 
     # Modifying parts of a Table Methods ----
     def tab_header(self, title: str | Typst, subtitle: str | Typst | None = None) -> t.Self:
-        """Add a table header."""
+        """Set table title and optional subtitle.
+
+        Args:
+            title: Title text or raw Typst.
+            subtitle: Optional subtitle text or raw Typst.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.heading = Heading(title, subtitle)
         return self
 
     def tab_figure(self, caption: str | Typst | None = None) -> t.Self:
-        """Add a figure wrapper."""
+        """Configure an optional figure caption wrapper around the table.
+
+        Args:
+            caption: Caption text or raw Typst. `None` disables wrapping.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.figure = Figure(caption)
         return self
 
     def tab_stubhead(self, label: str | Typst) -> t.Self:
-        """Add label text to the stubhead."""
+        """Set the label shown in the stub header cell.
+
+        Args:
+            label: Stub header label text or raw Typst.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.stubhead = label
+        return self
+
+    def tab_style(
+        self, locator: locators.Loc, text: TextStyle | None = None, cell: CellStyle | None = None
+    ) -> t.Self:
+        """Add style rules for a specific table region.
+
+        Args:
+            locator: Target region selector (for example `locators.LocHeader`).
+            text: Optional text-level style settings.
+            cell: Optional cell-level style settings.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.styles.append(
+            StyleInfo(locname=locator, style=StyleHolder(text=text, cell=cell))
+        )
         return self
 
     # Formatting Methods ----
@@ -271,7 +428,16 @@ class TypTable:
         *,
         missing_text: str = "",
     ) -> t.Self:
-        """Substitutes Null and NaN values with the given missing text."""
+        """Replace null-like values in selected cells.
+
+        Args:
+            columns: Optional column selector limiting where substitution applies.
+            rows: Optional row selector limiting where substitution applies.
+            missing_text: Replacement text used for missing values.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.substitute.append(
             fmt(self._df, SubMissing(missing_text=missing_text), columns, rows)
         )
@@ -284,7 +450,15 @@ class TypTable:
         *,
         f_string: str,
     ) -> t.Self:
-        """Set a column format with a narwhals style f-string.
+        """Format selected values with a Narwhals-style f-string.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            f_string: Format string used to render each selected value.
+
+        Returns:
+            The current table instance for chaining.
 
         Note:
             Currently only accepts 1 placeholder.
@@ -310,7 +484,27 @@ class TypTable:
         sep_mark: str = ",",
         force_sign: bool = False,
     ) -> t.Self:
-        """Format numeric values."""
+        """Format selected numeric values with configurable numeric rules.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            decimals: Number of decimal places.
+            n_sigfig: Optional number of significant figures.
+            drop_trailing_zeros: Whether to remove trailing zero digits.
+            drop_trailing_dec_mark: Whether to remove dangling decimal marks.
+            use_seps: Whether to include thousands separators.
+            accounting: Whether to use accounting-style negatives.
+            scale_by: Multiplicative scaling factor before formatting.
+            compact: Whether to compact large numbers (for example, `1K`).
+            pattern: Output pattern containing `{x}` placeholder.
+            dec_mark: Decimal mark character.
+            sep_mark: Thousands separator character.
+            force_sign: Whether to always show explicit sign symbols.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.formats.append(
             fmt(
                 self._df,
@@ -338,13 +532,28 @@ class TypTable:
     def cols_align(
         self, align: ttypes.Alignment = "left", columns: ColumnSelector | None = None
     ) -> t.Self:
-        """Align the columns to the given direction."""
+        """Set text alignment for selected columns.
+
+        Args:
+            align: Target alignment value.
+            columns: Optional column selector; defaults to all columns.
+
+        Returns:
+            The current table instance for chaining.
+        """
         columns_to_align = resolve_columns(self._df, columns)
         self._typ_data.boxhead.set_cols_align(columns_to_align, align)
         return self
 
     def cols_hide(self, columns: ColumnSelector | None = None) -> t.Self:
-        """Hide the columns in the final table."""
+        """Hide selected columns from the rendered output.
+
+        Args:
+            columns: Optional column selector; defaults to all columns.
+
+        Returns:
+            The current table instance for chaining.
+        """
         columns_to_hide = resolve_columns(self._df, columns)
         self._typ_data.boxhead.set_cols_hidden(columns_to_hide)
         return self
@@ -352,7 +561,15 @@ class TypTable:
     def cols_label(
         self, cases: dict[str, str | Typst] | None = None, **kwargs: str | Typst
     ) -> t.Self:
-        """Relabel one or more columns."""
+        """Set explicit labels for one or more columns.
+
+        Args:
+            cases: Optional mapping of column names to new labels.
+            **kwargs: Additional column-to-label mappings.
+
+        Returns:
+            The current table instance for chaining.
+        """
         cases = cases | kwargs if cases else kwargs
         self._typ_data.boxhead.set_cols_label(cases)
         return self
@@ -360,7 +577,15 @@ class TypTable:
     def cols_label_with(
         self, fn: t.Callable[[str], str | Typst], columns: ColumnSelector | None = None
     ) -> t.Self:
-        """Relabel one or more columns using a function."""
+        """Relabel selected columns using a mapping function.
+
+        Args:
+            fn: Function receiving current column name and returning new label.
+            columns: Optional column selector; defaults to all columns.
+
+        Returns:
+            The current table instance for chaining.
+        """
         columns_to_relabel = resolve_columns(self._df, columns)
         new_labels = {col: fn(col) for col in columns_to_relabel}
         self._typ_data.boxhead.set_cols_label(new_labels)

@@ -2,10 +2,8 @@
   columns: 1,
   stroke: none,
   align: (auto),
-  table.header(
-    [\= Header]
-  ),
-table.hline(stroke: 1.2pt),
+  table.header([\= Header]),
+  table.hline(stroke: 1.2pt),
   [\#a],
   table.hline(stroke: 0.6pt),
   [Stuff \#Here],

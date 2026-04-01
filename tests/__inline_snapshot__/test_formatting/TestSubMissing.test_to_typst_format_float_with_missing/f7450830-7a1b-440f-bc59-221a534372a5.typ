@@ -2,10 +2,8 @@
   columns: 3,
   stroke: none,
   align: (auto, auto, auto),
-  table.header(
-    [string], [int], [float]
-  ),
-table.hline(stroke: 1.2pt),
+  table.header([string], [int], [float]),
+  table.hline(stroke: 1.2pt),
   [a], [10], [Missing],
   table.hline(stroke: 0.6pt),
   [b], [10000], [0.00],

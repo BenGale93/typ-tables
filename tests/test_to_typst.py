@@ -3,7 +3,7 @@ import pytest
 from inline_snapshot import external
 from narwhals import selectors as ncs
 
-from typ_tables import TypTable
+from typ_tables import TypTable, locators, style
 from typ_tables.escape import Typst
 
 
@@ -122,6 +122,32 @@ class TestBasic:
         result = table.to_typst()
 
         assert result == external("uuid:5a710293-3fba-423e-a890-1e7cfcc0c0c6.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_format_header(self, table_check) -> None:
+        df = pl.DataFrame(
+            {
+                "int": [10, 10000, 1000000],
+                "float": [0.000001, 0.1368753, 163985.8374],
+                "string": ["a", "b", "c"],
+            }
+        )
+
+        table = (
+            TypTable(df)
+            .tab_style(
+                cell=style.CellStyle(align="right", inset=style.Sides(bottom="20pt")),
+                text=style.TextStyle(size="15pt", fill="blue"),
+                locator=locators.LocHeader(),
+            )
+            .tab_header("Test Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:80b276c0-46d7-48d4-98a6-10588ca067f0.typ")
 
         warnings = table_check(result)
 

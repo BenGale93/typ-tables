@@ -2,7 +2,18 @@
   columns: 3,
   stroke: none,
   align: (auto, auto, auto),
-  table.header([string], [#underline[int]], [#underline[float]]),
+  table.hline(stroke: 1.2pt),
+  table.header(
+    table.cell(
+      colspan: 3,
+      align: center,
+      text(
+        size: 20pt,
+      )[Table Header],
+    ),
+  ),
+  table.hline(stroke: 1.2pt),
+  table.header([string], [int], [float]),
   table.hline(stroke: 1.2pt),
   [a], [10], [nan],
   table.hline(stroke: 0.6pt),

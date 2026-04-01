@@ -2,10 +2,8 @@
   columns: 2,
   stroke: none,
   align: (auto, auto),
-  table.header(
-    [string], [int]
-  ),
-table.hline(stroke: 1.2pt),
+  table.header([string], [int]),
+  table.hline(stroke: 1.2pt),
   [\_^a\*\_], [\_10\_],
   table.hline(stroke: 0.6pt),
   [\_^b\*\_], [\_10000\_],

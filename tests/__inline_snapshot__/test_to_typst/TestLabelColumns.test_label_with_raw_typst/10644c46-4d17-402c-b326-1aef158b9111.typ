@@ -2,10 +2,8 @@
   columns: 3,
   stroke: none,
   align: (auto, auto, auto),
-  table.header(
-    [#strong[String]], [#underline[Integer]], [$pi r^2$]
-  ),
-table.hline(stroke: 1.2pt),
+  table.header([#strong[String]], [#underline[Integer]], [$pi r^2$]),
+  table.hline(stroke: 1.2pt),
   [a], [10], [nan],
   table.hline(stroke: 0.6pt),
   [b], [10000], [1e-06],
