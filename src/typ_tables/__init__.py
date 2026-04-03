@@ -9,7 +9,7 @@ from textwrap import indent
 import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
-from typ_tables import locators, ttypes
+from typ_tables import locators, ttypes, utils
 from typ_tables.boxhead import Boxhead
 from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import Typst, escape_value
@@ -119,19 +119,6 @@ class Figure:
         return table_str
 
 
-@dataclass
-class StyleInfo:
-    """Associates a locator with style settings.
-
-    Attributes:
-        locname: Locator describing where the style should apply.
-        style: Style configuration to apply at the locator.
-    """
-
-    locname: locators.Loc
-    style: StyleHolder
-
-
 @dataclass(kw_only=True)
 class TypData:
     """Internal container with table structure, formatting, and styling state.
@@ -153,7 +140,7 @@ class TypData:
     substitute: list[Formatter]
     heading: Heading
     figure: Figure
-    styles: list[StyleInfo] = field(default_factory=list)
+    styles: list[utils.StyleInfo] = field(default_factory=list)
     stubhead: str | Typst | None = None
 
     @classmethod
@@ -268,6 +255,24 @@ class TypData:
         columns = self.boxhead.get_stub_and_default_columns()
         n_cols = len(columns)
         rows = []
+
+        body_styles = []
+        for style_info in self.styles:
+            if not isinstance(style_info.locname, locators.LocBody):
+                continue
+
+            cell_pos = style_info.locname.resolve(data)
+            body_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
+
+        stub_styles = []
+        if columns[0].col_type == "stub":
+            for style_info in self.styles:
+                if not isinstance(style_info.locname, locators.LocStub):
+                    continue
+
+                cell_pos = style_info.locname.resolve(data, columns[0].var)
+                stub_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
+
         prev_group_info = None
         ordered_index = self.stub.group_indices_map()
         for i, group_info in ordered_index:
@@ -284,8 +289,12 @@ class TypData:
 
             body_cells = []
             for col in columns:
+                if col.col_type == "stub":
+                    cell_style = utils.find_styles(col.var, i, stub_styles)
+                else:
+                    cell_style = utils.find_styles(col.var, i, body_styles)
                 cell_content = data[i][col.var].item()
-                cell_str = f"[{escape_value(cell_content)}],"
+                cell_str = cell_style.to_typst(cell_content, 1)
                 body_cells.append(cell_str)
 
             row = " ".join(body_cells)
@@ -416,7 +425,7 @@ class TypTable:
             The current table instance for chaining.
         """
         self._typ_data.styles.append(
-            StyleInfo(locname=locator, style=StyleHolder(text=text, cell=cell))
+            utils.StyleInfo(locname=locator, style=StyleHolder(text=text, cell=cell))
         )
         return self
 

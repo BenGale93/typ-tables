@@ -1,0 +1,37 @@
+#table(
+  columns: 2,
+  stroke: none,
+  align: (auto, auto),
+  table.hline(stroke: 1.2pt),
+  table.header(
+    table.cell(
+      colspan: 2,
+      align: center,
+      [Table Header],
+    ),
+  ),
+  table.hline(stroke: 1.2pt),
+  table.vline(x: 1, start: 2),
+table.header([], [count]),
+  table.hline(stroke: 1.2pt),
+  table.hline(stroke: 1pt),
+ table.cell(colspan: 2, [group\_a]),
+ table.hline(stroke : 1pt),
+
+  text(
+  fill: red,
+)[apple], [10],
+  table.hline(stroke: 0.6pt),
+  [banana], [3],
+  table.hline(stroke: 0.6pt),
+  table.hline(stroke: 1pt),
+ table.cell(colspan: 2, [group\_b]),
+ table.hline(stroke : 1pt),
+
+  text(
+  fill: red,
+)[pear], [73],
+  table.hline(stroke: 0.6pt),
+  [kiwi], [477],
+  table.hline(stroke: 0.6pt),
+)

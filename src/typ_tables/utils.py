@@ -1,0 +1,40 @@
+"""Module containing utility functions."""
+
+from dataclasses import dataclass
+
+from typ_tables.locators import CellPos, Loc
+from typ_tables.style import StyleHolder
+
+
+@dataclass
+class StyleInfo:
+    """Associates a locator with style settings.
+
+    Attributes:
+        locname: Locator describing where the style should apply.
+        style: Style configuration to apply at the locator.
+    """
+
+    locname: Loc
+    style: StyleHolder
+
+
+@dataclass
+class StylePosition:
+    """List of tables cells and the style to apply to them."""
+
+    style: StyleHolder
+    positions: list[CellPos]
+
+
+def find_styles(column: str, row: int, styles: list[StylePosition]) -> StyleHolder:
+    """Find all styles applicable to the column and row."""
+    current_pos = CellPos(column=column, row=row)
+    final_style = StyleHolder()
+
+    for style in styles:
+        for pos in style.positions:
+            if current_pos == pos:
+                final_style = final_style | style.style
+
+    return final_style
