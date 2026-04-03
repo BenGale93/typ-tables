@@ -2,6 +2,7 @@ from dataclasses import fields
 
 import narwhals as nw
 import narwhals.selectors as ncs
+import pytest
 from inline_snapshot import external, snapshot
 
 from typ_tables import TypTable, locators, style
@@ -134,6 +135,22 @@ class TestStyleHeader:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+    def test_fill_header_based_on_expr_fails(self, basic_data) -> None:
+        with pytest.raises(
+            TypeError, match=r"Expected only scalars in style field: `fill` for this location."
+        ):
+            _ = TypTable(basic_data).tab_style(
+                text=style.TextStyle(
+                    fill=nw.when(nw.col("int") < 100).then(nw.lit("blue")).otherwise(nw.lit("red"))
+                ),
+                cell=style.CellStyle(
+                    align=nw.when(nw.col("int") < 100)
+                    .then(nw.lit("right"))
+                    .otherwise(nw.lit("left"))
+                ),
+                locator=locators.LocHeader(),
+            )
 
 
 class TestStyleBody:

@@ -129,6 +129,18 @@ def _resolve_style_to_list_of_styles(
     return resolved_fields
 
 
+def _resolve_style_to_single_style(instance: _DataclassInstance) -> dict[str, t.Any]:
+    resolved_fields: dict[str, t.Any] = {}
+    for field in fields(instance):
+        name = field.name
+        value = getattr(instance, name)
+        if isinstance(value, (list, nw.Expr)):
+            msg = f"Expected only scalars in style field: `{name}` for this location."
+            raise TypeError(msg)
+        resolved_fields[name] = value
+    return resolved_fields
+
+
 @dataclass
 class TextStyle:
     """Text-level style properties applied to table cell content.
@@ -148,6 +160,14 @@ class TextStyle:
             TextStyleForCell(**dict(zip(resolved_fields, t, strict=True)))
             for t in zip(*resolved_fields.values(), strict=True)
         ]
+
+    def get_single(self) -> TextStyleForCell:
+        """Return a text style for a single cell.
+
+        Used for single cell locations like the header.
+        """
+        resolved_fields = _resolve_style_to_single_style(self)
+        return TextStyleForCell(**resolved_fields)
 
 
 @dataclass
@@ -227,6 +247,14 @@ class CellStyle:
             CellStyleForCell(**dict(zip(resolved_fields, t, strict=True)))
             for t in zip(*resolved_fields.values(), strict=True)
         ]
+
+    def get_single(self) -> CellStyleForCell:
+        """Return a cell style for a single cell.
+
+        Used for single cell locations like the header.
+        """
+        resolved_fields = _resolve_style_to_single_style(self)
+        return CellStyleForCell(**resolved_fields)
 
 
 @dataclass

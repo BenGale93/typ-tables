@@ -140,7 +140,7 @@ class TypData:
     substitute: list[Formatter]
     heading: Heading
     figure: Figure
-    styles: list[utils.StyleInfo] = field(default_factory=list)
+    styles: list[locators.StyledLoc] = field(default_factory=list)
     stubhead: str | Typst | None = None
 
     @classmethod
@@ -226,9 +226,9 @@ class TypData:
 
         header_style = StyleHolder()
         for style_info in self.styles:
-            if isinstance(style_info.locname, locators.LocHeader):
+            if isinstance(style_info, locators.StyledLocHeader):
                 # Ideally we want to guarantee there is only one here.
-                header_style = style_info.style[0]
+                header_style = style_info.style
 
         formatted_title = self.heading.to_typst(n_col, header_style)
 
@@ -259,19 +259,19 @@ class TypData:
 
         body_styles = []
         for style_info in self.styles:
-            if not isinstance(style_info.locname, locators.LocBody):
+            if not isinstance(style_info, locators.StyledLocBody):
                 continue
 
-            cell_pos = style_info.locname.resolve(data)
+            cell_pos = style_info.resolve(data)
             body_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
 
         stub_styles = []
         if columns[0].col_type == "stub":
             for style_info in self.styles:
-                if not isinstance(style_info.locname, locators.LocStub):
+                if not isinstance(style_info, locators.StyledLocStub):
                     continue
 
-                cell_pos = style_info.locname.resolve(data, columns[0].var)
+                cell_pos = style_info.resolve(data, columns[0].var)
                 stub_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
 
         prev_group_info = None
@@ -425,18 +425,9 @@ class TypTable:
         Returns:
             The current table instance for chaining.
         """
-        n_rows = len(self._df)
+        styled_loc = locator._apply_style(self._df, text, cell)
 
-        text_styles_for_cells = text.resolve(self._df) if text is not None else [None] * n_rows
-        cell_styles_for_cells = cell.resolve(self._df) if cell is not None else [None] * n_rows
-
-        style_holders = []
-        for text_style, cell_style in zip(
-            text_styles_for_cells, cell_styles_for_cells, strict=True
-        ):
-            style_holders.append(StyleHolder(text=text_style, cell=cell_style))
-
-        self._typ_data.styles.append(utils.StyleInfo(locname=locator, style=style_holders))
+        self._typ_data.styles.append(styled_loc)
         return self
 
     # Formatting Methods ----

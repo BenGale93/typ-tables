@@ -49,7 +49,7 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "ISC001", "ANN401"]
+ignore = ["COM812", "ISC001", "ANN401", "SLF001"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore all directories named `tests`.

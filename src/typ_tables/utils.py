@@ -2,21 +2,8 @@
 
 from dataclasses import dataclass
 
-from typ_tables.locators import CellPos, Loc
+from typ_tables.locators import CellPos
 from typ_tables.style import StyleHolder
-
-
-@dataclass
-class StyleInfo:
-    """Associates a locator with style settings.
-
-    Attributes:
-        locname: Locator describing where the style should apply.
-        style: Style configuration to apply at the locator.
-    """
-
-    locname: Loc
-    style: list[StyleHolder]
 
 
 @dataclass
