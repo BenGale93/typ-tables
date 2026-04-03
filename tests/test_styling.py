@@ -1,13 +1,28 @@
+from dataclasses import fields
+
+import narwhals as nw
 import narwhals.selectors as ncs
 from inline_snapshot import external, snapshot
 
 from typ_tables import TypTable, locators, style
 
 
+class TestAttributesMatch:
+    def test_text_attrs_match(self):
+        assert [f.name for f in fields(style.TextStyleForCell)] == [
+            f.name for f in fields(style.TextStyle)
+        ]
+
+    def test_cell_attrs_match(self):
+        assert [f.name for f in fields(style.CellStyleForCell)] == [
+            f.name for f in fields(style.CellStyle)
+        ]
+
+
 class TestMergeStyles:
     def test_merge_cell_style(self):
-        style_1 = style.CellStyle(inset="10pt", align="auto")
-        style_2 = style.CellStyle(align="bottom")
+        style_1 = style.CellStyleForCell(inset="10pt", align="auto")
+        style_2 = style.CellStyleForCell(align="bottom")
 
         merged_style = style_1 | style_2
 
@@ -15,8 +30,8 @@ class TestMergeStyles:
         assert merged_style.align == "bottom"
 
     def test_merge_text_style(self):
-        style_1 = style.TextStyle(size="20pt", fill="red")
-        style_2 = style.TextStyle(fill="blue")
+        style_1 = style.TextStyleForCell(size="20pt", fill="red")
+        style_2 = style.TextStyleForCell(fill="blue")
 
         merged_style = style_1 | style_2
 
@@ -33,13 +48,15 @@ class TestApplyStyle:
 
     def test_apply_no_style_blank_stylers(self):
         content = "Test content"
-        style_holder = style.StyleHolder(cell=style.CellStyle(), text=style.TextStyle())
+        style_holder = style.StyleHolder(
+            cell=style.CellStyleForCell(), text=style.TextStyleForCell()
+        )
 
         assert style_holder.to_typst(content) == snapshot("[Test content],")
 
     def test_apply_cell_style(self):
         content = "Test content"
-        cell_style = style.CellStyle(align="right")
+        cell_style = style.CellStyleForCell(align="right")
         style_holder = style.StyleHolder(cell=cell_style)
 
         assert style_holder.to_typst(content) == snapshot("""\
@@ -51,7 +68,7 @@ table.cell(
 
     def test_apply_text_size_style(self):
         content = "Test content"
-        text_style = style.TextStyle(size="20pt")
+        text_style = style.TextStyleForCell(size="20pt")
         style_holder = style.StyleHolder(text=text_style)
 
         assert style_holder.to_typst(content) == snapshot("""\
@@ -62,7 +79,7 @@ text(
 
     def test_apply_text_fill_style(self):
         content = "Test content"
-        text_style = style.TextStyle(fill="red")
+        text_style = style.TextStyleForCell(fill="red")
         style_holder = style.StyleHolder(text=text_style)
 
         assert style_holder.to_typst(content) == snapshot("""\
@@ -133,6 +150,48 @@ class TestStyleBody:
         result = table.to_typst()
 
         assert result == external("uuid:fade75d3-ba9c-4836-b955-7edf2296a004.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_body_based_on_expr(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_style(
+                text=style.TextStyle(
+                    fill=nw.when(nw.col("int") < 100).then(nw.lit("blue")).otherwise(nw.lit("red"))
+                ),
+                cell=style.CellStyle(
+                    align=nw.when(nw.col("int") < 100)
+                    .then(nw.lit("right"))
+                    .otherwise(nw.lit("left"))
+                ),
+                locator=locators.LocBody(),
+            )
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:efe8cbeb-53ef-4e0a-8424-c744bb08ba55.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_body_based_on_list(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_style(
+                text=style.TextStyle(fill=["red", "blue", "red", "yellow", "purple"]),
+                cell=style.CellStyle(align=["left", "right", "top", "bottom", "horizon"]),
+                locator=locators.LocBody(),
+            )
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:3d67d5ea-6872-42c0-a4b8-92b16fc18398.typ")
 
         warnings = table_check(result)
 

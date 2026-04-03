@@ -4,8 +4,10 @@ import typing as t
 from dataclasses import asdict, dataclass, fields
 from textwrap import indent
 
+import narwhals as nw
+
 from typ_tables.escape import Typst, escape_value
-from typ_tables.ttypes import Alignment, Auto
+from typ_tables.ttypes import Alignment, Auto, Data
 
 Relative: t.TypeAlias = str
 
@@ -52,13 +54,8 @@ CELL_PROPERTY_INDENT = " " * 2
 
 
 @dataclass
-class TextStyle:
-    """Text-level style properties applied to table cell content.
-
-    Attributes:
-        size: Typst text size expression (for example `"10pt"`).
-        fill: Typst text fill expression (for example `"red"`).
-    """
+class TextStyleForCell:
+    """Text style for an individual cell in a table."""
 
     size: str | None = None
     fill: str | None = None
@@ -96,7 +93,7 @@ class TextStyle:
         Returns:
             A merged `TextStyle` instance.
         """
-        if not isinstance(value, TextStyle):  # pragma: no cover
+        if not isinstance(value, type(self)):  # pragma: no cover
             return NotImplemented
 
         new_text_style = {}
@@ -109,14 +106,53 @@ class TextStyle:
         return type(self)(**new_text_style)
 
 
+class _DataclassInstance(t.Protocol):
+    __dataclass_fields__: t.ClassVar[dict[str, t.Any]]
+
+
+def _resolve_style_to_list_of_styles(
+    instance: _DataclassInstance, data: Data
+) -> dict[str, list[t.Any]]:
+    n_rows = len(data)
+    resolved_fields: dict[str, list[t.Any]] = {}
+    for field in fields(instance):
+        name = field.name
+        value = getattr(instance, name)
+        if isinstance(value, nw.Expr):
+            result = data.select(value)
+            values = result[result.columns[0]].to_list()
+            resolved_fields[name] = values
+        elif isinstance(value, list):
+            resolved_fields[name] = value
+        else:
+            resolved_fields[name] = [value] * n_rows
+    return resolved_fields
+
+
 @dataclass
-class CellStyle:
-    """Cell-level style properties applied with `table.cell(...)`.
+class TextStyle:
+    """Text-level style properties applied to table cell content.
 
     Attributes:
-        inset: Cell inset value, either a single relative value or per-side values.
-        align: Typst alignment value for the cell.
+        size: Typst text size expression (for example `"10pt"`).
+        fill: Typst text fill expression (for example `"red"`).
     """
+
+    size: str | list[str] | nw.Expr | None = None
+    fill: str | list[str] | nw.Expr | None = None
+
+    def resolve(self, data: Data) -> list[TextStyleForCell]:
+        """Resolve the text style into a list of text styles for each cell in a column."""
+        resolved_fields = _resolve_style_to_list_of_styles(self, data)
+        return [
+            TextStyleForCell(**dict(zip(resolved_fields, t, strict=True)))
+            for t in zip(*resolved_fields.values(), strict=True)
+        ]
+
+
+@dataclass
+class CellStyleForCell:
+    """Cell style for an individual cell in a table."""
 
     inset: Relative | Sides | None = None
     align: Auto | Alignment | None = None
@@ -159,7 +195,7 @@ class CellStyle:
         Returns:
             A merged `CellStyle` instance.
         """
-        if not isinstance(value, CellStyle):  # pragma: no cover
+        if not isinstance(value, type(self)):  # pragma: no cover
             return NotImplemented
 
         new_cell_style = {}
@@ -173,6 +209,27 @@ class CellStyle:
 
 
 @dataclass
+class CellStyle:
+    """Text-level style properties applied to table cell content.
+
+    Attributes:
+        size: Typst text size expression (for example `"10pt"`).
+        fill: Typst text fill expression (for example `"red"`).
+    """
+
+    inset: Relative | Sides | list[Relative | Sides] | nw.Expr | None = None
+    align: Auto | Alignment | list[Auto | Alignment] | nw.Expr | None = None
+
+    def resolve(self, data: Data) -> list[CellStyleForCell]:
+        """Resolve the cell style into a list of cell styles for each cell in a column."""
+        resolved_fields = _resolve_style_to_list_of_styles(self, data)
+        return [
+            CellStyleForCell(**dict(zip(resolved_fields, t, strict=True)))
+            for t in zip(*resolved_fields.values(), strict=True)
+        ]
+
+
+@dataclass
 class StyleHolder:
     """Container for composing text and cell style layers.
 
@@ -181,8 +238,8 @@ class StyleHolder:
         cell: Optional cell-level style settings.
     """
 
-    text: TextStyle | None = None
-    cell: CellStyle | None = None
+    text: TextStyleForCell | None = None
+    cell: CellStyleForCell | None = None
 
     def to_typst(self, body: str | Typst, colspan: int | None = None) -> str:
         """Render a value into a fully styled Typst cell snippet.

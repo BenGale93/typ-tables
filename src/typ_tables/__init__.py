@@ -16,7 +16,7 @@ from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables.stub import Stub
-from typ_tables.style import CellStyle, StyleHolder, TextStyle
+from typ_tables.style import CellStyle, CellStyleForCell, StyleHolder, TextStyle
 
 HEADER_STROKE = "1.2pt"
 
@@ -39,7 +39,7 @@ class Heading:
         _subtitle: Optional heading subtitle text or raw Typst.
     """
 
-    DEFAULT_STYLE = StyleHolder(cell=CellStyle(align="center"))
+    DEFAULT_STYLE = StyleHolder(cell=CellStyleForCell(align="center"))
 
     _title: str | Typst | None = None
     _subtitle: str | Typst | None = None
@@ -227,7 +227,8 @@ class TypData:
         header_style = StyleHolder()
         for style_info in self.styles:
             if isinstance(style_info.locname, locators.LocHeader):
-                header_style = style_info.style
+                # Ideally we want to guarantee there is only one here.
+                header_style = style_info.style[0]
 
         formatted_title = self.heading.to_typst(n_col, header_style)
 
@@ -424,9 +425,18 @@ class TypTable:
         Returns:
             The current table instance for chaining.
         """
-        self._typ_data.styles.append(
-            utils.StyleInfo(locname=locator, style=StyleHolder(text=text, cell=cell))
-        )
+        n_rows = len(self._df)
+
+        text_styles_for_cells = text.resolve(self._df) if text is not None else [None] * n_rows
+        cell_styles_for_cells = cell.resolve(self._df) if cell is not None else [None] * n_rows
+
+        style_holders = []
+        for text_style, cell_style in zip(
+            text_styles_for_cells, cell_styles_for_cells, strict=True
+        ):
+            style_holders.append(StyleHolder(text=text_style, cell=cell_style))
+
+        self._typ_data.styles.append(utils.StyleInfo(locname=locator, style=style_holders))
         return self
 
     # Formatting Methods ----

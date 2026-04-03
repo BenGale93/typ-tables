@@ -47,7 +47,7 @@ class TestResolveRows:
         assert location.resolve_rows(row_data, None) == [0, 1, 2, 3, 4]
 
     def test_resolve_rows_expr(self, row_data):
-        assert location.resolve_rows(row_data, (nw.col("data") < 3)) == [0, 1]  # noqa: PLR2004
+        assert location.resolve_rows(row_data, (nw.col("data") < 3)) == [0, 1]
 
     def test_resolve_rows_int(self, row_data):
         assert location.resolve_rows(row_data, 1) == [1]

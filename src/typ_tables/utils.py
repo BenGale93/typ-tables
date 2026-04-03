@@ -16,14 +16,14 @@ class StyleInfo:
     """
 
     locname: Loc
-    style: StyleHolder
+    style: list[StyleHolder]
 
 
 @dataclass
 class StylePosition:
     """List of tables cells and the style to apply to them."""
 
-    style: StyleHolder
+    style: list[StyleHolder]
     positions: list[CellPos]
 
 
@@ -35,6 +35,6 @@ def find_styles(column: str, row: int, styles: list[StylePosition]) -> StyleHold
     for style in styles:
         for pos in style.positions:
             if current_pos == pos:
-                final_style = final_style | style.style
+                final_style = final_style | style.style[row]
 
     return final_style
