@@ -10,8 +10,8 @@ from textwrap import indent
 import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
-from typ_tables import locators, ttypes, utils
-from typ_tables.boxhead import Boxhead
+from typ_tables import locators, ttypes
+from typ_tables.boxhead import Boxhead, ColInfo
 from typ_tables.constants import ROW_INDEX
 from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
@@ -257,53 +257,90 @@ class TypData:
         columns = self.boxhead.get_stub_and_default_columns()
         n_cols = len(columns)
         rows = []
-
-        body_styles = []
-        stub_styles = []
-        row_group_styles = locators.RowGroupStyles()
-        for style_info in self.styles:
-            if isinstance(style_info, locators.StyledLocBody):
-                cell_pos = style_info.resolve(data)
-                body_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
-
-            if isinstance(style_info, locators.StyledLocStub):
-                cell_pos = style_info.resolve(data, columns[0].var)
-                stub_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
-
-            if isinstance(style_info, locators.StyledLocRowGroup):
-                row_group_col = self.boxhead.get_group_column_name()
-                if row_group_col is None:
-                    warnings.warn(
-                        "Row-group style locator was used but no row-group was set.", stacklevel=2
-                    )
-                    continue
-                group_values = style_info.resolve(original_data, row_group_col)
-                row_group_styles.append(group_values, style_info.style)
+        cell_styles = self._build_cell_style_index(data, columns)
+        row_group_styles = self._build_row_group_styles(original_data)
 
         prev_group_info = None
         ordered_index = self.stub.group_indices_map()
         for i, group_info in ordered_index:
             if group_info is not None and group_info is not prev_group_info:
-                group_cell_style = row_group_styles.get_style(group_info.group_id)
-                cell_str = group_cell_style.to_typst(group_info.name, colspan=n_cols)
-                group_row = f"table.hline(stroke: 1pt),\n {cell_str}\n table.hline(stroke : 1pt),\n"
-                rows.append(group_row)
+                rows.append(self._render_group_row(group_info, n_cols, row_group_styles))
                 prev_group_info = group_info
 
-            body_cells = []
-            for col in columns:
-                if col.col_type == "stub":
-                    cell_style = utils.find_styles(col.var, i, stub_styles)
-                else:
-                    cell_style = utils.find_styles(col.var, i, body_styles)
-                cell_content = data[i][col.var].item()
-                cell_str = cell_style.to_typst(cell_content, 1)
-                body_cells.append(cell_str)
-
-            row = " ".join(body_cells)
-            rows.extend((row, "table.hline(stroke: 0.6pt),"))
+            rows.append(self._render_data_row(data, i, columns, cell_styles))
+            rows.append("table.hline(stroke: 0.6pt),")
 
         return "\n  ".join(rows)
+
+    def _build_cell_style_index(
+        self, data: ttypes.Data, columns: list[ColInfo]
+    ) -> dict[locators.CellPos, StyleHolder]:
+        """Precompute merged styles for each addressable body cell."""
+        styles: dict[locators.CellPos, StyleHolder] = {}
+        stub_column = next((c.var for c in columns if c.col_type == "stub"), None)
+
+        for style_info in self.styles:
+            if isinstance(style_info, locators.StyledLocBody):
+                for pos in style_info.resolve(data):
+                    if pos.column == stub_column:
+                        continue
+                    current_style = styles.get(pos, StyleHolder())
+                    styles[pos] = current_style | style_info.style[pos.row]
+
+            if isinstance(style_info, locators.StyledLocStub) and stub_column is not None:
+                for pos in style_info.resolve(data, stub_column):
+                    current_style = styles.get(pos, StyleHolder())
+                    styles[pos] = current_style | style_info.style[pos.row]
+
+        return styles
+
+    def _build_row_group_styles(self, original_data: ttypes.Data) -> locators.RowGroupStyles:
+        """Collect row-group style assignments resolved against source data."""
+        row_group_styles = locators.RowGroupStyles()
+        row_group_col = self.boxhead.get_group_column_name()
+
+        for style_info in self.styles:
+            if not isinstance(style_info, locators.StyledLocRowGroup):
+                continue
+            if row_group_col is None:
+                warnings.warn(
+                    "Row-group style locator was used but no row-group was set.", stacklevel=2
+                )
+                continue
+
+            group_values = style_info.resolve(original_data, row_group_col)
+            row_group_styles.append(group_values, style_info.style)
+
+        return row_group_styles
+
+    def _render_group_row(
+        self,
+        group_info: t.Any,
+        n_cols: int,
+        row_group_styles: locators.RowGroupStyles,
+    ) -> str:
+        """Render a row-group heading with top and bottom separator lines."""
+        group_cell_style = row_group_styles.get_style(group_info.group_id)
+        cell_str = group_cell_style.to_typst(group_info.name, colspan=n_cols)
+        return f"table.hline(stroke: 1pt),\n {cell_str}\n table.hline(stroke : 1pt),\n"
+
+    def _render_data_row(
+        self,
+        data: ttypes.Data,
+        row_idx: int,
+        columns: list[ColInfo],
+        cell_styles: dict[locators.CellPos, StyleHolder],
+    ) -> str:
+        """Render a single data row using precomputed per-cell styles."""
+        body_cells = []
+        for col in columns:
+            cell_style = cell_styles.get(
+                locators.CellPos(row=row_idx, column=col.var), StyleHolder()
+            )
+            cell_content = data[row_idx][col.var].item()
+            body_cells.append(cell_style.to_typst(cell_content, 1))
+
+        return " ".join(body_cells)
 
 
 TABLE_TEMPLATE = Template("""#table(

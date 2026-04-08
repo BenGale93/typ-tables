@@ -75,7 +75,7 @@ class LocHeader:
         )
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class CellPos:
     """Class representing a cell in a DataFrame."""
 
