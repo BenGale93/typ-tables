@@ -283,8 +283,9 @@ class StyleHolder:
         body = f"[{escape_value(body)}],"
         if self.text:
             body = self.text.to_typst(body)
-        if self.cell:
-            body = self.cell.to_typst(body, colspan)
+        if self.cell or (colspan is not None and colspan > 1):
+            cell = CellStyleForCell() if self.cell is None else self.cell
+            body = cell.to_typst(body, colspan)
         return body
 
     def __or__(self, value: object) -> t.Self:

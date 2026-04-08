@@ -1,6 +1,7 @@
 """Package for creating Typst Tables from DataFrames."""
 
 import typing as t
+import warnings
 from dataclasses import dataclass, field
 from functools import cached_property
 from string import Template
@@ -227,8 +228,7 @@ class TypData:
         header_style = StyleHolder()
         for style_info in self.styles:
             if isinstance(style_info, locators.StyledLocHeader):
-                # Ideally we want to guarantee there is only one here.
-                header_style = style_info.style
+                header_style = header_style | style_info.style
 
         formatted_title = self.heading.to_typst(n_col, header_style)
 
@@ -243,11 +243,12 @@ class TypData:
             f"  table.hline(stroke: {HEADER_STROKE})"
         )
 
-    def body(self, data: ttypes.Data) -> str:
+    def body(self, data: ttypes.Data, original_data: ttypes.Data) -> str:
         """Render Typst rows for table body data.
 
         Args:
             data: Formatted data with table row index intact.
+            original_data: Unformatted data.
 
         Returns:
             Typst string containing data rows and horizontal rules, including
@@ -258,33 +259,34 @@ class TypData:
         rows = []
 
         body_styles = []
-        for style_info in self.styles:
-            if not isinstance(style_info, locators.StyledLocBody):
-                continue
-
-            cell_pos = style_info.resolve(data)
-            body_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
-
         stub_styles = []
-        if columns[0].col_type == "stub":
-            for style_info in self.styles:
-                if not isinstance(style_info, locators.StyledLocStub):
-                    continue
+        row_group_styles = locators.RowGroupStyles()
+        for style_info in self.styles:
+            if isinstance(style_info, locators.StyledLocBody):
+                cell_pos = style_info.resolve(data)
+                body_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
 
+            if isinstance(style_info, locators.StyledLocStub):
                 cell_pos = style_info.resolve(data, columns[0].var)
                 stub_styles.append(utils.StylePosition(style=style_info.style, positions=cell_pos))
+
+            if isinstance(style_info, locators.StyledLocRowGroup):
+                row_group_col = self.boxhead.get_group_column_name()
+                if row_group_col is None:
+                    warnings.warn(
+                        "Row-group style locator was used but no row-group was set.", stacklevel=2
+                    )
+                    continue
+                group_values = style_info.resolve(original_data, row_group_col)
+                row_group_styles.append(group_values, style_info.style)
 
         prev_group_info = None
         ordered_index = self.stub.group_indices_map()
         for i, group_info in ordered_index:
             if group_info is not None and group_info is not prev_group_info:
-                group_row = " ".join(
-                    [
-                        "table.hline(stroke: 1pt),\n",
-                        f"table.cell(colspan: {n_cols}, [{escape_value(group_info.name)}]),\n",
-                        "table.hline(stroke : 1pt),\n",
-                    ]
-                )
+                group_cell_style = row_group_styles.get_style(group_info.group_id)
+                cell_str = group_cell_style.to_typst(group_info.name, colspan=n_cols)
+                group_row = f"table.hline(stroke: 1pt),\n {cell_str}\n table.hline(stroke : 1pt),\n"
                 rows.append(group_row)
                 prev_group_info = group_info
 
@@ -325,11 +327,12 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
         A complete Typst table string, optionally wrapped in `#figure`.
     """
     data = typ.format_df(original_data).drop(ROW_INDEX)
+    typ.stub.update_group_row_labels(data, typ.boxhead)
 
     columns = typ.columns()
     alignment = typ.alignment()
     header = typ.header()
-    body = typ.body(data)
+    body = typ.body(data, original_data)
 
     table_str = TABLE_TEMPLATE.substitute(
         columns=columns,

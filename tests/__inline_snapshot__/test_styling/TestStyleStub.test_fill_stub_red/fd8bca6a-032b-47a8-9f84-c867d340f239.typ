@@ -15,7 +15,10 @@
 table.header([], [count]),
   table.hline(stroke: 1.2pt),
   table.hline(stroke: 1pt),
- table.cell(colspan: 2, [group\_a]),
+ table.cell(
+  colspan: 2,
+  [group\_a],
+),
  table.hline(stroke : 1pt),
 
   text(
@@ -27,7 +30,10 @@ table.header([], [count]),
 )[banana], [3],
   table.hline(stroke: 0.6pt),
   table.hline(stroke: 1pt),
- table.cell(colspan: 2, [group\_b]),
+ table.cell(
+  colspan: 2,
+  [group\_b],
+),
  table.hline(stroke : 1pt),
 
   text(

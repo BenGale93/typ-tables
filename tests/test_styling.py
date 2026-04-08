@@ -291,3 +291,94 @@ class TestStyleStub:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestStyleRowGroup:
+    def test_fill_row_group_red(self, table_check, group_data) -> None:
+        table = (
+            TypTable(group_data, rowname_col="fruit", groupname_col="group")
+            .tab_style(
+                text=style.TextStyle(fill="red"),
+                locator=locators.LocRowGroup(),
+            )
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:4345a4f0-2d5a-4d89-af4c-c30d7b6e257a.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_specific_row_group_red(self, table_check, group_data) -> None:
+        table = (
+            TypTable(group_data, rowname_col="fruit", groupname_col="group")
+            .tab_style(
+                text=style.TextStyle(fill="red"),
+                locator=locators.LocRowGroup(group="group_a"),
+            )
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:6d836139-467f-490c-bb31-d179b2864e71.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_specific_row_groups_red(self, table_check, group_data) -> None:
+        table = (
+            TypTable(group_data, rowname_col="fruit", groupname_col="group")
+            .tab_style(
+                text=style.TextStyle(fill="red"),
+                locator=locators.LocRowGroup(group=["group_b"]),
+            )
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:94bd8900-5432-4e14-8fe2-cdbdcfabfb35.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_row_groups_red_and_format(self, table_check, group_data) -> None:
+        table = (
+            TypTable(group_data, rowname_col="fruit", groupname_col="group")
+            .tab_style(
+                text=style.TextStyle(fill="red"),
+                locator=locators.LocRowGroup(),
+            )
+            .fmt(columns="group", f_string="${}$")
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:b393a321-59cd-43a5-8cb5-3c9ed3101014.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_style_row_group_none_set(self, table_check, group_data) -> None:
+        table = (
+            TypTable(group_data)
+            .tab_style(
+                text=style.TextStyle(fill="red"),
+                locator=locators.LocRowGroup(),
+            )
+            .tab_header("Table Header")
+        )
+        with pytest.warns(
+            UserWarning, match=r"Row-group style locator was used but no row-group was set."
+        ):
+            result = table.to_typst()
+
+        assert result == external("uuid:907dfd32-eed8-4d8f-88a7-99cb7647ba55.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0

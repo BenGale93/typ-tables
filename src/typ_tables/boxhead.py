@@ -56,6 +56,13 @@ class Boxhead(list[ColInfo]):
             if new_label is not None:
                 col.column_label = new_label
 
+    def get_group_column_name(self) -> str | None:
+        """Gets the default columns."""
+        row_group_cols = self._get_columns_of_type("row_group")
+        if len(row_group_cols) == 0:
+            return None
+        return row_group_cols[0].var
+
     def get_default_columns(self) -> list[ColInfo]:
         """Gets the default columns."""
         return self._get_columns_of_type("default")

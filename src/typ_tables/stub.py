@@ -7,6 +7,9 @@ import narwhals as nw
 
 from typ_tables import constants, ttypes
 
+if t.TYPE_CHECKING:
+    from typ_tables.boxhead import Boxhead
+
 
 @dataclass
 class RowInfo:
@@ -127,3 +130,14 @@ class Stub:
 
     def group_indices_map(self) -> list[tuple[int, GroupRowInfo | None]]:  # noqa: D102
         return self.group_rows.indices_map(len(self.rows))
+
+    def update_group_row_labels(self, data: ttypes.Data, boxhead: "Boxhead") -> None:
+        """Updates the group row labels based on the formatted data."""
+        rowgroup_var = boxhead.get_group_column_name()
+        if rowgroup_var is None:
+            return
+
+        for group_row in self.group_rows:
+            first_index = group_row.indices[0]
+            cell_content = data.item(row=first_index, column=rowgroup_var)
+            group_row.group_label = str(cell_content)

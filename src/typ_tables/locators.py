@@ -1,7 +1,9 @@
 """Module defining styling locators."""
 
 import typing as t
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+import narwhals as nw
 
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns, resolve_rows
 from typ_tables.style import CellStyle, StyleHolder, TextStyle
@@ -25,7 +27,17 @@ class Loc(t.Protocol):
         data: Data,
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
-    ) -> StyledLoc: ...
+    ) -> StyledLoc:
+        """Apply text/cell styles and return a styled locator.
+
+        Args:
+            data: Source data used for resolving selector-driven styles.
+            text: Optional text style selector for the target location.
+            cell: Optional cell style selector for the target location.
+
+        Returns:
+            Styled locator instance for the specific location type.
+        """
 
 
 @dataclass
@@ -45,6 +57,16 @@ class LocHeader:
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocHeader:
+        """Build a styled header locator.
+
+        Args:
+            data: Source data used for style resolution.
+            text: Optional text style selector for header cells.
+            cell: Optional cell style selector for header cells.
+
+        Returns:
+            Styled header locator with resolved style values.
+        """
         text_style_for_cell = text.get_single() if text is not None else None
         cell_style_for_cell = cell.get_single() if cell is not None else None
 
@@ -90,6 +112,16 @@ class LocBody:
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocBody:
+        """Build a styled body locator.
+
+        Args:
+            data: Source data used for row-level style resolution.
+            text: Optional text style selector for body rows.
+            cell: Optional cell style selector for body rows.
+
+        Returns:
+            Styled body locator with per-row style holders.
+        """
         n_rows = len(data)
         text_styles_for_cells = text.resolve(data) if text is not None else [None] * n_rows
         cell_styles_for_cells = cell.resolve(data) if cell is not None else [None] * n_rows
@@ -128,6 +160,16 @@ class LocStub:
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocStub:
+        """Build a styled stub locator.
+
+        Args:
+            data: Source data used for row-level style resolution.
+            text: Optional text style selector for stub rows.
+            cell: Optional cell style selector for stub rows.
+
+        Returns:
+            Styled stub locator with per-row style holders.
+        """
         n_rows = len(data)
         text_styles_for_cells = text.resolve(data) if text is not None else [None] * n_rows
         cell_styles_for_cells = cell.resolve(data) if cell is not None else [None] * n_rows
@@ -138,3 +180,99 @@ class LocStub:
             style_holders.append(StyleHolder(text=text_style, cell=cell_style))
 
         return StyledLocStub(style=style_holders, rows=self.rows)
+
+
+Groups = list[str]
+
+
+@dataclass
+class StyledLocRowGroup(StyledLoc):
+    """Styled Marker locator selecting the table row groups."""
+
+    style: StyleHolder
+    group: str | list[str] | None = None
+
+    def resolve(self, data: Data, group_key: str) -> Groups:
+        """Resolve which cells in data to apply the style to."""
+        unique_values = [
+            str(v) for v in data.select(nw.col(group_key).unique())[group_key].to_list()
+        ]
+        if self.group is None:
+            groups = unique_values
+        elif isinstance(self.group, list):
+            groups = [u for u in unique_values if u in self.group]
+        else:
+            groups = [u for u in unique_values if u == self.group]
+
+        return groups
+
+
+@dataclass
+class LocRowGroup:
+    """Marker locator selecting the table row groups."""
+
+    group: str | list[str] | None = None
+
+    def _apply_style(
+        self,
+        data: Data,  # noqa: ARG002
+        text: TextStyle | None = None,
+        cell: CellStyle | None = None,
+    ) -> StyledLocRowGroup:
+        """Build a styled row-group locator.
+
+        Args:
+            data: Source data used for style resolution.
+            text: Optional text style selector for row-group labels.
+            cell: Optional cell style selector for row-group labels.
+
+        Returns:
+            Styled row-group locator with resolved style values.
+        """
+        text_style_for_cell = text.get_single() if text is not None else None
+        cell_style_for_cell = cell.get_single() if cell is not None else None
+
+        return StyledLocRowGroup(
+            style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
+            group=self.group,
+        )
+
+
+@dataclass
+class StyleForGroups:
+    """Style mapping for a set of row-group identifiers."""
+
+    groups: Groups
+    style: StyleHolder
+
+
+@dataclass
+class RowGroupStyles:
+    """Container for row-group style mappings and style resolution."""
+
+    styles: list[StyleForGroups] = field(default_factory=list)
+
+    def append(self, groups: Groups, style: StyleHolder) -> None:
+        """Add a style assignment for one or more row groups.
+
+        Args:
+            groups: Row-group identifiers to associate with `style`.
+            style: Style to apply when a group identifier matches.
+        """
+        self.styles.append(StyleForGroups(groups, style))
+
+    def get_style(self, group_id: str) -> StyleHolder:
+        """Resolve the merged style for a given row-group identifier.
+
+        Args:
+            group_id: Row-group identifier to resolve.
+
+        Returns:
+            Combined style from all matching assignments.
+        """
+        group_cell_style = StyleHolder()
+        for style_for_groups in self.styles:
+            if group_id in style_for_groups.groups:
+                group_cell_style = group_cell_style | style_for_groups.style
+
+        return group_cell_style
