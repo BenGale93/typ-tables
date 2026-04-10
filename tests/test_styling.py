@@ -2,6 +2,7 @@ from dataclasses import fields
 
 import narwhals as nw
 import narwhals.selectors as ncs
+import polars as pl
 import pytest
 from inline_snapshot import external, snapshot
 
@@ -382,3 +383,74 @@ class TestStyleRowGroup:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+def test_apply_multiple_text_styles(table_check, basic_data) -> None:
+    table = (
+        TypTable(basic_data)
+        .tab_style(
+            text=style.TextStyle(fill="red"),
+            locator=locators.LocBody(rows=0, columns="string"),
+        )
+        .tab_style(
+            text=style.TextStyle(font="FreeMono"),
+            locator=locators.LocBody(rows=1, columns="string"),
+        )
+        .tab_style(
+            text=style.TextStyle(style="italic"),
+            locator=locators.LocBody(rows=2, columns="string"),
+        )
+        .tab_style(
+            text=style.TextStyle(weight="extrabold"),
+            locator=locators.LocBody(rows=3, columns="string"),
+        )
+        .tab_style(
+            text=style.TextStyle(weight=150),
+            locator=locators.LocBody(rows=4, columns="string"),
+        )
+        .tab_style(
+            text=style.TextStyle(stretch="200%"),
+            locator=locators.LocBody(rows=0, columns="int"),
+        )
+        .tab_style(
+            text=style.TextStyle(stroke="2pt + red"),
+            locator=locators.LocBody(rows=1, columns="int"),
+        )
+        .tab_style(
+            text=style.TextStyle(tracking="1.5pt"),
+            locator=locators.LocBody(rows=2, columns="int"),
+        )
+        .tab_style(
+            text=style.TextStyle(spacing="200%"),
+            locator=locators.LocHeader(),
+        )
+        .tab_header("Table Header")
+    )
+
+    result = table.to_typst()
+
+    assert result == external("uuid:6b8ceccf-a7e6-417d-aead-f27ade6af900.typ")
+
+    warnings = table_check(result)
+
+    assert len(warnings) == 0
+
+
+def test_test_fractions(table_check) -> None:
+    data = pl.DataFrame({"Fractions": ["1/2", "1/3"]})
+    table = (
+        TypTable(data)
+        .tab_style(
+            text=style.TextStyle(fractions=True),
+            locator=locators.LocBody(),
+        )
+        .tab_header("Table Header")
+    )
+
+    result = table.to_typst()
+
+    assert result == external("uuid:5447bc09-92ed-4a1e-babb-2719b59a54d2.typ")
+
+    warnings = table_check(result)
+
+    assert len(warnings) == 0

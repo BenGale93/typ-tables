@@ -1,7 +1,7 @@
 """Module for specifying Typst cell styling."""
 
 import typing as t
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from textwrap import indent
 
 import narwhals as nw
@@ -9,7 +9,7 @@ import narwhals as nw
 from typ_tables.escape import Typst, escape_value
 from typ_tables.ttypes import Alignment, Auto, Data
 
-Relative: t.TypeAlias = str
+Relative = str
 
 
 @dataclass(slots=True)
@@ -52,13 +52,38 @@ class Sides:
 
 CELL_PROPERTY_INDENT = " " * 2
 
+Length = str
+FontStyle = t.Literal["normal", "italic", "oblique"]
+FontWeight = (
+    t.Literal[
+        "thin", "extralight", "light", "regular", "medium", "semibold", "bold", "extrabold", "black"
+    ]
+    | int
+)
+
+
+def _to_typst(v: object, *, wrap: bool = False) -> object:
+    if wrap and isinstance(v, str):
+        return f'"{_to_typst(v, wrap=False)}"'
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    return v
+
 
 @dataclass
 class TextStyleForCell:
     """Text style for an individual cell in a table."""
 
-    size: str | None = None
+    font: str | None = field(default=None, metadata={"wrap": True})
+    style: FontStyle | None = field(default=None, metadata={"wrap": True})
+    weight: FontWeight | None = field(default=None, metadata={"wrap": True})
+    stretch: str | None = None
+    size: Length | None = None
     fill: str | None = None
+    stroke: str | None = None
+    tracking: Length | None = None
+    spacing: Relative | None = None
+    fractions: bool | None = None
 
     def to_typst(self, body: str) -> str:
         """Wrap a body string in a Typst `text(...)` call when configured.
@@ -72,11 +97,16 @@ class TextStyleForCell:
         """
         text_snippets = ["text("]
 
-        for field in fields(self):
-            name = field.name
+        for f in fields(self):
+            name = f.name
             value = getattr(self, name)
-            if value:
-                text_snippets.append(indent(f"{name}: {value},", CELL_PROPERTY_INDENT))
+            if value is None:
+                continue
+
+            wrap = "wrap" in f.metadata
+            v = _to_typst(value, wrap=wrap)
+
+            text_snippets.append(indent(f"{name}: {v},", CELL_PROPERTY_INDENT))
 
         if len(text_snippets) == 1:
             return body
@@ -97,8 +127,8 @@ class TextStyleForCell:
             return NotImplemented
 
         new_text_style = {}
-        for field in fields(self):
-            name = field.name
+        for f in fields(self):
+            name = f.name
             current = getattr(self, name)
             new = getattr(value, name)
             new_text_style[name] = new if new is not None else current
@@ -115,8 +145,8 @@ def _resolve_style_to_list_of_styles(
 ) -> dict[str, list[t.Any]]:
     n_rows = len(data)
     resolved_fields: dict[str, list[t.Any]] = {}
-    for field in fields(instance):
-        name = field.name
+    for f in fields(instance):
+        name = f.name
         value = getattr(instance, name)
         if isinstance(value, nw.Expr):
             result = data.select(value)
@@ -131,8 +161,8 @@ def _resolve_style_to_list_of_styles(
 
 def _resolve_style_to_single_style(instance: _DataclassInstance) -> dict[str, t.Any]:
     resolved_fields: dict[str, t.Any] = {}
-    for field in fields(instance):
-        name = field.name
+    for f in fields(instance):
+        name = f.name
         value = getattr(instance, name)
         if isinstance(value, (list, nw.Expr)):
             msg = f"Expected only scalars in style field: `{name}` for this location."
@@ -143,15 +173,18 @@ def _resolve_style_to_single_style(instance: _DataclassInstance) -> dict[str, t.
 
 @dataclass
 class TextStyle:
-    """Text-level style properties applied to table cell content.
+    """Text-level style properties applied to table cell content."""
 
-    Attributes:
-        size: Typst text size expression (for example `"10pt"`).
-        fill: Typst text fill expression (for example `"red"`).
-    """
-
-    size: str | list[str] | nw.Expr | None = None
+    font: str | list[str] | nw.Expr | None = None
+    style: FontStyle | list[FontStyle] | nw.Expr | None = None
+    weight: FontWeight | list[FontWeight] | nw.Expr | None = None
+    stretch: str | list[str] | nw.Expr | None = None
+    size: Length | list[Length] | nw.Expr | None = None
     fill: str | list[str] | nw.Expr | None = None
+    stroke: str | list[str] | nw.Expr | None = None
+    tracking: Length | list[Length] | nw.Expr | None = None
+    spacing: Relative | list[Relative] | nw.Expr | None = None
+    fractions: bool | list[bool] | nw.Expr | None = None
 
     def resolve(self, data: Data) -> list[TextStyleForCell]:
         """Resolve the text style into a list of text styles for each cell in a column."""
@@ -192,8 +225,8 @@ class CellStyleForCell:
         if colspan is not None:
             cell_snippets.append(indent(f"colspan: {colspan},", CELL_PROPERTY_INDENT))
 
-        for field in fields(self):
-            name = field.name
+        for f in fields(self):
+            name = f.name
             value = getattr(self, name)
             if value:
                 cell_snippets.append(indent(f"{name}: {value},", CELL_PROPERTY_INDENT))
@@ -219,8 +252,8 @@ class CellStyleForCell:
             return NotImplemented
 
         new_cell_style = {}
-        for field in fields(self):
-            name = field.name
+        for f in fields(self):
+            name = f.name
             current = getattr(self, name)
             new = getattr(value, name)
             new_cell_style[name] = new if new is not None else current
@@ -230,12 +263,7 @@ class CellStyleForCell:
 
 @dataclass
 class CellStyle:
-    """Text-level style properties applied to table cell content.
-
-    Attributes:
-        size: Typst text size expression (for example `"10pt"`).
-        fill: Typst text fill expression (for example `"red"`).
-    """
+    """Text-level style properties applied to table cell content."""
 
     inset: Relative | Sides | list[Relative | Sides] | nw.Expr | None = None
     align: Auto | Alignment | list[Auto | Alignment] | nw.Expr | None = None
