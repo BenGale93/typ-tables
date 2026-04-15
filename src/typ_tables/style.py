@@ -264,14 +264,24 @@ class CellStyleForCell:
         return type(self)(**new_cell_style)
 
 
+Inset = Relative | Sides | dict[str, str]
+
+
 @dataclass
 class CellStyle:
     """Cell-level style properties applied to table cell content."""
 
-    inset: Relative | Sides | list[Relative | Sides] | nw.Expr | None = None
+    inset: Inset | list[Inset] | nw.Expr | None = None
     align: Auto | Alignment | list[Auto | Alignment] | nw.Expr | None = None
     fill: Fill | list[Fill] | nw.Expr | None = None
     stroke: Stroke | list[Stroke] | nw.Expr | None = None
+
+    def __post_init__(self) -> None:
+        """Coerces types."""
+        if isinstance(self.inset, dict):
+            self.inset = Sides(**self.inset)
+        elif isinstance(self.inset, list):
+            self.inset = [Sides(**i) if isinstance(i, dict) else i for i in self.inset]
 
     def resolve(self, data: Data) -> list[CellStyleForCell]:
         """Resolve the cell style into a list of cell styles for each cell in a column."""

@@ -91,6 +91,29 @@ text(
 """)
 
 
+class TestCellStyle:
+    def test_coerce_inset_dict(self):
+        cell_style = style.CellStyle(inset={"x": "10pt", "y": "20pt"})
+
+        assert isinstance(cell_style.inset, style.Sides)
+        assert cell_style.inset.x == "10pt"
+        assert cell_style.inset.y == "20pt"
+
+    def test_coerce_inset_list_dict(self):
+        cell_style = style.CellStyle(inset=[{"x": "10pt", "y": "20pt"}, {"top": "30pt"}])
+
+        assert isinstance(cell_style.inset, list)
+        sides_a = cell_style.inset[0]
+        sides_b = cell_style.inset[1]
+
+        assert isinstance(sides_a, style.Sides)
+        assert sides_a.x == "10pt"
+        assert sides_a.y == "20pt"
+
+        assert isinstance(sides_b, style.Sides)
+        assert sides_b.top == "30pt"
+
+
 class TestStyleHeader:
     def test_align_to_right(self, table_check, basic_data) -> None:
         table = (
