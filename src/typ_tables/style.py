@@ -10,6 +10,16 @@ from typ_tables.escape import Typst, escape_value
 from typ_tables.ttypes import Alignment, Auto, Data
 
 Relative = str
+Fill = str
+Length = str
+Stroke = str
+FontStyle = t.Literal["normal", "italic", "oblique"]
+FontWeight = (
+    t.Literal[
+        "thin", "extralight", "light", "regular", "medium", "semibold", "bold", "extrabold", "black"
+    ]
+    | int
+)
 
 
 @dataclass(slots=True)
@@ -52,15 +62,6 @@ class Sides:
 
 CELL_PROPERTY_INDENT = " " * 2
 
-Length = str
-FontStyle = t.Literal["normal", "italic", "oblique"]
-FontWeight = (
-    t.Literal[
-        "thin", "extralight", "light", "regular", "medium", "semibold", "bold", "extrabold", "black"
-    ]
-    | int
-)
-
 
 def _to_typst(v: object, *, wrap: bool = False) -> object:
     if wrap and isinstance(v, str):
@@ -79,8 +80,8 @@ class TextStyleForCell:
     weight: FontWeight | None = field(default=None, metadata={"wrap": True})
     stretch: str | None = None
     size: Length | None = None
-    fill: str | None = None
-    stroke: str | None = None
+    fill: Fill | None = None
+    stroke: Stroke | None = None
     tracking: Length | None = None
     spacing: Relative | None = None
     fractions: bool | None = None
@@ -180,8 +181,8 @@ class TextStyle:
     weight: FontWeight | list[FontWeight] | nw.Expr | None = None
     stretch: str | list[str] | nw.Expr | None = None
     size: Length | list[Length] | nw.Expr | None = None
-    fill: str | list[str] | nw.Expr | None = None
-    stroke: str | list[str] | nw.Expr | None = None
+    fill: Fill | list[Fill] | nw.Expr | None = None
+    stroke: Stroke | list[Stroke] | nw.Expr | None = None
     tracking: Length | list[Length] | nw.Expr | None = None
     spacing: Relative | list[Relative] | nw.Expr | None = None
     fractions: bool | list[bool] | nw.Expr | None = None
@@ -209,6 +210,8 @@ class CellStyleForCell:
 
     inset: Relative | Sides | None = None
     align: Auto | Alignment | None = None
+    fill: Fill | None = None
+    stroke: Stroke | None = None
 
     def to_typst(self, body: str, colspan: int | None = None) -> str:
         """Wrap a body string in a Typst `table.cell(...)` call when configured.
@@ -263,10 +266,12 @@ class CellStyleForCell:
 
 @dataclass
 class CellStyle:
-    """Text-level style properties applied to table cell content."""
+    """Cell-level style properties applied to table cell content."""
 
     inset: Relative | Sides | list[Relative | Sides] | nw.Expr | None = None
     align: Auto | Alignment | list[Auto | Alignment] | nw.Expr | None = None
+    fill: Fill | list[Fill] | nw.Expr | None = None
+    stroke: Stroke | list[Stroke] | nw.Expr | None = None
 
     def resolve(self, data: Data) -> list[CellStyleForCell]:
         """Resolve the cell style into a list of cell styles for each cell in a column."""

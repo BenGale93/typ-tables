@@ -454,3 +454,34 @@ def test_test_fractions(table_check) -> None:
     warnings = table_check(result)
 
     assert len(warnings) == 0
+
+
+def test_apply_multiple_cell_styles(table_check, basic_data) -> None:
+    table = (
+        TypTable(basic_data)
+        .tab_style(
+            cell=style.CellStyle(inset="1pt"),
+            locator=locators.LocBody(rows=0, columns="string"),
+        )
+        .tab_style(
+            cell=style.CellStyle(align="right"),
+            locator=locators.LocBody(rows=1, columns="string"),
+        )
+        .tab_style(
+            cell=style.CellStyle(fill="red"),
+            locator=locators.LocBody(rows=2, columns="string"),
+        )
+        .tab_style(
+            cell=style.CellStyle(stroke="2pt + blue"),
+            locator=locators.LocBody(rows=3, columns="string"),
+        )
+        .tab_header("Table Header")
+    )
+
+    result = table.to_typst()
+
+    assert result == external("uuid:799a8d78-754f-4475-ae73-a067ac194699.typ")
+
+    warnings = table_check(result)
+
+    assert len(warnings) == 0
