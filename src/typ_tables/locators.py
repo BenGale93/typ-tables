@@ -250,6 +250,8 @@ class StyleForGroups:
 class RowGroupStyles:
     """Container for row-group style mappings and style resolution."""
 
+    DEFAULT_STYLE = StyleHolder(cell=CellStyleForCell(stroke="(top: 1pt, bottom: 1pt)"))
+
     styles: list[StyleForGroups] = field(default_factory=list)
 
     def append(self, groups: Groups, style: StyleHolder) -> None:
@@ -270,7 +272,7 @@ class RowGroupStyles:
         Returns:
             Combined style from all matching assignments.
         """
-        group_cell_style = StyleHolder(cell=CellStyleForCell(stroke="(bottom: 1pt)"))
+        group_cell_style = self.DEFAULT_STYLE
         for style_for_groups in self.styles:
             if group_id in style_for_groups.groups:
                 group_cell_style = group_cell_style | style_for_groups.style

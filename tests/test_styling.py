@@ -40,6 +40,14 @@ class TestMergeStyles:
         assert merged_style.size == "20pt"
         assert merged_style.fill == "blue"
 
+    def test_merge_text_style_with_sides(self):
+        style_1 = style.TextStyleForCell(stroke=style.Sides(bottom="1pt"))
+        style_2 = style.TextStyleForCell(stroke=style.Sides(right="1pt"))
+
+        merged_style = style_1 | style_2
+
+        assert merged_style.stroke == style.Sides(right="1pt", bottom="1pt")
+
     def test_merge_style_holder_none_is_replaced(self):
         holder_1 = style.StyleHolder(text=None, cell=None)
         holder_2 = style.StyleHolder(

@@ -7,20 +7,36 @@
     top: none
   ),
   align: (auto, auto),
-  table.vline(x: 1, start: 1),
-table.header([Fruits], [count]),
+  table.header([Fruits], [count]),
   table.cell(
   colspan: 2,
-  stroke: (bottom: 1pt),
+  stroke: (top: 1pt, bottom: 1pt),
   [group\_a],
 ),
-  [apple], [10],
-  [banana], [3],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [apple],
+), [10],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [banana],
+), [3],
   table.cell(
   colspan: 2,
-  stroke: (bottom: 1pt),
+  stroke: (top: 1pt, bottom: 1pt),
   [group\_b],
 ),
-  [pear], [73],
-  [kiwi], [477],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [pear],
+), [73],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [kiwi],
+), [477],
+  table.hline(stroke: 1pt),
 )

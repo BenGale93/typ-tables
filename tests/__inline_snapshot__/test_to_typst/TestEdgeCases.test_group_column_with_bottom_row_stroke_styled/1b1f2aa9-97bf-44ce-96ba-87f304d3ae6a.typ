@@ -1,21 +1,12 @@
 #table(
   columns: 2,
   stroke: (x, y) => (
-    bottom: if y < 2 { 1.2pt } else { 0.6pt },
+    bottom: if y < 1 { 1.2pt } else { 0.6pt },
     left: none,
     right: none,
     top: none
   ),
   align: (auto, auto),
-  
-  table.header(
-    table.cell(
-      colspan: 2,
-      align: center,
-      stroke: (top: 1.2pt, bottom: 1.2pt),
-      [Table Header],
-    ),
-  ),
   table.header([], [count]),
   table.cell(
   colspan: 2,
@@ -44,7 +35,7 @@
 ), [73],
   table.cell(
   colspan: 1,
-  stroke: (right: 1pt),
+  stroke: (right: 1pt, bottom: 1pt + red),
   [kiwi],
 ), [477],
   table.hline(stroke: 1pt),

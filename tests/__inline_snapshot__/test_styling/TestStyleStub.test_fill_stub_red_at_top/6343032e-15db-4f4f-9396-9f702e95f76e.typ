@@ -16,24 +16,40 @@
       [Table Header],
     ),
   ),
-  table.vline(x: 1, start: 2),
-table.header([], [count]),
+  table.header([], [count]),
   table.cell(
   colspan: 2,
-  stroke: (bottom: 1pt),
+  stroke: (top: 1pt, bottom: 1pt),
   [group\_a],
 ),
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
   text(
-  fill: red,
-)[apple], [10],
-  [banana], [3],
+    fill: red,
+  )[apple],
+), [10],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [banana],
+), [3],
   table.cell(
   colspan: 2,
-  stroke: (bottom: 1pt),
+  stroke: (top: 1pt, bottom: 1pt),
   [group\_b],
 ),
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
   text(
-  fill: red,
-)[pear], [73],
-  [kiwi], [477],
+    fill: red,
+  )[pear],
+), [73],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [kiwi],
+), [477],
+  table.hline(stroke: 1pt),
 )

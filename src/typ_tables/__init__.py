@@ -17,7 +17,7 @@ from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables.stub import Stub
-from typ_tables.style import CellStyle, CellStyleForCell, StyleHolder, TextStyle
+from typ_tables.style import CellStyle, CellStyleForCell, Sides, StyleHolder, TextStyle
 
 TITLE_TEMPLATE = Template(
     """
@@ -138,7 +138,9 @@ class TypData:
         stubhead: Optional label for the stub header cell.
     """
 
-    DEFAULT_COLUMN_HEADER_STYLE = StyleHolder(cell=CellStyleForCell(stroke="(bottom: 1.2pt)"))
+    DEFAULT_COLUMN_HEADER_STYLE = StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
+    DEFAULT_STUB_CELL_STYLE = StyleHolder(cell=CellStyleForCell(stroke=Sides(right="1pt")))
+    DEFAULT_BODY_CELL_STYLE = StyleHolder()
 
     boxhead: Boxhead
     stub: Stub
@@ -237,13 +239,7 @@ class TypData:
 
         formatted_title = self.heading.to_typst(n_col, header_style)
 
-        if columns[0].col_type == "stub":
-            start_num = 2 if formatted_title else 1
-            vline = f"table.vline(x: 1, start: {start_num}),\n"
-        else:
-            vline = ""
-
-        return f"{formatted_title}{vline}table.header({header})"
+        return f"{formatted_title}table.header({header})"
 
     def body(self, data: ttypes.Data, original_data: ttypes.Data) -> str:
         """Render Typst rows for table body data.
@@ -270,6 +266,8 @@ class TypData:
                 prev_group_info = group_info
 
             rows.append(self._render_data_row(data, i, columns, cell_styles))
+        if group_info is not None:
+            rows.append("table.hline(stroke: 1pt),")
 
         return "\n  ".join(rows)
 
@@ -340,7 +338,11 @@ class TypData:
         """Render a single data row using precomputed per-cell styles."""
         body_cells = []
         for col in columns:
-            cell_style = cell_styles.get(
+            if col.col_type == "stub":
+                default_style = self.DEFAULT_STUB_CELL_STYLE
+            else:
+                default_style = self.DEFAULT_BODY_CELL_STYLE
+            cell_style = default_style | cell_styles.get(
                 locators.CellPos(row=row_idx, column=col.var), StyleHolder()
             )
             cell_content = data[row_idx][col.var].item()

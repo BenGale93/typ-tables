@@ -7,9 +7,20 @@
     top: none
   ),
   align: (auto, auto, auto),
-  table.vline(x: 1, start: 1),
-table.header([], [int], [float]),
-  [a], [10], [1e-06],
-  [b], [10000], [0.1368753],
-  [c], [1000000], [163985.8374],
+  table.header([], [int], [float]),
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [a],
+), [10], [1e-06],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [b],
+), [10000], [0.1368753],
+  table.cell(
+  colspan: 1,
+  stroke: (right: 1pt),
+  [c],
+), [1000000], [163985.8374],
 )

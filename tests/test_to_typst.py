@@ -261,3 +261,18 @@ class TestEdgeCases:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+    def test_group_column_with_bottom_row_stroke_styled(self, table_check, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        table = table.tab_style(
+            cell=style.CellStyle(stroke={"bottom": "1pt + red"}),
+            locator=locators.LocStub(rows=3),
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:1b1f2aa9-97bf-44ce-96ba-87f304d3ae6a.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0

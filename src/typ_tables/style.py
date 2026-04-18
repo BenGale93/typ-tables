@@ -61,6 +61,38 @@ class Sides(t.Generic[T]):
         sides = ", ".join(set_sides)
         return f"({sides})"
 
+    def __or__(self, value: object) -> t.Self:
+        """Merge two text styles, preferring values from `value` when set.
+
+        Args:
+            value: Another `Sides` instance.
+
+        Returns:
+            A merged `Sides` instance.
+        """
+        klass = type(self)
+        if value is None:
+            return self
+
+        if not isinstance(value, klass):  # pragma: no cover
+            return NotImplemented
+
+        current = {k: v for k, v in asdict(self).items() if v is not None}
+        new = {k: v for k, v in asdict(value).items() if v is not None}
+
+        return klass(**(current | new))
+
+    def __ror__(self, value: object) -> t.Self:
+        """Merge two text styles, preferring values from `value` when set.
+
+        Args:
+            value: Another `Sides` instance.
+
+        Returns:
+            A merged `Sides` instance.
+        """
+        return self.__or__(value)
+
 
 Inset = Relative | Sides[Relative] | dict[str, str]
 FullStroke = Stroke | Sides[Stroke] | dict[str, str]
@@ -146,7 +178,10 @@ class TextStyleForCell:
             name = f.name
             current = getattr(self, name)
             new = getattr(value, name)
-            new_text_style[name] = new if new is not None else current
+            if isinstance(new, Sides):
+                new_text_style[name] = current | new
+            else:
+                new_text_style[name] = new if new is not None else current
 
         return type(self)(**new_text_style)
 
@@ -277,7 +312,10 @@ class CellStyleForCell:
             name = f.name
             current = getattr(self, name)
             new = getattr(value, name)
-            new_cell_style[name] = new if new is not None else current
+            if isinstance(new, Sides):
+                new_cell_style[name] = current | new
+            else:
+                new_cell_style[name] = new if new is not None else current
 
         return type(self)(**new_cell_style)
 
