@@ -1,18 +1,22 @@
 #table(
   columns: 3,
-  stroke: none,
+  stroke: (x, y) => (
+    bottom: if y < 2 { 1.2pt } else { 0.6pt },
+    left: none,
+    right: none,
+    top: none
+  ),
   align: (auto, auto, auto),
-  table.hline(stroke: 1.2pt),
+  
   table.header(
     table.cell(
       colspan: 3,
       align: center,
+      stroke: (top: 1.2pt, bottom: 1.2pt),
       [Table Header],
     ),
   ),
-  table.hline(stroke: 1.2pt),
   table.header([string], [int], [float]),
-  table.hline(stroke: 1.2pt),
   table.cell(
   colspan: 1,
   align: right,
@@ -32,7 +36,6 @@
     fill: blue,
   )[nan],
 ),
-  table.hline(stroke: 0.6pt),
   table.cell(
   colspan: 1,
   align: left,
@@ -52,7 +55,6 @@
     fill: red,
   )[1e-06],
 ),
-  table.hline(stroke: 0.6pt),
   table.cell(
   colspan: 1,
   align: left,
@@ -72,7 +74,6 @@
     fill: red,
   )[0.1368753],
 ),
-  table.hline(stroke: 0.6pt),
   table.cell(
   colspan: 1,
   align: left,
@@ -92,7 +93,6 @@
     fill: red,
   )[163985.8374],
 ),
-  table.hline(stroke: 0.6pt),
   table.cell(
   colspan: 1,
   align: left,
@@ -112,5 +112,4 @@
     fill: red,
   )[None],
 ),
-  table.hline(stroke: 0.6pt),
 )

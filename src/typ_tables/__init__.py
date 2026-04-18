@@ -19,14 +19,11 @@ from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables.stub import Stub
 from typ_tables.style import CellStyle, CellStyleForCell, StyleHolder, TextStyle
 
-HEADER_STROKE = "1.2pt"
-
 TITLE_TEMPLATE = Template(
-    f"""table.hline(stroke: {HEADER_STROKE}),
+    """
   table.header(
 $cell_block
   ),
-  table.hline(stroke: {HEADER_STROKE}),
   """
 )
 
@@ -40,10 +37,16 @@ class Heading:
         _subtitle: Optional heading subtitle text or raw Typst.
     """
 
-    DEFAULT_STYLE = StyleHolder(cell=CellStyleForCell(align="center"))
+    DEFAULT_STYLE = StyleHolder(
+        cell=CellStyleForCell(align="center", stroke="(top: 1.2pt, bottom: 1.2pt)")
+    )
 
     _title: str | Typst | None = None
     _subtitle: str | Typst | None = None
+
+    def __bool__(self) -> bool:
+        """Returns true if a title or subtitle is set."""
+        return not (self._title is None and self._subtitle is None)
 
     @cached_property
     def title(self) -> str | Typst | None:
@@ -135,6 +138,8 @@ class TypData:
         stubhead: Optional label for the stub header cell.
     """
 
+    DEFAULT_COLUMN_HEADER_STYLE = StyleHolder(cell=CellStyleForCell(stroke="(bottom: 1.2pt)"))
+
     boxhead: Boxhead
     stub: Stub
     formats: list[Formatter]
@@ -216,7 +221,7 @@ class TypData:
         headers = []
         for col in columns:
             if col.col_type == "stub":
-                header_cell = f"[{self.stubhead}]" if self.stubhead else "[]"
+                header_cell = f"[{escape_value(self.stubhead)}]" if self.stubhead else "[]"
             else:
                 header_cell = f"[{col.name}]"
             headers.append(header_cell)
@@ -238,10 +243,7 @@ class TypData:
         else:
             vline = ""
 
-        return (
-            f"{formatted_title}{vline}table.header({header}),\n"
-            f"  table.hline(stroke: {HEADER_STROKE})"
-        )
+        return f"{formatted_title}{vline}table.header({header})"
 
     def body(self, data: ttypes.Data, original_data: ttypes.Data) -> str:
         """Render Typst rows for table body data.
@@ -268,9 +270,14 @@ class TypData:
                 prev_group_info = group_info
 
             rows.append(self._render_data_row(data, i, columns, cell_styles))
-            rows.append("table.hline(stroke: 0.6pt),")
 
         return "\n  ".join(rows)
+
+    def num_headers(self) -> int:
+        """Number of header rows in the final table."""
+        if self.heading:
+            return 2
+        return 1
 
     def _build_cell_style_index(
         self, data: ttypes.Data, columns: list[ColInfo]
@@ -321,8 +328,7 @@ class TypData:
     ) -> str:
         """Render a row-group heading with top and bottom separator lines."""
         group_cell_style = row_group_styles.get_style(group_info.group_id)
-        cell_str = group_cell_style.to_typst(group_info.name, colspan=n_cols)
-        return f"table.hline(stroke: 1pt),\n {cell_str}\n table.hline(stroke : 1pt),\n"
+        return group_cell_style.to_typst(group_info.name, colspan=n_cols)
 
     def _render_data_row(
         self,
@@ -345,7 +351,12 @@ class TypData:
 
 TABLE_TEMPLATE = Template("""#table(
   columns: $columns,
-  stroke: none,
+  stroke: (x, y) => (
+    bottom: if y < $header_rows { 1.2pt } else { 0.6pt },
+    left: none,
+    right: none,
+    top: none
+  ),
   align: $alignment,
   $header,
   $body
@@ -376,6 +387,7 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
         alignment=alignment,
         header=header,
         body=body,
+        header_rows=typ.num_headers(),
     )
     return typ.figure.add_figure_args(table_str)
 

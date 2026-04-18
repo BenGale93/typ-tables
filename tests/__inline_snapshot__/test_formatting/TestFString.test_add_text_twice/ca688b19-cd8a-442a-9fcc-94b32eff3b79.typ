@@ -1,15 +1,15 @@
 #table(
   columns: 2,
-  stroke: none,
+  stroke: (x, y) => (
+    bottom: if y < 1 { 1.2pt } else { 0.6pt },
+    left: none,
+    right: none,
+    top: none
+  ),
   align: (auto, auto),
   table.header([string], [int]),
-  table.hline(stroke: 1.2pt),
   [\_^a\*\_], [\_10\_],
-  table.hline(stroke: 0.6pt),
   [\_^b\*\_], [\_10000\_],
-  table.hline(stroke: 0.6pt),
   [\_^c\*\_], [\_1000000\_],
-  table.hline(stroke: 0.6pt),
   [None], [None],
-  table.hline(stroke: 0.6pt),
 )

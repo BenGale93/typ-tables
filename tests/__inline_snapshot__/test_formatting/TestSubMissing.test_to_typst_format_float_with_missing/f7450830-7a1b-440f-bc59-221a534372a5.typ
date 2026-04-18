@@ -1,17 +1,16 @@
 #table(
   columns: 3,
-  stroke: none,
+  stroke: (x, y) => (
+    bottom: if y < 1 { 1.2pt } else { 0.6pt },
+    left: none,
+    right: none,
+    top: none
+  ),
   align: (auto, auto, auto),
   table.header([string], [int], [float]),
-  table.hline(stroke: 1.2pt),
   [a], [10], [Missing],
-  table.hline(stroke: 0.6pt),
   [b], [10000], [0.00],
-  table.hline(stroke: 0.6pt),
   [c], [1000000], [0.14],
-  table.hline(stroke: 0.6pt),
   [random\-letters], [568282638583], [163,985.84],
-  table.hline(stroke: 0.6pt),
   [Missing], [Missing], [Missing],
-  table.hline(stroke: 0.6pt),
 )

@@ -343,8 +343,24 @@ class StyleHolder:
         if not isinstance(value, StyleHolder):  # pragma: no cover
             return NotImplemented
 
-        new_text = value.text if value.text is not None else self.text
+        match (self.text, value.text):
+            case (None, TextStyleForCell()):
+                new_text = value.text
+            case (TextStyleForCell(), None):
+                new_text = self.text
+            case (TextStyleForCell(), TextStyleForCell()):
+                new_text = self.text | value.text
+            case _:
+                new_text = None
 
-        new_cell = value.cell if value.cell is not None else self.cell
+        match (self.cell, value.cell):
+            case (None, CellStyleForCell()):
+                new_cell = value.cell
+            case (CellStyleForCell(), None):
+                new_cell = self.cell
+            case (CellStyleForCell(), CellStyleForCell()):
+                new_cell = self.cell | value.cell
+            case _:
+                new_cell = None
 
         return type(self)(text=new_text, cell=new_cell)

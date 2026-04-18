@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import narwhals as nw
 
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns, resolve_rows
-from typ_tables.style import CellStyle, StyleHolder, TextStyle
+from typ_tables.style import CellStyle, CellStyleForCell, StyleHolder, TextStyle
 from typ_tables.ttypes import Data
 
 
@@ -270,7 +270,7 @@ class RowGroupStyles:
         Returns:
             Combined style from all matching assignments.
         """
-        group_cell_style = StyleHolder()
+        group_cell_style = StyleHolder(cell=CellStyleForCell(stroke="(bottom: 1pt)"))
         for style_for_groups in self.styles:
             if group_id in style_for_groups.groups:
                 group_cell_style = group_cell_style | style_for_groups.style

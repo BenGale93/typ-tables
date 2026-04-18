@@ -1,47 +1,43 @@
 #table(
   columns: 2,
-  stroke: none,
+  stroke: (x, y) => (
+    bottom: if y < 2 { 1.2pt } else { 0.6pt },
+    left: none,
+    right: none,
+    top: none
+  ),
   align: (auto, auto),
-  table.hline(stroke: 1.2pt),
+  
   table.header(
     table.cell(
       colspan: 2,
       align: center,
+      stroke: (top: 1.2pt, bottom: 1.2pt),
       [Table Header],
     ),
   ),
-  table.hline(stroke: 1.2pt),
   table.vline(x: 1, start: 2),
 table.header([], [count]),
-  table.hline(stroke: 1.2pt),
-  table.hline(stroke: 1pt),
- table.cell(
+  table.cell(
   colspan: 2,
+  stroke: (bottom: 1pt),
   [group\_a],
 ),
- table.hline(stroke : 1pt),
-
   text(
   fill: red,
 )[apple], [10],
-  table.hline(stroke: 0.6pt),
   text(
   fill: red,
 )[banana], [3],
-  table.hline(stroke: 0.6pt),
-  table.hline(stroke: 1pt),
- table.cell(
+  table.cell(
   colspan: 2,
+  stroke: (bottom: 1pt),
   [group\_b],
 ),
- table.hline(stroke : 1pt),
-
   text(
   fill: red,
 )[pear], [73],
-  table.hline(stroke: 0.6pt),
   text(
   fill: red,
 )[kiwi], [477],
-  table.hline(stroke: 0.6pt),
 )

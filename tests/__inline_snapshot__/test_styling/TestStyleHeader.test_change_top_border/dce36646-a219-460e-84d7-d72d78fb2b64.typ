@@ -1,13 +1,22 @@
 #table(
   columns: 3,
   stroke: (x, y) => (
-    bottom: if y < 1 { 1.2pt } else { 0.6pt },
+    bottom: if y < 2 { 1.2pt } else { 0.6pt },
     left: none,
     right: none,
     top: none
   ),
   align: (auto, auto, auto),
-  table.header([#strong[String]], [#underline[Integer]], [$pi r^2$]),
+  
+  table.header(
+    table.cell(
+      colspan: 3,
+      align: center,
+      stroke: (top: blue),
+      [Table Header],
+    ),
+  ),
+  table.header([string], [int], [float]),
   [a], [10], [nan],
   [b], [10000], [1e-06],
   [c], [1000000], [0.1368753],

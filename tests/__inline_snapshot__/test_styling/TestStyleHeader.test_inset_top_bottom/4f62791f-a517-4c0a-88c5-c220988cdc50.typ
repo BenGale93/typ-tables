@@ -1,26 +1,26 @@
 #table(
   columns: 3,
-  stroke: none,
+  stroke: (x, y) => (
+    bottom: if y < 2 { 1.2pt } else { 0.6pt },
+    left: none,
+    right: none,
+    top: none
+  ),
   align: (auto, auto, auto),
-  table.hline(stroke: 1.2pt),
+  
   table.header(
     table.cell(
       colspan: 3,
       inset: (top: 10pt, bottom: 10pt),
+      align: center,
+      stroke: (top: 1.2pt, bottom: 1.2pt),
       [Table Header],
     ),
   ),
-  table.hline(stroke: 1.2pt),
   table.header([string], [int], [float]),
-  table.hline(stroke: 1.2pt),
   [a], [10], [nan],
-  table.hline(stroke: 0.6pt),
   [b], [10000], [1e-06],
-  table.hline(stroke: 0.6pt),
   [c], [1000000], [0.1368753],
-  table.hline(stroke: 0.6pt),
   [random\-letters], [568282638583], [163985.8374],
-  table.hline(stroke: 0.6pt),
   [None], [None], [None],
-  table.hline(stroke: 0.6pt),
 )

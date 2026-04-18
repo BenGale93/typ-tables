@@ -160,6 +160,20 @@ class TestStyleHeader:
 
         assert len(warnings) == 0
 
+    def test_change_top_border(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_style(cell=style.CellStyle(stroke="(top: blue)"), locator=locators.LocHeader())
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:dce36646-a219-460e-84d7-d72d78fb2b64.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
     def test_fill_header_based_on_expr_fails(self, basic_data) -> None:
         with pytest.raises(
             TypeError, match=r"Expected only scalars in style field: `fill` for this location."
