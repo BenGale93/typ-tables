@@ -231,7 +231,7 @@ class TextStyle:
     stretch: str | list[str] | nw.Expr | None = None
     size: Length | list[Length] | nw.Expr | None = None
     fill: Fill | list[Fill] | nw.Expr | None = None
-    stroke: Stroke | list[Stroke] | nw.Expr | None = None
+    stroke: FullStroke | list[FullStroke] | nw.Expr | None = None
     tracking: Length | list[Length] | nw.Expr | None = None
     spacing: Relative | list[Relative] | nw.Expr | None = None
     fractions: bool | list[bool] | nw.Expr | None = None
@@ -264,7 +264,7 @@ class CellStyleForCell:
     inset: Relative | Sides[Relative] | None = None
     align: Auto | Alignment | None = None
     fill: Fill | None = None
-    stroke: FullStroke | list[FullStroke] | nw.Expr | None = None
+    stroke: Stroke | Sides[Stroke] | None = None
 
     def to_typst(self, body: str, colspan: int | None = None) -> str:
         """Wrap a body string in a Typst `table.cell(...)` call when configured.
@@ -391,6 +391,8 @@ class StyleHolder:
         Returns:
             A merged `StyleHolder` instance.
         """
+        if value is None:
+            return self
         if not isinstance(value, StyleHolder):  # pragma: no cover
             return NotImplemented
 
@@ -415,3 +417,14 @@ class StyleHolder:
                 new_cell = None
 
         return type(self)(text=new_text, cell=new_cell)
+
+    def __ror__(self, value: object) -> t.Self:  # pragma: no cover
+        """Merge two style holders, preferring values from `value` when set.
+
+        Args:
+            value: Another `StyleHolder` instance.
+
+        Returns:
+            A merged `StyleHolder` instance.
+        """
+        return self.__or__(value)

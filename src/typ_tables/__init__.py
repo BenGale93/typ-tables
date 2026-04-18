@@ -28,6 +28,26 @@ $cell_block
 )
 
 
+@dataclass
+class DefaultStyles:
+    """Container for all default styles."""
+
+    header: StyleHolder = field(
+        default_factory=lambda: StyleHolder(
+            cell=CellStyleForCell(align="center", stroke=Sides(top="1.2pt", bottom="1.2pt"))
+        )
+    )
+    stub_cell: StyleHolder = field(
+        default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(right="1pt")))
+    )
+    body_cell: StyleHolder = field(default_factory=StyleHolder)
+    row_group: StyleHolder = field(
+        default_factory=lambda: StyleHolder(
+            cell=CellStyleForCell(stroke=Sides(top="1pt", bottom="1pt"))
+        )
+    )
+
+
 @dataclass(frozen=True)
 class Heading:
     """Table heading metadata rendered above the main header row.
@@ -36,10 +56,6 @@ class Heading:
         _title: Optional heading title text or raw Typst.
         _subtitle: Optional heading subtitle text or raw Typst.
     """
-
-    DEFAULT_STYLE = StyleHolder(
-        cell=CellStyleForCell(align="center", stroke="(top: 1.2pt, bottom: 1.2pt)")
-    )
 
     _title: str | Typst | None = None
     _subtitle: str | Typst | None = None
@@ -82,7 +98,7 @@ class Heading:
                 f"== {escape_value(self.title)} \\\n  {escape_value(self.subtitle)}"
             )
 
-        cell_block = (self.DEFAULT_STYLE | styles).to_typst(title_contents, n_col)
+        cell_block = styles.to_typst(title_contents, n_col)
         cell_block = indent(cell_block, " " * 4)
 
         return TITLE_TEMPLATE.substitute(title_contents=title_contents, cell_block=cell_block)
@@ -138,10 +154,7 @@ class TypData:
         stubhead: Optional label for the stub header cell.
     """
 
-    DEFAULT_COLUMN_HEADER_STYLE = StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
-    DEFAULT_STUB_CELL_STYLE = StyleHolder(cell=CellStyleForCell(stroke=Sides(right="1pt")))
-    DEFAULT_BODY_CELL_STYLE = StyleHolder()
-
+    default_styles: DefaultStyles = field(default_factory=DefaultStyles)
     boxhead: Boxhead
     stub: Stub
     formats: list[Formatter]
@@ -232,7 +245,7 @@ class TypData:
 
         n_col = len(columns)
 
-        header_style = StyleHolder()
+        header_style = self.default_styles.header
         for style_info in self.styles:
             if isinstance(style_info, locators.StyledLocHeader):
                 header_style = header_style | style_info.style
@@ -267,7 +280,19 @@ class TypData:
 
             rows.append(self._render_data_row(data, i, columns, cell_styles))
         if group_info is not None:
-            rows.append("table.hline(stroke: 1pt),")
+            row_group_cell_style = self.default_styles.row_group.cell
+            if row_group_cell_style is None:
+                stroke = None
+            else:
+                row_group_stroke_style = row_group_cell_style.stroke
+                if row_group_stroke_style is None:
+                    stroke = None
+                elif isinstance(row_group_stroke_style, Sides):
+                    stroke = row_group_stroke_style.top
+                else:
+                    stroke = row_group_stroke_style
+            if stroke:
+                rows.append(f"table.hline(stroke: {stroke}),")
 
         return "\n  ".join(rows)
 
@@ -325,7 +350,9 @@ class TypData:
         row_group_styles: locators.RowGroupStyles,
     ) -> str:
         """Render a row-group heading with top and bottom separator lines."""
-        group_cell_style = row_group_styles.get_style(group_info.group_id)
+        group_cell_style = row_group_styles.get_style(
+            group_info.group_id, self.default_styles.row_group
+        )
         return group_cell_style.to_typst(group_info.name, colspan=n_cols)
 
     def _render_data_row(
@@ -339,11 +366,11 @@ class TypData:
         body_cells = []
         for col in columns:
             if col.col_type == "stub":
-                default_style = self.DEFAULT_STUB_CELL_STYLE
+                default_style = self.default_styles.stub_cell
             else:
-                default_style = self.DEFAULT_BODY_CELL_STYLE
+                default_style = self.default_styles.body_cell
             cell_style = default_style | cell_styles.get(
-                locators.CellPos(row=row_idx, column=col.var), StyleHolder()
+                locators.CellPos(row=row_idx, column=col.var)
             )
             cell_content = data[row_idx][col.var].item()
             body_cells.append(cell_style.to_typst(cell_content, 1))

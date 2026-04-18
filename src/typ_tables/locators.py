@@ -1,12 +1,13 @@
 """Module defining styling locators."""
 
 import typing as t
+from copy import deepcopy
 from dataclasses import dataclass, field
 
 import narwhals as nw
 
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns, resolve_rows
-from typ_tables.style import CellStyle, CellStyleForCell, StyleHolder, TextStyle
+from typ_tables.style import CellStyle, StyleHolder, TextStyle
 from typ_tables.ttypes import Data
 
 
@@ -250,8 +251,6 @@ class StyleForGroups:
 class RowGroupStyles:
     """Container for row-group style mappings and style resolution."""
 
-    DEFAULT_STYLE = StyleHolder(cell=CellStyleForCell(stroke="(top: 1pt, bottom: 1pt)"))
-
     styles: list[StyleForGroups] = field(default_factory=list)
 
     def append(self, groups: Groups, style: StyleHolder) -> None:
@@ -263,16 +262,17 @@ class RowGroupStyles:
         """
         self.styles.append(StyleForGroups(groups, style))
 
-    def get_style(self, group_id: str) -> StyleHolder:
+    def get_style(self, group_id: str, default: StyleHolder) -> StyleHolder:
         """Resolve the merged style for a given row-group identifier.
 
         Args:
             group_id: Row-group identifier to resolve.
+            default: Default row group style.
 
         Returns:
             Combined style from all matching assignments.
         """
-        group_cell_style = self.DEFAULT_STYLE
+        group_cell_style = deepcopy(default)
         for style_for_groups in self.styles:
             if group_id in style_for_groups.groups:
                 group_cell_style = group_cell_style | style_for_groups.style
