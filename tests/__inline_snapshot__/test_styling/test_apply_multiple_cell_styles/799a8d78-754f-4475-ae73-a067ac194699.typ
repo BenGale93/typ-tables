@@ -37,5 +37,9 @@
   stroke: 2pt + blue,
   [random\-letters],
 ), [568282638583], [163985.8374],
-  [None], [None], [None],
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 1pt + red),
+  [None],
+), [None], [None],
 )

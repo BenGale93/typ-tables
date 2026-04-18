@@ -21,10 +21,12 @@ FontWeight = (
     | int
 )
 
+T = t.TypeVar("T")
+
 
 @dataclass(slots=True)
-class Sides:
-    """Represents per-side relative size values for Typst properties.
+class Sides(t.Generic[T]):
+    """Represents per-side values for Typst properties.
 
     Attributes:
         rest: Default value for unspecified sides.
@@ -36,13 +38,13 @@ class Sides:
         bottom: Bottom-side value.
     """
 
-    rest: Relative | None = None
-    x: Relative | None = None
-    y: Relative | None = None
-    top: Relative | None = None
-    right: Relative | None = None
-    left: Relative | None = None
-    bottom: Relative | None = None
+    rest: T | None = None
+    x: T | None = None
+    y: T | None = None
+    top: T | None = None
+    right: T | None = None
+    left: T | None = None
+    bottom: T | None = None
 
     def __str__(self) -> str:
         """Render the sides object as a Typst-style named tuple string.
@@ -58,6 +60,18 @@ class Sides:
 
         sides = ", ".join(set_sides)
         return f"({sides})"
+
+
+Inset = Relative | Sides[Relative] | dict[str, str]
+FullStroke = Stroke | Sides[Stroke] | dict[str, str]
+
+
+def _coerce_sides(attr: t.Any) -> t.Any:
+    if isinstance(attr, dict):
+        return Sides(**attr)
+    if isinstance(attr, list):
+        return [Sides(**i) if isinstance(i, dict) else i for i in attr]
+    return attr
 
 
 CELL_PROPERTY_INDENT = " " * 2
@@ -81,7 +95,7 @@ class TextStyleForCell:
     stretch: str | None = None
     size: Length | None = None
     fill: Fill | None = None
-    stroke: Stroke | None = None
+    stroke: Stroke | Sides[Stroke] | None = None
     tracking: Length | None = None
     spacing: Relative | None = None
     fractions: bool | None = None
@@ -187,6 +201,10 @@ class TextStyle:
     spacing: Relative | list[Relative] | nw.Expr | None = None
     fractions: bool | list[bool] | nw.Expr | None = None
 
+    def __post_init__(self) -> None:
+        """Coerces types."""
+        self.stroke = _coerce_sides(self.stroke)
+
     def resolve(self, data: Data) -> list[TextStyleForCell]:
         """Resolve the text style into a list of text styles for each cell in a column."""
         resolved_fields = _resolve_style_to_list_of_styles(self, data)
@@ -208,10 +226,10 @@ class TextStyle:
 class CellStyleForCell:
     """Cell style for an individual cell in a table."""
 
-    inset: Relative | Sides | None = None
+    inset: Relative | Sides[Relative] | None = None
     align: Auto | Alignment | None = None
     fill: Fill | None = None
-    stroke: Stroke | None = None
+    stroke: FullStroke | list[FullStroke] | nw.Expr | None = None
 
     def to_typst(self, body: str, colspan: int | None = None) -> str:
         """Wrap a body string in a Typst `table.cell(...)` call when configured.
@@ -264,9 +282,6 @@ class CellStyleForCell:
         return type(self)(**new_cell_style)
 
 
-Inset = Relative | Sides | dict[str, str]
-
-
 @dataclass
 class CellStyle:
     """Cell-level style properties applied to table cell content."""
@@ -274,14 +289,12 @@ class CellStyle:
     inset: Inset | list[Inset] | nw.Expr | None = None
     align: Auto | Alignment | list[Auto | Alignment] | nw.Expr | None = None
     fill: Fill | list[Fill] | nw.Expr | None = None
-    stroke: Stroke | list[Stroke] | nw.Expr | None = None
+    stroke: FullStroke | list[FullStroke] | nw.Expr | None = None
 
     def __post_init__(self) -> None:
         """Coerces types."""
-        if isinstance(self.inset, dict):
-            self.inset = Sides(**self.inset)
-        elif isinstance(self.inset, list):
-            self.inset = [Sides(**i) if isinstance(i, dict) else i for i in self.inset]
+        self.inset = _coerce_sides(self.inset)
+        self.stroke = _coerce_sides(self.stroke)
 
     def resolve(self, data: Data) -> list[CellStyleForCell]:
         """Resolve the cell style into a list of cell styles for each cell in a column."""

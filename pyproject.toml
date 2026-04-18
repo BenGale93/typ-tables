@@ -25,7 +25,7 @@ test = [
   "pandas>=3.0.0",
   "pyarrow>=20.0.0",
 ]
-typing = ["pyrefly>=0.57.0"]
+typing = ["pyrefly>=0.61.0"]
 typing-test = [{ include-group = "test" }, { include-group = "typing" }]
 
 [project.scripts]

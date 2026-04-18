@@ -40,6 +40,39 @@ class TestMergeStyles:
         assert merged_style.size == "20pt"
         assert merged_style.fill == "blue"
 
+    def test_merge_style_holder_none_is_replaced(self):
+        holder_1 = style.StyleHolder(text=None, cell=None)
+        holder_2 = style.StyleHolder(
+            text=style.TextStyleForCell(font="test"), cell=style.CellStyleForCell(align="end")
+        )
+
+        new_holder = holder_1 | holder_2
+
+        assert holder_2 == new_holder
+
+    def test_merge_style_holder_default_and_none(self):
+        holder_1 = style.StyleHolder(
+            text=style.TextStyleForCell(font="test"), cell=style.CellStyleForCell(align="end")
+        )
+        holder_2 = style.StyleHolder(text=None, cell=None)
+
+        new_holder = holder_1 | holder_2
+
+        assert holder_1 == new_holder
+
+    def test_merge_style_holder_recursive_merge(self):
+        holder_1 = style.StyleHolder(
+            text=style.TextStyleForCell(weight="bold"), cell=style.CellStyleForCell(fill="red")
+        )
+        holder_2 = style.StyleHolder(
+            text=style.TextStyleForCell(font="test"), cell=style.CellStyleForCell(align="end")
+        )
+
+        new_holder = holder_1 | holder_2
+
+        assert new_holder.text == style.TextStyleForCell(font="test", weight="bold")
+        assert new_holder.cell == style.CellStyleForCell(align="end", fill="red")
+
 
 class TestApplyStyle:
     def test_apply_no_style(self):
@@ -511,6 +544,10 @@ def test_apply_multiple_cell_styles(table_check, basic_data) -> None:
         .tab_style(
             cell=style.CellStyle(stroke="2pt + blue"),
             locator=locators.LocBody(rows=3, columns="string"),
+        )
+        .tab_style(
+            cell=style.CellStyle(stroke={"bottom": "1pt + red"}),
+            locator=locators.LocBody(rows=4, columns="string"),
         )
         .tab_header("Table Header")
     )
