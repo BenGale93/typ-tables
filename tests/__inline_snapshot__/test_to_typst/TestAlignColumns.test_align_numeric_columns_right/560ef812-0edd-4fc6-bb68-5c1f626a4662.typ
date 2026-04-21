@@ -2,6 +2,7 @@
   columns: 3,
   stroke: none,
   align: (auto, right, right),
+  inset: 0% + 5pt,
   table.header(table.cell(
   stroke: (bottom: 1.2pt),
   [string],

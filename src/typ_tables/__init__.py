@@ -17,7 +17,7 @@ from typ_tables.escape import Typst, escape_value
 from typ_tables.formats import Formatter, FString, Numeric, SubMissing, fmt
 from typ_tables.location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables.stub import Stub
-from typ_tables.style import CellStyle, CellStyleForCell, Sides, StyleHolder, TextStyle
+from typ_tables.style import CellStyle, CellStyleForCell, Relative, Sides, StyleHolder, TextStyle
 
 TITLE_TEMPLATE = Template(
     """
@@ -167,6 +167,7 @@ class TypData:
     figure: Figure
     styles: list[locators.StyledLoc] = field(default_factory=list)
     stubhead: str | Typst | None = None
+    inset: str | Sides = "0% + 5pt"
 
     @classmethod
     def from_data(
@@ -386,6 +387,7 @@ TABLE_TEMPLATE = Template("""#table(
   columns: $columns,
   stroke: none,
   align: $alignment,
+  inset: $inset,
   $header,
   $body
 )
@@ -415,6 +417,7 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
         alignment=alignment,
         header=header,
         body=body,
+        inset=typ.inset,
     )
     return typ.figure.add_figure_args(table_str)
 
@@ -678,4 +681,12 @@ class TypTable:
         columns_to_relabel = resolve_columns(self._df, columns)
         new_labels = {col: fn(col) for col in columns_to_relabel}
         self._typ_data.boxhead.set_cols_label(new_labels)
+        return self
+
+    # Table option methods ----
+    def set_table_inset(self, inset: str | Sides[Relative] | dict[str, Relative]) -> t.Self:
+        """How much to pad the cells' content for all cells in the table."""
+        if isinstance(inset, dict):
+            inset = Sides(**inset)
+        self._typ_data.inset = inset
         return self

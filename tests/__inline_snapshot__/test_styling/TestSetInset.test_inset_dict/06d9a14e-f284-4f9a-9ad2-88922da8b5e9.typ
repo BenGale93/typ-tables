@@ -1,73 +1,36 @@
 #table(
-  columns: 1,
+  columns: 3,
   stroke: none,
-  align: (auto),
-  inset: 0% + 5pt,
+  align: (auto, auto, auto),
+  inset: (rest: 0% + 5pt, top: 10pt, bottom: 2pt),
+  
+  table.header(
+    table.cell(
+      colspan: 3,
+      align: center,
+      stroke: (top: 1.2pt, bottom: 1.2pt),
+      [Test Header],
+    ),
+  ),
   table.header(table.cell(
+  stroke: (bottom: 1.2pt),
+  [string],
+), table.cell(
+  stroke: (bottom: 1.2pt),
+  [int],
+), table.cell(
   stroke: (bottom: 1.2pt),
   [float],
 ),),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [0],
-),
-  table.cell(
+  [a],
+), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [100.00],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [1.36],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [1.00],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [10.00M],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [100,000.00Q],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [0.00],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [None],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [\-10.00],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [\-1.36],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [\-1.00],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [\-10.00M],
-),
-  table.cell(
+  [10],
+), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
   [nan],
@@ -75,11 +38,53 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [inf],
+  [b],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [10000],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [1e-06],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-inf],
+  [c],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [1000000],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [0.1368753],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [random\-letters],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [568282638583],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [163985.8374],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [None],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [None],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [None],
 ),
 )

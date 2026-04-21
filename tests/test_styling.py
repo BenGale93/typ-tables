@@ -6,7 +6,7 @@ import polars as pl
 import pytest
 from inline_snapshot import external, snapshot
 
-from typ_tables import TypTable, locators, style
+from typ_tables import Sides, TypTable, locators, style
 
 
 class TestAttributesMatch:
@@ -496,6 +496,36 @@ class TestStyleStubhead:
         result = table.to_typst()
 
         assert result == external("uuid:e16f9236-bae2-43fa-a5df-b3b98d644f5d.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
+class TestSetInset:
+    def test_inset_dict(self, table_check, basic_data):
+        table = (
+            TypTable(basic_data)
+            .set_table_inset({"top": "10pt", "bottom": "2pt", "rest": "0% + 5pt"})
+            .tab_header("Test Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:06d9a14e-f284-4f9a-9ad2-88922da8b5e9.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_inset_sides(self, table_check, basic_data):
+        table = (
+            TypTable(basic_data)
+            .set_table_inset(Sides(top="10pt", bottom="2pt", rest="0% + 5pt"))
+            .tab_header("Test Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:3fb2f1a4-15db-461e-9c47-fbbecb697036.typ")
 
         warnings = table_check(result)
 

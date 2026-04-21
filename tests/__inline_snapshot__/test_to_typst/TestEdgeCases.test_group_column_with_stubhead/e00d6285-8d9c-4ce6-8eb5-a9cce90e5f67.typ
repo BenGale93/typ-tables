@@ -2,6 +2,7 @@
   columns: 2,
   stroke: none,
   align: (auto, auto),
+  inset: 0% + 5pt,
   table.header(table.cell(
   stroke: (bottom: 1.2pt),
   [Fruits],
