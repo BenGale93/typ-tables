@@ -2,15 +2,28 @@
   columns: 3,
   stroke: none,
   align: (auto, auto, auto),
+  
+  table.header(
+    table.cell(
+      colspan: 3,
+      align: center,
+      stroke: (top: 1.2pt, bottom: 1.2pt),
+      [Table Header],
+    ),
+  ),
   table.header(table.cell(
   stroke: (bottom: 1.2pt),
-  [STRING],
+  [string],
 ), table.cell(
   stroke: (bottom: 1.2pt),
-  [INT],
+  text(
+    fill: blue,
+  )[int],
 ), table.cell(
   stroke: (bottom: 1.2pt),
-  [FLOAT],
+  text(
+    fill: blue,
+  )[float],
 ),),
   table.cell(
   colspan: 1,

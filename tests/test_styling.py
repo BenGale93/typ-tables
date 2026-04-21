@@ -463,6 +463,25 @@ class TestStyleRowGroup:
         assert len(warnings) == 0
 
 
+class TestStyleColumnLabels:
+    def test_fill_column_labels(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_style(
+                text=style.TextStyle(fill="blue"),
+                locator=locators.LocColumnLabels(columns=ncs.numeric()),
+            )
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:a320710c-9285-46cb-9e07-2efeae2333f7.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 def test_apply_multiple_text_styles(table_check, basic_data) -> None:
     table = (
         TypTable(basic_data)

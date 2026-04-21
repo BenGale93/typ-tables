@@ -1,11 +1,6 @@
 #table(
   columns: 2,
-  stroke: (x, y) => (
-    bottom: if y < 2 { 1.2pt } else { 0.6pt },
-    left: none,
-    right: none,
-    top: none
-  ),
+  stroke: none,
   align: (auto, auto),
   
   table.header(
@@ -16,44 +11,65 @@
       [Table Header],
     ),
   ),
-  table.header([], [count]),
+  table.header(table.cell(
+  stroke: (bottom: 1.2pt),
+  [],
+), table.cell(
+  stroke: (bottom: 1.2pt),
+  [count],
+),),
   table.cell(
   colspan: 2,
-  stroke: (top: 1pt, bottom: 1pt),
+  stroke: (bottom: 1pt),
   [group\_a],
 ),
   table.cell(
   colspan: 1,
-  stroke: (right: 1pt),
+  stroke: (right: 1pt, bottom: 0.6pt),
   text(
     fill: red,
   )[apple],
-), [10],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [10],
+),
   table.cell(
   colspan: 1,
-  stroke: (right: 1pt),
+  stroke: (right: 1pt, bottom: 0.6pt),
   text(
     fill: red,
   )[banana],
-), [3],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [3],
+),
   table.cell(
   colspan: 2,
-  stroke: (top: 1pt, bottom: 1pt),
+  stroke: (bottom: 1pt),
   [group\_b],
 ),
   table.cell(
   colspan: 1,
-  stroke: (right: 1pt),
+  stroke: (right: 1pt, bottom: 0.6pt),
   text(
     fill: red,
   )[pear],
-), [73],
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [73],
+),
   table.cell(
   colspan: 1,
-  stroke: (right: 1pt),
+  stroke: (right: 1pt, bottom: 0.6pt),
   text(
     fill: red,
   )[kiwi],
-), [477],
-  table.hline(stroke: 1pt),
+), table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
+  [477],
+),
 )

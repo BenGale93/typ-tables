@@ -1,11 +1,6 @@
 #table(
   columns: 1,
-  stroke: (x, y) => (
-    bottom: if y < 2 { 1.2pt } else { 0.6pt },
-    left: none,
-    right: none,
-    top: none
-  ),
+  stroke: none,
   align: (auto),
   
   table.header(
@@ -16,11 +11,22 @@
       [Table Header],
     ),
   ),
-  table.header([Fractions]),
+  table.header(table.cell(
+  stroke: (bottom: 1.2pt),
+  [Fractions],
+),),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   text(
-  fractions: true,
-)[1\/2],
+    fractions: true,
+  )[1\/2],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   text(
-  fractions: true,
-)[1\/3],
+    fractions: true,
+  )[1\/3],
+),
 )

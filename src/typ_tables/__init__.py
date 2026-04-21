@@ -37,14 +37,19 @@ class DefaultStyles:
             cell=CellStyleForCell(align="center", stroke=Sides(top="1.2pt", bottom="1.2pt"))
         )
     )
-    stub_cell: StyleHolder = field(
-        default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(right="1pt")))
+    header_cells: StyleHolder = field(
+        default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
     )
-    body_cell: StyleHolder = field(default_factory=StyleHolder)
-    row_group: StyleHolder = field(
+    stub_cell: StyleHolder = field(
         default_factory=lambda: StyleHolder(
-            cell=CellStyleForCell(stroke=Sides(top="1pt", bottom="1pt"))
+            cell=CellStyleForCell(stroke=Sides(bottom="0.6pt", right="1pt"))
         )
+    )
+    body_cell: StyleHolder = field(
+        default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="0.6pt")))
+    )
+    row_group: StyleHolder = field(
+        default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1pt")))
     )
 
 
@@ -59,10 +64,6 @@ class Heading:
 
     _title: str | Typst | None = None
     _subtitle: str | Typst | None = None
-
-    def __bool__(self) -> bool:
-        """Returns true if a title or subtitle is set."""
-        return not (self._title is None and self._subtitle is None)
 
     @cached_property
     def title(self) -> str | Typst | None:
@@ -225,23 +226,42 @@ class TypData:
         """
         return str(len(self.boxhead))
 
-    def header(self) -> str:
+    def header(self, original_data: ttypes.Data) -> str:
         """Render table header rows, including optional title and stub divider.
+
+        Args:
+            original_data: Unformatted data.
 
         Returns:
             Typst header block containing heading rows, column labels, and
             header rules.
         """
         columns = self.boxhead.get_stub_and_default_columns()
+
+        column_label_stylers: dict[str, StyleHolder] = {}
+        for style_info in self.styles:
+            if not isinstance(style_info, locators.StyledLocColumnLabels):
+                continue
+            columns_to_style = style_info.resolve(original_data)
+            for column_to_style in columns_to_style:
+                current_style = column_label_stylers.get(
+                    column_to_style, self.default_styles.header_cells
+                )
+                column_label_stylers[column_to_style] = current_style | style_info.style
+
         headers = []
         for col in columns:
             if col.col_type == "stub":
-                header_cell = f"[{escape_value(self.stubhead)}]" if self.stubhead else "[]"
+                stub_header_cell_style = self.default_styles.header_cells
+                header_cell = stub_header_cell_style.to_typst(self.stubhead or "")
             else:
-                header_cell = f"[{col.name}]"
+                header_cell_style = column_label_stylers.get(
+                    col.var, self.default_styles.header_cells
+                )
+                header_cell = header_cell_style.to_typst(col.name)
             headers.append(header_cell)
 
-        header = ", ".join(headers)
+        header = " ".join(headers)
 
         n_col = len(columns)
 
@@ -279,28 +299,8 @@ class TypData:
                 prev_group_info = group_info
 
             rows.append(self._render_data_row(data, i, columns, cell_styles))
-        if group_info is not None:
-            row_group_cell_style = self.default_styles.row_group.cell
-            if row_group_cell_style is None:
-                stroke = None
-            else:
-                row_group_stroke_style = row_group_cell_style.stroke
-                if row_group_stroke_style is None:
-                    stroke = None
-                elif isinstance(row_group_stroke_style, Sides):
-                    stroke = row_group_stroke_style.top
-                else:
-                    stroke = row_group_stroke_style
-            if stroke:
-                rows.append(f"table.hline(stroke: {stroke}),")
 
         return "\n  ".join(rows)
-
-    def num_headers(self) -> int:
-        """Number of header rows in the final table."""
-        if self.heading:
-            return 2
-        return 1
 
     def _build_cell_style_index(
         self, data: ttypes.Data, columns: list[ColInfo]
@@ -380,12 +380,7 @@ class TypData:
 
 TABLE_TEMPLATE = Template("""#table(
   columns: $columns,
-  stroke: (x, y) => (
-    bottom: if y < $header_rows { 1.2pt } else { 0.6pt },
-    left: none,
-    right: none,
-    top: none
-  ),
+  stroke: none,
   align: $alignment,
   $header,
   $body
@@ -408,7 +403,7 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
 
     columns = typ.columns()
     alignment = typ.alignment()
-    header = typ.header()
+    header = typ.header(data)
     body = typ.body(data, original_data)
 
     table_str = TABLE_TEMPLATE.substitute(
@@ -416,7 +411,6 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
         alignment=alignment,
         header=header,
         body=body,
-        header_rows=typ.num_headers(),
     )
     return typ.figure.add_figure_args(table_str)
 

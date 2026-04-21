@@ -1,26 +1,84 @@
 #table(
   columns: 1,
-  stroke: (x, y) => (
-    bottom: if y < 1 { 1.2pt } else { 0.6pt },
-    left: none,
-    right: none,
-    top: none
-  ),
+  stroke: none,
   align: (auto),
-  table.header([float]),
+  table.header(table.cell(
+  stroke: (bottom: 1.2pt),
+  [float],
+),),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [0],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [100],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [1.36],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [1],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [10,000,000],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [100,000,000,000,000,000,000],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [0],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [None],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [\-10],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [\-1.36],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [\-1],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [\-10,000,000],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [nan],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [inf],
+),
+  table.cell(
+  colspan: 1,
+  stroke: (bottom: 0.6pt),
   [\-inf],
+),
 )
