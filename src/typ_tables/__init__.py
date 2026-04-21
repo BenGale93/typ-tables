@@ -55,6 +55,15 @@ class DefaultStyles:
         default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1pt")))
     )
 
+    def clear(self) -> None:
+        """Sets text and cell styles to None for all style holders."""
+        self.header.clear()
+        self.header_cells.clear()
+        self.stub_header_cell.clear()
+        self.stub_cell.clear()
+        self.body_cell.clear()
+        self.row_group.clear()
+
 
 @dataclass(frozen=True)
 class Heading:
@@ -689,4 +698,9 @@ class TypTable:
         if isinstance(inset, dict):
             inset = Sides(**inset)
         self._typ_data.inset = inset
+        return self
+
+    def clear_defaults(self) -> t.Self:
+        """Clears all the typ-table default styling."""
+        self._typ_data.default_styles.clear()
         return self

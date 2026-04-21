@@ -636,3 +636,15 @@ def test_apply_multiple_cell_styles(table_check, basic_data) -> None:
     warnings = table_check(result)
 
     assert len(warnings) == 0
+
+
+def test_clear_style(table_check, basic_data):
+    table = TypTable(basic_data).clear_defaults().tab_header("Table Header")
+
+    result = table.to_typst()
+
+    assert result == external("uuid:18e3eacb-9137-4f4a-9b64-6229932c8ab2.typ")
+
+    warnings = table_check(result)
+
+    assert len(warnings) == 0

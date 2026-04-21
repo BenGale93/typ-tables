@@ -428,3 +428,8 @@ class StyleHolder:
             A merged `StyleHolder` instance.
         """
         return self.__or__(value)
+
+    def clear(self) -> None:
+        """Clears all the styles from the holder."""
+        self.text = None
+        self.cell = None
