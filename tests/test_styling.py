@@ -532,6 +532,23 @@ class TestSetInset:
         assert len(warnings) == 0
 
 
+class TestSetRawStroke:
+    def test_stroke_function(self, table_check, basic_data):
+        table = (
+            TypTable(basic_data)
+            .clear_defaults()
+            .set_table_stroke("(x, y) => if y == 0 { (bottom: 0.7pt + black) }")
+            .tab_header("Test Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:17d0d3a4-399f-4cd9-80b0-26fc8eabc863.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 def test_apply_multiple_text_styles(table_check, basic_data) -> None:
     table = (
         TypTable(basic_data)

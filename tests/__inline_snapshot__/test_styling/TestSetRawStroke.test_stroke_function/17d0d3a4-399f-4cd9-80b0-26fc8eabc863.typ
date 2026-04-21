@@ -1,13 +1,13 @@
 #table(
   columns: 3,
-  stroke: 1pt + black,
+  stroke: (x, y) => if y == 0 { (bottom: 0.7pt + black) },
   align: (auto, auto, auto),
   inset: 0% + 5pt,
   
   table.header(
     table.cell(
       colspan: 3,
-      [Table Header],
+      [Test Header],
     ),
   ),
   table.header([string], [int], [float],),

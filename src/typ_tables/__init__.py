@@ -177,6 +177,7 @@ class TypData:
     styles: list[locators.StyledLoc] = field(default_factory=list)
     stubhead: str | Typst | None = None
     inset: str | Sides = "0% + 5pt"
+    stroke: str = "none"
 
     @classmethod
     def from_data(
@@ -394,7 +395,7 @@ class TypData:
 
 TABLE_TEMPLATE = Template("""#table(
   columns: $columns,
-  stroke: none,
+  stroke: $stroke,
   align: $alignment,
   inset: $inset,
   $header,
@@ -427,6 +428,7 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
         header=header,
         body=body,
         inset=typ.inset,
+        stroke=typ.stroke,
     )
     return typ.figure.add_figure_args(table_str)
 
@@ -700,7 +702,17 @@ class TypTable:
         self._typ_data.inset = inset
         return self
 
+    def set_table_stroke(self, stroke: str) -> t.Self:
+        """Set the table level stroke.
+
+        Note:
+            Can be a function, the raw string is used within the template.
+        """
+        self._typ_data.stroke = stroke
+        return self
+
     def clear_defaults(self) -> t.Self:
         """Clears all the typ-table default styling."""
         self._typ_data.default_styles.clear()
+        self._typ_data.stroke = "1pt + black"
         return self
