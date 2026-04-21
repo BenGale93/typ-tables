@@ -179,6 +179,41 @@ class LocColumnLabels:
 
 
 @dataclass
+class StyledLocStubhead(StyledLoc):
+    """Styled marker locator selecting the table stub head."""
+
+    style: StyleHolder
+
+
+@dataclass
+class LocStubhead:
+    """Marker locator selecting the stub head."""
+
+    def _apply_style(
+        self,
+        data: Data,  # noqa: ARG002
+        text: TextStyle | None = None,
+        cell: CellStyle | None = None,
+    ) -> StyledLocStubhead:
+        """Build a styled stub head locator.
+
+        Args:
+            data: Source data used for row-level style resolution.
+            text: Optional text style selector for body rows.
+            cell: Optional cell style selector for body rows.
+
+        Returns:
+            Styled stub head locator with per-row style holders.
+        """
+        text_style_for_cell = text.get_single() if text is not None else None
+        cell_style_for_cell = cell.get_single() if cell is not None else None
+
+        return StyledLocStubhead(
+            style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
+        )
+
+
+@dataclass
 class StyledLocStub(StyledLoc):
     """Styled marker locator selecting the table stub region."""
 

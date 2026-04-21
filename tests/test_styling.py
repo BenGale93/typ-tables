@@ -482,6 +482,26 @@ class TestStyleColumnLabels:
         assert len(warnings) == 0
 
 
+class TestStyleStubhead:
+    def test_fill_stub_head(self, table_check, group_data) -> None:
+        table = (
+            TypTable(group_data, rowname_col="fruit", groupname_col="group")
+            .tab_style(
+                text=style.TextStyle(fill="blue"),
+                locator=locators.LocStubhead(),
+            )
+            .tab_stubhead("Test")
+            .tab_header("Table Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:e16f9236-bae2-43fa-a5df-b3b98d644f5d.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 def test_apply_multiple_text_styles(table_check, basic_data) -> None:
     table = (
         TypTable(basic_data)

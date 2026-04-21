@@ -40,6 +40,9 @@ class DefaultStyles:
     header_cells: StyleHolder = field(
         default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
     )
+    stub_header_cell: StyleHolder = field(
+        default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
+    )
     stub_cell: StyleHolder = field(
         default_factory=lambda: StyleHolder(
             cell=CellStyleForCell(stroke=Sides(bottom="0.6pt", right="1pt"))
@@ -239,21 +242,22 @@ class TypData:
         columns = self.boxhead.get_stub_and_default_columns()
 
         column_label_stylers: dict[str, StyleHolder] = {}
+        stub_head_style = self.default_styles.stub_header_cell
         for style_info in self.styles:
-            if not isinstance(style_info, locators.StyledLocColumnLabels):
-                continue
-            columns_to_style = style_info.resolve(original_data)
-            for column_to_style in columns_to_style:
-                current_style = column_label_stylers.get(
-                    column_to_style, self.default_styles.header_cells
-                )
-                column_label_stylers[column_to_style] = current_style | style_info.style
+            if isinstance(style_info, locators.StyledLocColumnLabels):
+                columns_to_style = style_info.resolve(original_data)
+                for column_to_style in columns_to_style:
+                    current_style = column_label_stylers.get(
+                        column_to_style, self.default_styles.header_cells
+                    )
+                    column_label_stylers[column_to_style] = current_style | style_info.style
+            elif isinstance(style_info, locators.StyledLocStubhead):
+                stub_head_style = stub_head_style | style_info.style
 
         headers = []
         for col in columns:
             if col.col_type == "stub":
-                stub_header_cell_style = self.default_styles.header_cells
-                header_cell = stub_header_cell_style.to_typst(self.stubhead or "")
+                header_cell = stub_head_style.to_typst(self.stubhead or "")
             else:
                 header_cell_style = column_label_stylers.get(
                     col.var, self.default_styles.header_cells
