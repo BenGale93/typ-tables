@@ -6,7 +6,7 @@ import narwhals as nw
 from narwhals import selectors as ncs
 
 from typ_tables import ttypes
-from typ_tables.constants import ROW_INDEX
+from typ_tables._constants import ROW_INDEX
 
 ColumnSelector = ncs.Selector | list[str] | str | list[int] | int
 RowSelector = nw.Expr | list[int] | int

@@ -8,9 +8,9 @@ from dataclasses import dataclass
 
 import narwhals as nw
 
-from typ_tables import location, ttypes
-from typ_tables.constants import ROW_INDEX
-from typ_tables.formats import _numeric
+from typ_tables import _location, ttypes
+from typ_tables._constants import ROW_INDEX
+from typ_tables._formats import _numeric
 
 
 class FormatFn(t.Protocol):
@@ -36,12 +36,12 @@ class Formatter:
 def fmt(
     data: ttypes.Data,
     func: FormatFn,
-    columns: location.ColumnSelector | None = None,
-    rows: location.RowSelector | None = None,
+    columns: _location.ColumnSelector | None = None,
+    rows: _location.RowSelector | None = None,
 ) -> Formatter:
     """Create a formatter container."""
-    cols = location.resolve_columns(data, columns)
-    rows = location.resolve_rows(data, rows)
+    cols = _location.resolve_columns(data, columns)
+    rows = _location.resolve_rows(data, rows)
 
     return Formatter(func, cols, rows)
 

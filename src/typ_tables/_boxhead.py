@@ -4,7 +4,7 @@ import typing as t
 import warnings
 from dataclasses import dataclass
 
-from typ_tables import constants, escape, ttypes
+from typ_tables import _constants, _escape, ttypes
 
 ColType = t.Literal["default", "stub", "row_group", "hidden"]
 
@@ -15,14 +15,14 @@ class ColInfo:
 
     var: str
     col_type: ColType
-    column_label: str | escape.Typst | None = None
+    column_label: str | _escape.Typst | None = None
     column_align: ttypes.Alignment | ttypes.Auto = "auto"
     column_width: str | None = None
 
     @property
     def name(self) -> str:
         """Return the name of the column the table should use."""
-        return escape.escape_value(self.column_label or self.var)
+        return _escape.escape_value(self.column_label or self.var)
 
 
 class Boxhead(list[ColInfo]):
@@ -49,7 +49,7 @@ class Boxhead(list[ColInfo]):
             if col.var in col_names:
                 col.column_align = align
 
-    def set_cols_label(self, col_labels: dict[str, str | escape.Typst]) -> None:
+    def set_cols_label(self, col_labels: dict[str, str | _escape.Typst]) -> None:
         """Sets the labels of the columns using the given map."""
         for col in self:
             new_label = col_labels.get(col.var)
@@ -81,7 +81,7 @@ class Boxhead(list[ColInfo]):
         """Creates boxhead from the given data."""
         boxhead = cls([])
         for name in data.columns:
-            if name == constants.ROW_INDEX:
+            if name == _constants.ROW_INDEX:
                 continue
             if name == rowname_col:
                 col_type = "stub"

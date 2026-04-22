@@ -4,7 +4,7 @@ import math
 import typing as t
 
 if t.TYPE_CHECKING:
-    from typ_tables.formats import Numeric
+    from typ_tables._formats import Numeric
 
 
 def remove_minus(string: str) -> str:

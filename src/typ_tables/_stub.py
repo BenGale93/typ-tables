@@ -5,10 +5,10 @@ from dataclasses import dataclass, field
 
 import narwhals as nw
 
-from typ_tables import constants, ttypes
+from typ_tables import _constants, ttypes
 
 if t.TYPE_CHECKING:
-    from typ_tables.boxhead import Boxhead
+    from typ_tables._boxhead import Boxhead
 
 
 @dataclass
@@ -47,7 +47,7 @@ class GroupRows(list[GroupRowInfo]):
         unique_values = data.select(nw.col(group_key).unique())
         for group in unique_values[group_key]:
             row_indices = data.filter(nw.col(group_key) == nw.lit(group))[
-                constants.ROW_INDEX
+                _constants.ROW_INDEX
             ].to_list()
             group_map[group] = row_indices
 
@@ -128,7 +128,7 @@ class Stub:
 
         return cls(row_info, group_rows)
 
-    def group_indices_map(self) -> list[tuple[int, GroupRowInfo | None]]:  # noqa: D102
+    def group_indices_map(self) -> list[tuple[int, GroupRowInfo | None]]:
         return self.group_rows.indices_map(len(self.rows))
 
     def update_group_row_labels(self, data: ttypes.Data, boxhead: "Boxhead") -> None:

@@ -6,25 +6,25 @@ import polars as pl
 import pytest
 from inline_snapshot import external, snapshot
 
-from typ_tables import Sides, TypTable, locators, style
+from typ_tables import Sides, TypTable, _style, locators, style
 
 
 class TestAttributesMatch:
     def test_text_attrs_match(self):
-        assert [f.name for f in fields(style.TextStyleForCell)] == [
-            f.name for f in fields(style.TextStyle)
+        assert [f.name for f in fields(_style.TextStyleForCell)] == [
+            f.name for f in fields(_style.TextStyle)
         ]
 
     def test_cell_attrs_match(self):
-        assert [f.name for f in fields(style.CellStyleForCell)] == [
-            f.name for f in fields(style.CellStyle)
+        assert [f.name for f in fields(_style.CellStyleForCell)] == [
+            f.name for f in fields(_style.CellStyle)
         ]
 
 
 class TestMergeStyles:
     def test_merge_cell_style(self):
-        style_1 = style.CellStyleForCell(inset="10pt", align="auto")
-        style_2 = style.CellStyleForCell(align="bottom")
+        style_1 = _style.CellStyleForCell(inset="10pt", align="auto")
+        style_2 = _style.CellStyleForCell(align="bottom")
 
         merged_style = style_1 | style_2
 
@@ -32,8 +32,8 @@ class TestMergeStyles:
         assert merged_style.align == "bottom"
 
     def test_merge_text_style(self):
-        style_1 = style.TextStyleForCell(size="20pt", fill="red")
-        style_2 = style.TextStyleForCell(fill="blue")
+        style_1 = _style.TextStyleForCell(size="20pt", fill="red")
+        style_2 = _style.TextStyleForCell(fill="blue")
 
         merged_style = style_1 | style_2
 
@@ -41,17 +41,17 @@ class TestMergeStyles:
         assert merged_style.fill == "blue"
 
     def test_merge_text_style_with_sides(self):
-        style_1 = style.TextStyleForCell(stroke=style.Sides(bottom="1pt"))
-        style_2 = style.TextStyleForCell(stroke=style.Sides(right="1pt"))
+        style_1 = _style.TextStyleForCell(stroke=_style.Sides(bottom="1pt"))
+        style_2 = _style.TextStyleForCell(stroke=_style.Sides(right="1pt"))
 
         merged_style = style_1 | style_2
 
-        assert merged_style.stroke == style.Sides(right="1pt", bottom="1pt")
+        assert merged_style.stroke == _style.Sides(right="1pt", bottom="1pt")
 
     def test_merge_style_holder_none_is_replaced(self):
-        holder_1 = style.StyleHolder(text=None, cell=None)
-        holder_2 = style.StyleHolder(
-            text=style.TextStyleForCell(font="test"), cell=style.CellStyleForCell(align="end")
+        holder_1 = _style.StyleHolder(text=None, cell=None)
+        holder_2 = _style.StyleHolder(
+            text=_style.TextStyleForCell(font="test"), cell=_style.CellStyleForCell(align="end")
         )
 
         new_holder = holder_1 | holder_2
@@ -59,48 +59,48 @@ class TestMergeStyles:
         assert holder_2 == new_holder
 
     def test_merge_style_holder_default_and_none(self):
-        holder_1 = style.StyleHolder(
-            text=style.TextStyleForCell(font="test"), cell=style.CellStyleForCell(align="end")
+        holder_1 = _style.StyleHolder(
+            text=_style.TextStyleForCell(font="test"), cell=_style.CellStyleForCell(align="end")
         )
-        holder_2 = style.StyleHolder(text=None, cell=None)
+        holder_2 = _style.StyleHolder(text=None, cell=None)
 
         new_holder = holder_1 | holder_2
 
         assert holder_1 == new_holder
 
     def test_merge_style_holder_recursive_merge(self):
-        holder_1 = style.StyleHolder(
-            text=style.TextStyleForCell(weight="bold"), cell=style.CellStyleForCell(fill="red")
+        holder_1 = _style.StyleHolder(
+            text=_style.TextStyleForCell(weight="bold"), cell=_style.CellStyleForCell(fill="red")
         )
-        holder_2 = style.StyleHolder(
-            text=style.TextStyleForCell(font="test"), cell=style.CellStyleForCell(align="end")
+        holder_2 = _style.StyleHolder(
+            text=_style.TextStyleForCell(font="test"), cell=_style.CellStyleForCell(align="end")
         )
 
         new_holder = holder_1 | holder_2
 
-        assert new_holder.text == style.TextStyleForCell(font="test", weight="bold")
-        assert new_holder.cell == style.CellStyleForCell(align="end", fill="red")
+        assert new_holder.text == _style.TextStyleForCell(font="test", weight="bold")
+        assert new_holder.cell == _style.CellStyleForCell(align="end", fill="red")
 
 
 class TestApplyStyle:
     def test_apply_no_style(self):
         content = "Test content"
-        style_holder = style.StyleHolder()
+        style_holder = _style.StyleHolder()
 
         assert style_holder.to_typst(content) == snapshot("[Test content],")
 
     def test_apply_no_style_blank_stylers(self):
         content = "Test content"
-        style_holder = style.StyleHolder(
-            cell=style.CellStyleForCell(), text=style.TextStyleForCell()
+        style_holder = _style.StyleHolder(
+            cell=_style.CellStyleForCell(), text=_style.TextStyleForCell()
         )
 
         assert style_holder.to_typst(content) == snapshot("[Test content],")
 
     def test_apply_cell_style(self):
         content = "Test content"
-        cell_style = style.CellStyleForCell(align="right")
-        style_holder = style.StyleHolder(cell=cell_style)
+        cell_style = _style.CellStyleForCell(align="right")
+        style_holder = _style.StyleHolder(cell=cell_style)
 
         assert style_holder.to_typst(content) == snapshot("""\
 table.cell(
@@ -111,8 +111,8 @@ table.cell(
 
     def test_apply_text_size_style(self):
         content = "Test content"
-        text_style = style.TextStyleForCell(size="20pt")
-        style_holder = style.StyleHolder(text=text_style)
+        text_style = _style.TextStyleForCell(size="20pt")
+        style_holder = _style.StyleHolder(text=text_style)
 
         assert style_holder.to_typst(content) == snapshot("""\
 text(
@@ -122,8 +122,8 @@ text(
 
     def test_apply_text_fill_style(self):
         content = "Test content"
-        text_style = style.TextStyleForCell(fill="red")
-        style_holder = style.StyleHolder(text=text_style)
+        text_style = _style.TextStyleForCell(fill="red")
+        style_holder = _style.StyleHolder(text=text_style)
 
         assert style_holder.to_typst(content) == snapshot("""\
 text(
@@ -134,24 +134,24 @@ text(
 
 class TestCellStyle:
     def test_coerce_inset_dict(self):
-        cell_style = style.CellStyle(inset={"x": "10pt", "y": "20pt"})
+        cell_style = _style.CellStyle(inset={"x": "10pt", "y": "20pt"})
 
-        assert isinstance(cell_style.inset, style.Sides)
+        assert isinstance(cell_style.inset, _style.Sides)
         assert cell_style.inset.x == "10pt"
         assert cell_style.inset.y == "20pt"
 
     def test_coerce_inset_list_dict(self):
-        cell_style = style.CellStyle(inset=[{"x": "10pt", "y": "20pt"}, {"top": "30pt"}])
+        cell_style = _style.CellStyle(inset=[{"x": "10pt", "y": "20pt"}, {"top": "30pt"}])
 
         assert isinstance(cell_style.inset, list)
         sides_a = cell_style.inset[0]
         sides_b = cell_style.inset[1]
 
-        assert isinstance(sides_a, style.Sides)
+        assert isinstance(sides_a, _style.Sides)
         assert sides_a.x == "10pt"
         assert sides_a.y == "20pt"
 
-        assert isinstance(sides_b, style.Sides)
+        assert isinstance(sides_b, _style.Sides)
         assert sides_b.top == "30pt"
 
 
@@ -304,7 +304,7 @@ class TestStyleBody:
                 locator=locators.LocBody(),
             )
             .tab_style(
-                text=style.TextStyle(fill="blue"),
+                text=_style.TextStyle(fill="blue"),
                 locator=locators.LocBody(columns=ncs.numeric()),
             )
             .tab_header("Table Header")

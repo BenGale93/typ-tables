@@ -4,7 +4,7 @@ from inline_snapshot import external
 from narwhals import selectors as ncs
 
 from typ_tables import TypTable, locators, style
-from typ_tables.escape import Typst
+from typ_tables._escape import Typst
 
 
 class TestBasic:

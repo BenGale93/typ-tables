@@ -1,7 +1,6 @@
 from inline_snapshot import external
 
-from typ_tables import TypTable
-from typ_tables.escape import Typst
+from typ_tables import Typst, TypTable
 
 
 class TestTabHeader:

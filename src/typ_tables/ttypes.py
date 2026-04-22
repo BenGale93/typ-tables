@@ -11,3 +11,4 @@ Alignment = t.Literal["start", "end", "left", "center", "right", "top", "horizon
 Auto = t.Literal["auto"]
 
 Gutter = Auto | str
+Relative = str
