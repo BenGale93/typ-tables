@@ -14,6 +14,9 @@ dev = [
   { include-group = "test" },
   { include-group = "typing" },
 ]
+docs = [
+    "pillow>=12.2.0",
+]
 lint = ["ruff>=0.15.6"]
 test = [
   "pytest>=9.0.2",
