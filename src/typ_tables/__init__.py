@@ -65,6 +65,43 @@ class DefaultStyles:
         self.row_group.clear()
 
 
+@dataclass
+class _Gutter:
+    """Class representing the table gutters."""
+
+    value: ttypes.Gutter | None = None
+
+    def __str__(self) -> str:
+        """Typst string representation of the gutter."""
+        if self.value is None:
+            return "()"
+        return self.value
+
+    def __bool__(self) -> bool:
+        return bool(self.value)
+
+
+@dataclass
+class _Gutters:
+    """Class managing all potential gutter parameters."""
+
+    gutter: _Gutter = field(default_factory=_Gutter)
+    row_gutter: _Gutter = field(default_factory=_Gutter)
+    column_gutter: _Gutter = field(default_factory=_Gutter)
+
+    @property
+    def row(self) -> _Gutter:
+        if self.row_gutter:
+            return self.row_gutter
+        return self.gutter
+
+    @property
+    def column(self) -> _Gutter:
+        if self.column_gutter:
+            return self.column_gutter
+        return self.gutter
+
+
 @dataclass(frozen=True)
 class Heading:
     """Table heading metadata rendered above the main header row.
@@ -178,6 +215,7 @@ class TypData:
     stubhead: str | Typst | None = None
     inset: str | Sides = "0% + 5pt"
     stroke: str = "none"
+    gutters: _Gutters = field(default_factory=_Gutters)
 
     @classmethod
     def from_data(
@@ -395,6 +433,8 @@ class TypData:
 
 TABLE_TEMPLATE = Template("""#table(
   columns: $columns,
+  column-gutter: $column_gutter,
+  row-gutter: $row_gutter,
   stroke: $stroke,
   align: $alignment,
   inset: $inset,
@@ -429,6 +469,8 @@ def create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
         body=body,
         inset=typ.inset,
         stroke=typ.stroke,
+        row_gutter=typ.gutters.row,
+        column_gutter=typ.gutters.column,
     )
     return typ.figure.add_figure_args(table_str)
 
@@ -709,6 +751,19 @@ class TypTable:
             Can be a function, the raw string is used within the template.
         """
         self._typ_data.stroke = stroke
+        return self
+
+    def set_gutter(
+        self,
+        gutter: ttypes.Gutter | None = None,
+        row_gutter: ttypes.Gutter | None = None,
+        column_gutter: ttypes.Gutter | None = None,
+    ) -> t.Self:
+        """Set the table level gutter parameters."""
+        self._typ_data.gutters.gutter = _Gutter(gutter)
+        self._typ_data.gutters.row_gutter = _Gutter(row_gutter)
+        self._typ_data.gutters.column_gutter = _Gutter(column_gutter)
+
         return self
 
     def clear_defaults(self) -> t.Self:

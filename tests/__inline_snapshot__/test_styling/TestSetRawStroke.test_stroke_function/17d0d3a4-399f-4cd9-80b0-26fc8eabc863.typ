@@ -1,5 +1,7 @@
 #table(
   columns: 3,
+  column-gutter: (),
+  row-gutter: (),
   stroke: (x, y) => if y == 0 { (bottom: 0.7pt + black) },
   align: (auto, auto, auto),
   inset: 0% + 5pt,

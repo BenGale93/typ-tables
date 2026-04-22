@@ -9,3 +9,5 @@ Data = DataFrame[IntoDataFrameT]
 
 Alignment = t.Literal["start", "end", "left", "center", "right", "top", "horizon", "bottom"]
 Auto = t.Literal["auto"]
+
+Gutter = Auto | str

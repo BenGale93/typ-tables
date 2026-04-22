@@ -1,7 +1,7 @@
 #table(
   columns: 3,
-  column-gutter: (),
-  row-gutter: (),
+  column-gutter: 10pt,
+  row-gutter: 5pt,
   stroke: none,
   align: (auto, auto, auto),
   inset: 0% + 5pt,
@@ -11,7 +11,7 @@
       colspan: 3,
       align: center,
       stroke: (top: 1.2pt, bottom: 1.2pt),
-      [Table Header],
+      [Test Header],
     ),
   ),
   table.header(table.cell(
@@ -26,112 +26,67 @@
 ),),
   table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: red,
-  )[a],
+  [a],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[10],
+  [10],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[nan],
+  [nan],
 ),
   table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: red,
-  )[b],
+  [b],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[10000],
+  [10000],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[1e-06],
+  [1e-06],
 ),
   table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: red,
-  )[c],
+  [c],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[1000000],
+  [1000000],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[0.1368753],
+  [0.1368753],
 ),
   table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: red,
-  )[random\-letters],
+  [random\-letters],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[568282638583],
+  [568282638583],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[163985.8374],
+  [163985.8374],
 ),
   table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: red,
-  )[None],
+  [None],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[None],
+  [None],
 ), table.cell(
   colspan: 1,
-  align: right,
   stroke: (bottom: 0.6pt),
-  text(
-    fill: blue,
-  )[None],
+  [None],
 ),
 )

@@ -549,6 +549,32 @@ class TestSetRawStroke:
         assert len(warnings) == 0
 
 
+class TestSetGutter:
+    def test_gutter(self, table_check, basic_data):
+        table = TypTable(basic_data).set_gutter(gutter="5pt").tab_header("Test Header")
+        result = table.to_typst()
+
+        assert result == external("uuid:78b68a21-ccc4-41bd-b689-dd6184842b00.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_row_and_column_gutter(self, table_check, basic_data):
+        table = (
+            TypTable(basic_data)
+            .set_gutter(row_gutter="5pt", column_gutter="10pt")
+            .tab_header("Test Header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:34f83f56-6e13-4cbe-bc54-8e9f569bc815.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 def test_apply_multiple_text_styles(table_check, basic_data) -> None:
     table = (
         TypTable(basic_data)

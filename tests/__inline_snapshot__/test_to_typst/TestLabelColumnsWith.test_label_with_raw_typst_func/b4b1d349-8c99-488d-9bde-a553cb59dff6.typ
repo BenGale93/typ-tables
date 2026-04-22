@@ -1,5 +1,7 @@
 #table(
   columns: 3,
+  column-gutter: (),
+  row-gutter: (),
   stroke: none,
   align: (auto, auto, auto),
   inset: 0% + 5pt,
