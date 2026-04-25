@@ -276,3 +276,16 @@ class TestEdgeCases:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+    def test_column_label_with_underscore(self, table_check):
+        df = pl.DataFrame({"test_name": ["stuff", "more_stuff"]})
+
+        table = TypTable(df)
+
+        result = table.to_typst()
+
+        assert result == external("uuid:ebeb174f-9dfd-4dcf-800d-71d00af6e936.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0

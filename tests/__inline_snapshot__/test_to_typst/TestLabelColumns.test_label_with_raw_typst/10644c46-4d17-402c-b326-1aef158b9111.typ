@@ -7,13 +7,13 @@
   inset: 0% + 5pt,
   table.header(table.cell(
   stroke: (bottom: 1.2pt),
-  [\#strong\[String\]],
+  [#strong[String]],
 ), table.cell(
   stroke: (bottom: 1.2pt),
-  [\#underline\[Integer\]],
+  [#underline[Integer]],
 ), table.cell(
   stroke: (bottom: 1.2pt),
-  [\$pi r^2\$],
+  [$pi r^2$],
 ),),
   table.cell(
   colspan: 1,

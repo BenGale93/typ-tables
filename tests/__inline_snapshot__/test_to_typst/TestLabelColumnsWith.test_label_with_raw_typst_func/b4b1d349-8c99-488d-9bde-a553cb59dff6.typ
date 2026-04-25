@@ -10,10 +10,10 @@
   [string],
 ), table.cell(
   stroke: (bottom: 1.2pt),
-  [\#underline\[int\]],
+  [#underline[int]],
 ), table.cell(
   stroke: (bottom: 1.2pt),
-  [\#underline\[float\]],
+  [#underline[float]],
 ),),
   table.cell(
   colspan: 1,

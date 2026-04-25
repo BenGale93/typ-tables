@@ -20,9 +20,9 @@ class ColInfo:
     column_width: str | None = None
 
     @property
-    def name(self) -> str:
+    def name(self) -> _escape.Typst:
         """Return the name of the column the table should use."""
-        return _escape.escape_value(self.column_label or self.var)
+        return _escape.Typst(_escape.escape_value(self.column_label or self.var))
 
 
 class Boxhead(list[ColInfo]):

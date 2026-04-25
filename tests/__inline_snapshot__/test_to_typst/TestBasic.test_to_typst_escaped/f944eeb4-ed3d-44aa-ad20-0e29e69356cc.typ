@@ -7,7 +7,7 @@
   inset: 0% + 5pt,
   table.header(table.cell(
   stroke: (bottom: 1.2pt),
-  [\\\= Header],
+  [\= Header],
 ),),
   table.cell(
   colspan: 1,
