@@ -15,65 +15,65 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [0.00],
+  [0],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [0.00],
+  [0],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [100.00],
+  [100.0000001],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [100.00],
+  [100],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [1.36],
+  [1.69],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [1.00],
+  [1],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [1.00],
+  [1.0],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [113,525.00],
+  [113525],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [10,000,000.00],
+  [10000000.0],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [10,000,000.00],
+  [10000000],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [100,000,000,000,000,000,000.00],
+  [1e\+20],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [100,000,000,000,000,000.00],
+  [100000000000000000],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [0.00],
+  [0.0005009],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [993,383,853.00],
+  [993383853],
 ),
   table.cell(
   colspan: 1,
@@ -87,38 +87,38 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10.00],
+  [\-10.0000001],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10.00],
+  [\-10],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1.36],
+  [\-1.3572354],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1.00],
+  [\-1],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1.00],
+  [\-1.0],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [0.00],
+  [0],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10,000,000.00],
+  [\-10000000.0],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10,000,000.00],
+  [\-10000000],
 ),
   table.cell(
   colspan: 1,
@@ -127,7 +127,7 @@
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-868,238.00],
+  [\-868238],
 ),
   table.cell(
   colspan: 1,
@@ -136,7 +136,7 @@
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-342,523,532.00],
+  [\-342523532],
 ),
   table.cell(
   colspan: 1,

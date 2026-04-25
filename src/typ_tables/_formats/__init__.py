@@ -4,7 +4,7 @@ Numeric formatting code is taken from Great-Tables and adapted slightly.
 """
 
 import typing as t
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 import narwhals as nw
 
@@ -85,6 +85,24 @@ class FString:
         return data.with_columns(whens)
 
 
+def _format_by_cell(
+    data: ttypes.Data, cols: list[str], rows: list[int], fmt_value: t.Callable[[object], str | None]
+) -> ttypes.Data:
+    unique_rows = set(rows)
+    new_cols = []
+    for col in cols:
+        new_col = nw.new_series(
+            name=col,
+            values=[
+                fmt_value(value) if i in unique_rows else str(value)
+                for i, value in enumerate(data[col])
+            ],
+            backend=data.implementation,
+        )
+        new_cols.append(new_col)
+    return data.with_columns(*new_cols)
+
+
 @dataclass
 class Numeric:
     """Format numeric columns."""
@@ -104,21 +122,9 @@ class Numeric:
 
     def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
         """Formatting numeric values in the given columns and rows."""
-        unique_rows = set(rows)
-        new_cols = []
-        for col in cols:
-            new_col = nw.new_series(
-                name=col,
-                values=[
-                    self.fmt_value(value) if i in unique_rows else str(value)
-                    for i, value in enumerate(data[col])
-                ],
-                backend=data.implementation,
-            )
-            new_cols.append(new_col)
-        return data.with_columns(*new_cols)
+        return _format_by_cell(data, cols, rows, self.fmt_value)
 
-    def fmt_value(self, value: object) -> str | None:
+    def fmt_value(self, value: object) -> str | None:  # pragma: no cover
         """Formats an individual value."""
         if isinstance(value, str):
             try:
@@ -127,7 +133,7 @@ class Numeric:
                 return value
         elif value is None:
             return None
-        elif not isinstance(value, float):
+        elif not isinstance(value, (float, int)):
             return str(value)
 
         nan_or_inf = _numeric.is_nan_or_inf(value)
@@ -150,3 +156,32 @@ class Numeric:
             x_formatted = self.pattern.replace("{x}", x_formatted)
 
         return x_formatted
+
+
+@dataclass
+class Integer:
+    """Format integer columns."""
+
+    use_seps: bool
+    accounting: bool
+    scale_by: float
+    compact: bool
+    sep_mark: str
+    force_sign: bool
+    pattern: str
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting integer values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        numeric_config = Numeric(
+            **asdict(self),
+            decimals=0,
+            n_sigfig=None,
+            drop_trailing_zeros=False,
+            drop_trailing_dec_mark=True,
+            dec_mark="not used",
+        )
+        return numeric_config.fmt_value(value)

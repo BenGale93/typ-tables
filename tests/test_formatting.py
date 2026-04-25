@@ -132,6 +132,23 @@ def test_numeric(table_check, args, result):
                 float("inf"),
                 float("-inf"),
             ],
+            "integer": [
+                0,
+                100,
+                1,
+                113525,
+                10000000,
+                100000000000000000,
+                993383853,
+                None,
+                -10,
+                -1,
+                -0,
+                -10000000,
+                -868238,
+                -342523532,
+                None,
+            ],
         }
     )
 
@@ -152,6 +169,87 @@ def test_numeric_string_column(table_check):
     typst_table = table.to_typst()
 
     assert typst_table == external("uuid:38852fc1-fc60-42d1-b559-054d076d00dc.typ")
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
+
+
+def test_string_column_fmt_numeric_and_integer(table_check):
+    df = pl.DataFrame(
+        {
+            "string": ["stuff", "more_stuff"],
+            "other_string": ["stuff", "more_stuff"],
+        }
+    )
+
+    table = TypTable(df).fmt_number(columns="string").fmt_integer(columns="other_string")
+    typst_table = table.to_typst()
+
+    assert typst_table == external("uuid:fc51b5f6-3c07-4def-b65e-e8c8d0c195bb.typ")
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
+
+
+@pytest.mark.parametrize(
+    ("args", "result"),
+    [
+        ({}, external("uuid:default-integer.typ")),
+        ({"rows": [0]}, external("uuid:just-top-row-int.typ")),
+        ({"use_seps": False}, external("uuid:no-separators-int.typ")),
+        ({"accounting": True}, external("uuid:accounting-int.typ")),
+        ({"scale_by": 10}, external("uuid:scale-by-ten-int.typ")),
+        ({"compact": True}, external("uuid:compact-numbers-int.typ")),
+        ({"pattern": "${x}"}, external("uuid:dollar-pattern-int.typ")),
+        ({"force_sign": True}, external("uuid:force-sign-symbol-int.typ")),
+    ],
+)
+def test_integer(table_check, args, result):
+    df = pl.DataFrame(
+        {
+            "float": [
+                0.0,
+                100.0000001,
+                1.69,
+                1.0,
+                10000000,
+                1e20,
+                0.0005009,
+                None,
+                -10.0000001,
+                -1.3572354,
+                -1.0,
+                -10000000,
+                float("NaN"),
+                float("inf"),
+                float("-inf"),
+            ],
+            "integer": [
+                0,
+                100,
+                1,
+                113525,
+                10000000,
+                100000000000000000,
+                993383853,
+                None,
+                -10,
+                -1,
+                -0,
+                -10000000,
+                -868238,
+                -342523532,
+                None,
+            ],
+        }
+    )
+
+    table = TypTable(df).fmt_integer(**args)
+    typst_table = table.to_typst()
+
+    assert typst_table == result
 
     warnings = table_check(typst_table)
 

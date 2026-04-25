@@ -8,7 +8,7 @@ from narwhals.typing import IntoDataFrame
 from typ_tables import locators, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import Typst
-from typ_tables._formats import FString, Numeric, SubMissing, fmt
+from typ_tables._formats import FString, Integer, Numeric, SubMissing, fmt
 from typ_tables._gutter import GutterContainer
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables._typ_data import TABLE_TEMPLATE, Figure, Heading, TypData
@@ -235,6 +235,53 @@ class TypTable:
                     compact=compact,
                     pattern=pattern,
                     dec_mark=dec_mark,
+                    sep_mark=sep_mark,
+                    force_sign=force_sign,
+                ),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_integer(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        use_seps: bool = True,
+        accounting: bool = False,
+        scale_by: float = 1,
+        compact: bool = False,
+        pattern: str = "{x}",
+        sep_mark: str = ",",
+        force_sign: bool = False,
+    ) -> t.Self:
+        """Format selected integer values with configurable integer rules.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            use_seps: Whether to include thousands separators.
+            accounting: Whether to use accounting-style negatives.
+            scale_by: Multiplicative scaling factor before formatting.
+            compact: Whether to compact large numbers (for example, `1K`).
+            pattern: Output pattern containing `{x}` placeholder.
+            sep_mark: Thousands separator character.
+            force_sign: Whether to always show explicit sign symbols.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Integer(
+                    use_seps=use_seps,
+                    accounting=accounting,
+                    scale_by=scale_by,
+                    compact=compact,
+                    pattern=pattern,
                     sep_mark=sep_mark,
                     force_sign=force_sign,
                 ),
