@@ -52,22 +52,22 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1,000.00001%],
+  [-1,000.00001%],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-135.72354%],
+  [-135.72354%],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-100.00000%],
+  [-100.00000%],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1,000,000,000.00000%],
+  [-1,000,000,000.00000%],
 ),
   table.cell(
   colspan: 1,

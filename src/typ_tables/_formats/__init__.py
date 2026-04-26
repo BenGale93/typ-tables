@@ -264,6 +264,8 @@ class Percentage:
         else:
             value_formatted = percent_pattern.replace("{x}", value_formatted)
 
+        value_formatted = formatted(value_formatted)
+
         if is_negative and self.accounting:
             value_formatted = f"({_numeric.remove_minus(value_formatted)})"
 
