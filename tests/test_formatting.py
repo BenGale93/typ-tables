@@ -309,3 +309,71 @@ def test_percentage(table_check, args, result):
     warnings = table_check(typst_table)
 
     assert len(warnings) == 0
+
+
+@pytest.mark.parametrize(
+    ("args", "result"),
+    [
+        ({}, external("uuid:default-scientific.typ")),
+        ({"rows": [0]}, external("uuid:just-top-row-sci.typ")),
+        ({"decimals": 5}, external("uuid:five-decimals-sci.typ")),
+        ({"n_sigfig": 3}, external("uuid:three-sigfig-sci.typ")),
+        ({"drop_trailing_zeros": True}, external("uuid:drop-trailing-zeros-sci.typ")),
+        (
+            {"drop_trailing_dec_mark": False, "decimals": 0},
+            external("uuid:drop-trailing-dec-mark-sci.typ"),
+        ),
+        ({"scale_by": 10}, external("uuid:scale-by-ten-sci.typ")),
+        ({"pattern": "${x}"}, external("uuid:dollar-pattern-sci.typ")),
+        ({"dec_mark": ",", "sep_mark": "."}, external("uuid:use-different-marks-sci.typ")),
+        ({"force_sign_m": True, "force_sign_n": True}, external("uuid:force-sign-sci.typ")),
+    ],
+)
+def test_scientific(table_check, args, result):
+    df = pl.DataFrame(
+        {
+            "float": [
+                0.0,
+                100.0000001,
+                1.3572354,
+                1.0,
+                10000000,
+                1e20,
+                0.0005009,
+                None,
+                -10.0000001,
+                -1.3572354,
+                -1.0,
+                -10000000,
+                float("NaN"),
+                float("inf"),
+                float("-inf"),
+            ],
+            "integer": [
+                0,
+                100,
+                1,
+                113525,
+                10000000,
+                100000000000000000,
+                993383853,
+                None,
+                -10,
+                -1,
+                -0,
+                -10000000,
+                -868238,
+                -342523532,
+                None,
+            ],
+        }
+    )
+
+    table = TypTable(df).fmt_scientific(**args)
+    typst_table = table.to_typst()
+
+    assert typst_table == result
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0

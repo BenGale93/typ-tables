@@ -11,7 +11,7 @@
       colspan: 3,
       align: center,
       stroke: (top: 1.2pt, bottom: 1.2pt),
-      [\_Title Here\_],
+      [_Title Here_],
     ),
   ),
   table.header(table.cell(

@@ -1,10 +1,15 @@
 """Numeric formatting helper functions."""
 
 import math
+import re
 import typing as t
 
 if t.TYPE_CHECKING:
     from typ_tables._formats import Numeric
+
+
+def str_detect(string: str, pattern: str) -> bool:
+    return bool(re.match(pattern, string))
 
 
 def remove_minus(string: str) -> str:
@@ -275,3 +280,45 @@ def is_nan_or_inf(value: float) -> NaNorInf:
         return "nan"
     except OverflowError:
         return "inf"
+
+
+def _get_sci_parts(value: float, n_sigfig: int) -> tuple[bool, str, int, int]:
+    """Returns the properties for constructing a number in scientific notation."""
+    value = float(value)
+    sig_digits, power, is_negative = get_number_profile(value, n_sigfig)
+
+    dot_power = -(n_sigfig - 1)
+    ten_power = power + n_sigfig - 1
+
+    return is_negative, sig_digits, dot_power, ten_power
+
+
+def value_to_scientific_notation(
+    value: float,
+    decimals: int = 2,
+    n_sigfig: int | None = None,
+    dec_mark: str = ".",
+) -> str:
+    """Scientific notation.
+
+    Returns a string value with the correct precision and 10s exponent. An 'E' is placed between
+    the decimal value and 10s exponent.
+    """
+    # Transform value of `decimals` to `n_sigfig`
+    if n_sigfig:
+        pass
+    else:
+        n_sigfig = decimals + 1
+
+    is_negative, sig_digits, dot_power, ten_power = _get_sci_parts(value, n_sigfig)
+
+    return (
+        ("-" if is_negative else "")
+        + insert_decimal_mark(digits=sig_digits, power=dot_power, dec_mark=dec_mark)
+        + "E"
+        + str(ten_power)
+    )
+
+
+def has_sci_order_zero(value: float) -> bool:
+    return (value >= 1 and value < 10) or (value <= -1 and value > -10) or value == 0  # noqa: PLR2004

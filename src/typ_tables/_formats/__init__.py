@@ -10,6 +10,7 @@ import narwhals as nw
 
 from typ_tables import _location, ttypes
 from typ_tables._constants import ROW_INDEX
+from typ_tables._escape import formatted
 from typ_tables._formats import _numeric
 
 
@@ -265,6 +266,73 @@ class Percentage:
 
         if is_negative and self.accounting:
             value_formatted = f"({_numeric.remove_minus(value_formatted)})"
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
+
+
+@dataclass
+class Scientific:
+    """Format scientific columns."""
+
+    decimals: int
+    n_sigfig: int | None
+    drop_trailing_zeros: bool
+    drop_trailing_dec_mark: bool
+    scale_by: float
+    pattern: str
+    sep_mark: str
+    dec_mark: str
+    force_sign_m: bool
+    force_sign_n: bool
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting scientific values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        value = _coerce_value_to_numeric(value)
+        if not isinstance(value, (float, int)):
+            return value
+
+        nan_or_inf = _numeric.is_nan_or_inf(value)
+
+        value = value * self.scale_by
+
+        if nan_or_inf:
+            value_formatted = str(value)
+        else:
+            is_positive = value > 0
+
+            value_sci_notn = _numeric.value_to_scientific_notation(
+                value=value,
+                decimals=self.decimals,
+                n_sigfig=self.n_sigfig,
+                dec_mark=self.dec_mark,
+            )
+            sci_parts = value_sci_notn.split("E")
+
+            m_part, n_part = sci_parts
+
+            if self.drop_trailing_zeros:
+                m_part = m_part.rstrip("0")
+            if self.drop_trailing_dec_mark:
+                m_part = m_part.rstrip(".")
+
+            if is_positive and self.force_sign_m:
+                m_part = f"+{m_part}"
+
+            small_pos = _numeric.has_sci_order_zero(value=value)
+
+            if self.force_sign_n and not _numeric.str_detect(n_part, "-"):
+                n_part = "+" + n_part
+
+            value_formatted = m_part if small_pos else f"{m_part} #sym.times 10#super[{n_part}]"
+
+        value_formatted = formatted(value_formatted)
 
         if self.pattern != "{x}":
             value_formatted = self.pattern.replace("{x}", value_formatted)
