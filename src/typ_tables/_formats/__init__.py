@@ -67,7 +67,7 @@ class SubMissing:
             if data.select(nw.col(col)).schema[col].is_numeric():
                 cond = nw.col(col).is_null() | nw.col(col).is_nan()
             else:
-                cond = nw.col(col).is_null() | (nw.col(col) == nw.lit("nan"))
+                cond = nw.col(col).is_null() | (nw.col(col).str.contains("nan"))
 
             when = _create_when(col, rows, nw.lit(self.missing_text), cond)
             whens.append(when)
@@ -160,6 +160,8 @@ class Numeric:
         if is_negative and self.accounting:
             value_formatted = f"({_numeric.remove_minus(value_formatted)})"
 
+        value_formatted = formatted(value_formatted)
+
         if self.pattern != "{x}":
             value_formatted = self.pattern.replace("{x}", value_formatted)
 
@@ -237,9 +239,13 @@ class Percentage:
             compact=False,
             pattern="{x}",
         )
-        value_formatted = numeric_config.fmt_value(value)
-        if value_formatted is None or _numeric.is_nan_or_inf(value):
-            return value_formatted
+
+        value = value * scale_by
+
+        if _numeric.is_nan_or_inf(value):
+            return str(value)
+
+        value_formatted = _numeric.value_to_decimal_notation(value=value, config=numeric_config)
 
         is_negative = value < 0
         is_positive = value > 0

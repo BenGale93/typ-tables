@@ -87,25 +87,25 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10],
+  [-10],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10],
+  [-10],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1],
+  [-1],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1],
+  [-1],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-1],
+  [-1],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
@@ -114,11 +114,11 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10M],
+  [-10M],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-10M],
+  [-10M],
 ),
   table.cell(
   colspan: 1,
@@ -127,7 +127,7 @@
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-868K],
+  [-868K],
 ),
   table.cell(
   colspan: 1,
@@ -136,12 +136,12 @@
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-343M],
+  [-343M],
 ),
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-inf],
+  [-inf],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
