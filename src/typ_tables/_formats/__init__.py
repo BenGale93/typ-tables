@@ -346,3 +346,75 @@ class Scientific:
             value_formatted = self.pattern.replace("{x}", value_formatted)
 
         return value_formatted
+
+
+@dataclass
+class Engineering:
+    """Format engineering columns.
+
+    Engineering notation is like scientific notation, but the exponent is always
+    a multiple of 3. This makes it convenient for expressing values in SI units
+    (e.g., 1.23E3 = 1.23 k, 1.23E6 = 1.23 M, etc.).
+    """
+
+    decimals: int
+    n_sigfig: int | None
+    drop_trailing_zeros: bool
+    drop_trailing_dec_mark: bool
+    scale_by: float
+    pattern: str
+    sep_mark: str
+    dec_mark: str
+    force_sign_m: bool
+    force_sign_n: bool
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting engineering values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        value = _coerce_value_to_numeric(value)
+        if not isinstance(value, (float, int)):
+            return value
+
+        nan_or_inf = _numeric.is_nan_or_inf(value)
+
+        value = value * self.scale_by
+
+        if nan_or_inf:
+            value_formatted = str(value)
+        else:
+            is_positive = value > 0
+
+            value_eng_notn = _numeric.value_to_engineering_notation(
+                value=value,
+                decimals=self.decimals,
+                n_sigfig=self.n_sigfig,
+                dec_mark=self.dec_mark,
+            )
+            eng_parts = value_eng_notn.split("E")
+
+            m_part, n_part = eng_parts
+
+            if self.drop_trailing_zeros:
+                m_part = m_part.rstrip("0")
+            if self.drop_trailing_dec_mark:
+                m_part = m_part.rstrip(".")
+
+            if is_positive and self.force_sign_m:
+                m_part = f"+{m_part}"
+
+            small_pos = _numeric.has_sci_order_zero(value=value)
+
+            if self.force_sign_n and not _numeric.str_detect(n_part, "-"):
+                n_part = "+" + n_part
+
+            value_formatted = m_part if small_pos else f"{m_part} #sym.times 10#super[{n_part}]"
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted

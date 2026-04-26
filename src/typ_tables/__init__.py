@@ -8,7 +8,16 @@ from narwhals.typing import IntoDataFrame
 from typ_tables import locators, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import Typst
-from typ_tables._formats import FString, Integer, Numeric, Percentage, Scientific, SubMissing, fmt
+from typ_tables._formats import (
+    Engineering,
+    FString,
+    Integer,
+    Numeric,
+    Percentage,
+    Scientific,
+    SubMissing,
+    fmt,
+)
 from typ_tables._gutter import GutterContainer
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables._typ_data import TABLE_TEMPLATE, Figure, Heading, TypData
@@ -398,6 +407,68 @@ class TypTable:
             fmt(
                 self._df,
                 Scientific(
+                    decimals=decimals,
+                    n_sigfig=n_sigfig,
+                    drop_trailing_zeros=drop_trailing_zeros,
+                    drop_trailing_dec_mark=drop_trailing_dec_mark,
+                    scale_by=scale_by,
+                    pattern=pattern,
+                    sep_mark=sep_mark,
+                    dec_mark=dec_mark,
+                    force_sign_m=force_sign_m,
+                    force_sign_n=force_sign_n,
+                ),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_engineering(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        decimals: int = 2,
+        n_sigfig: int | None = None,
+        drop_trailing_zeros: bool = False,
+        drop_trailing_dec_mark: bool = True,
+        scale_by: float = 1,
+        pattern: str = "{x}",
+        sep_mark: str = ",",
+        dec_mark: str = ".",
+        force_sign_m: bool = False,
+        force_sign_n: bool = False,
+    ) -> t.Self:
+        """Format selected numeric values with engineering notation.
+
+        Engineering notation is like scientific notation, but the exponent is always
+        a multiple of 3. This makes it convenient for expressing values in SI units
+        (e.g., 1.23E3 = 1.23 k, 1.23E6 = 1.23 M, etc.).
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            decimals: Number of decimal places.
+            n_sigfig: Optional number of significant figures.
+            drop_trailing_zeros: Whether to remove trailing zero digits.
+            drop_trailing_dec_mark: Whether to remove dangling decimal marks.
+            scale_by: Multiplicative scaling factor before formatting.
+            pattern: Output pattern containing `{x}` placeholder.
+            sep_mark: Thousands separator character.
+            dec_mark: Decimal mark character.
+            force_sign_m: Should the plus sign be shown for positive values of
+                the mantissa (first component)?
+            force_sign_n: Should the plus sign be shown for positive values of
+                the exponent (second component)?
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Engineering(
                     decimals=decimals,
                     n_sigfig=n_sigfig,
                     drop_trailing_zeros=drop_trailing_zeros,

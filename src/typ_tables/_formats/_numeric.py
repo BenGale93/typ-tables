@@ -322,3 +322,37 @@ def value_to_scientific_notation(
 
 def has_sci_order_zero(value: float) -> bool:
     return (value >= 1 and value < 10) or (value <= -1 and value > -10) or value == 0  # noqa: PLR2004
+
+
+def value_to_engineering_notation(
+    value: float,
+    decimals: int = 2,
+    n_sigfig: int | None = None,
+    dec_mark: str = ".",
+) -> str:
+    """Engineering notation.
+
+    Returns a string value with the correct precision and 10s exponent. An 'E' is placed between
+    the decimal value and 10s exponent. The exponent is always a multiple of 3.
+    """
+    # Transform value of `decimals` to `n_sigfig`
+    if n_sigfig:
+        pass
+    else:
+        n_sigfig = decimals + 1
+
+    is_negative, sig_digits, dot_power, ten_power = _get_sci_parts(value, n_sigfig)
+
+    # Adjust exponent to be a multiple of 3
+    remainder = ten_power % 3
+    if remainder != 0:
+        # Adjust the exponent and the decimal position
+        ten_power -= remainder
+        dot_power += remainder
+
+    return (
+        ("-" if is_negative else "")
+        + insert_decimal_mark(digits=sig_digits, power=dot_power, dec_mark=dec_mark)
+        + "E"
+        + str(ten_power)
+    )
