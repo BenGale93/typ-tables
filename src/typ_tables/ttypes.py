@@ -12,3 +12,5 @@ Auto = t.Literal["auto"]
 
 Gutter = Auto | str
 Relative = str
+
+Placement = t.Literal["left", "right"]

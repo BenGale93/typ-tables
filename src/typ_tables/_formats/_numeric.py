@@ -32,13 +32,13 @@ def format_number_compactly(value: float, config: "Numeric") -> str:
 
     # Format the value to decimal notation; this is done before the `byte_units` text
     # is affixed to the value
-    x_formatted = value_to_decimal_notation(value=value, config=config)
+    value_formatted = value_to_decimal_notation(value=value, config=config)
 
     # Create a `suffix_pattern` object for affixing the `units_str`, which is the
     # string that represents the 'K', 'M', 'B', 'T', or 'Q' suffix
     suffix_pattern = f"{{x}}{units_str}"
 
-    return suffix_pattern.replace("{x}", x_formatted)
+    return suffix_pattern.replace("{x}", value_formatted)
 
 
 def value_to_decimal_notation(value: float, config: "Numeric") -> str:

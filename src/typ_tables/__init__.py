@@ -8,7 +8,7 @@ from narwhals.typing import IntoDataFrame
 from typ_tables import locators, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import Typst
-from typ_tables._formats import FString, Integer, Numeric, SubMissing, fmt
+from typ_tables._formats import FString, Integer, Numeric, Percentage, SubMissing, fmt
 from typ_tables._gutter import GutterContainer
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables._typ_data import TABLE_TEMPLATE, Figure, Heading, TypData
@@ -284,6 +284,72 @@ class TypTable:
                     pattern=pattern,
                     sep_mark=sep_mark,
                     force_sign=force_sign,
+                ),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_percentage(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        decimals: int = 2,
+        drop_trailing_zeros: bool = False,
+        drop_trailing_dec_mark: bool = True,
+        scale_values: bool = True,
+        use_seps: bool = True,
+        accounting: bool = False,
+        pattern: str = "{x}",
+        dec_mark: str = ".",
+        sep_mark: str = ",",
+        force_sign: bool = False,
+        placement: ttypes.Placement = "right",
+        incl_space: bool = False,
+    ) -> t.Self:
+        """Format selected numeric values with configurable numeric rules.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            decimals: Number of decimal places.
+            n_sigfig: Optional number of significant figures.
+            drop_trailing_zeros: Whether to remove trailing zero digits.
+            drop_trailing_dec_mark: Whether to remove dangling decimal marks.
+            scale_values: Should the values be scaled through multiplication by 100?
+            use_seps: Whether to include thousands separators.
+            accounting: Whether to use accounting-style negatives.
+            scale_by: Multiplicative scaling factor before formatting.
+            compact: Whether to compact large numbers (for example, `1K`).
+            pattern: Output pattern containing `{x}` placeholder.
+            sep_mark: Thousands separator character.
+            dec_mark: Decimal mark character.
+            force_sign: Whether to always show explicit sign symbols.
+            placement: Where to place the percent sign. Can be `left` or `right`.
+            incl_space: An option for whether to include a space between the
+                value and the percent sign.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Percentage(
+                    decimals=decimals,
+                    drop_trailing_zeros=drop_trailing_zeros,
+                    drop_trailing_dec_mark=drop_trailing_dec_mark,
+                    scale_values=scale_values,
+                    use_seps=use_seps,
+                    accounting=accounting,
+                    pattern=pattern,
+                    sep_mark=sep_mark,
+                    dec_mark=dec_mark,
+                    force_sign=force_sign,
+                    placement=placement,
+                    incl_space=incl_space,
                 ),
                 columns,
                 rows,

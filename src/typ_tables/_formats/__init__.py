@@ -103,6 +103,19 @@ def _format_by_cell(
     return data.with_columns(*new_cols)
 
 
+def _coerce_value_to_numeric(value: object) -> float | int | str | None:
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return value
+    elif value is None:
+        return value
+    elif not isinstance(value, (float, int)):  # pragma: no cover
+        return str(value)
+    return value
+
+
 @dataclass
 class Numeric:
     """Format numeric columns."""
@@ -126,15 +139,9 @@ class Numeric:
 
     def fmt_value(self, value: object) -> str | None:  # pragma: no cover
         """Formats an individual value."""
-        if isinstance(value, str):
-            try:
-                value = float(value)
-            except ValueError:
-                return value
-        elif value is None:
-            return None
-        elif not isinstance(value, (float, int)):
-            return str(value)
+        value = _coerce_value_to_numeric(value)
+        if not isinstance(value, (float, int)):
+            return value
 
         nan_or_inf = _numeric.is_nan_or_inf(value)
 
@@ -143,19 +150,19 @@ class Numeric:
         is_negative = value < 0
 
         if nan_or_inf:
-            x_formatted = str(value)
+            value_formatted = str(value)
         elif self.compact:
-            x_formatted = _numeric.format_number_compactly(value=value, config=self)
+            value_formatted = _numeric.format_number_compactly(value=value, config=self)
         else:
-            x_formatted = _numeric.value_to_decimal_notation(value=value, config=self)
+            value_formatted = _numeric.value_to_decimal_notation(value=value, config=self)
 
         if is_negative and self.accounting:
-            x_formatted = f"({_numeric.remove_minus(x_formatted)})"
+            value_formatted = f"({_numeric.remove_minus(value_formatted)})"
 
         if self.pattern != "{x}":
-            x_formatted = self.pattern.replace("{x}", x_formatted)
+            value_formatted = self.pattern.replace("{x}", value_formatted)
 
-        return x_formatted
+        return value_formatted
 
 
 @dataclass
@@ -185,3 +192,81 @@ class Integer:
             dec_mark="not used",
         )
         return numeric_config.fmt_value(value)
+
+
+@dataclass
+class Percentage:
+    """Format percentage columns."""
+
+    decimals: int
+    drop_trailing_zeros: bool
+    drop_trailing_dec_mark: bool
+    scale_values: bool
+    use_seps: bool
+    accounting: bool
+    pattern: str
+    sep_mark: str
+    dec_mark: str
+    force_sign: bool
+    placement: ttypes.Placement
+    incl_space: bool
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting percentage values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        scale_by = 100 if self.scale_values else 1
+        value = _coerce_value_to_numeric(value)
+        if not isinstance(value, (float, int)):
+            return value
+
+        numeric_config = Numeric(
+            decimals=self.decimals,
+            drop_trailing_zeros=self.drop_trailing_zeros,
+            drop_trailing_dec_mark=self.drop_trailing_dec_mark,
+            scale_by=scale_by,
+            use_seps=self.use_seps,
+            sep_mark=self.sep_mark,
+            dec_mark=self.dec_mark,
+            force_sign=False,
+            accounting=False,
+            n_sigfig=None,
+            compact=False,
+            pattern="{x}",
+        )
+        value_formatted = numeric_config.fmt_value(value)
+        if value_formatted is None or _numeric.is_nan_or_inf(value):
+            return value_formatted
+
+        is_negative = value < 0
+        is_positive = value > 0
+
+        percent_mark = "%"
+
+        space_character = " " if self.incl_space else ""
+        percent_pattern = (
+            f"{{x}}{space_character}{percent_mark}"
+            if self.placement == "right"
+            else f"{percent_mark}{space_character}{{x}}"
+        )
+
+        if is_negative and self.placement == "left":
+            value_formatted = value_formatted.replace("-", "")
+            value_formatted = percent_pattern.replace("{x}", value_formatted)
+            value_formatted = "-" + value_formatted
+        elif is_positive and self.force_sign and self.placement == "left":
+            value_formatted = value_formatted.replace("+", "")
+            value_formatted = percent_pattern.replace("{x}", value_formatted)
+            value_formatted = "+" + value_formatted
+        else:
+            value_formatted = percent_pattern.replace("{x}", value_formatted)
+
+        if is_negative and self.accounting:
+            value_formatted = f"({_numeric.remove_minus(value_formatted)})"
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
