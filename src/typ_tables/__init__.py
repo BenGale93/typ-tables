@@ -9,6 +9,7 @@ from typ_tables import locators, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import Typst
 from typ_tables._formats import (
+    Currency,
     Engineering,
     FString,
     Integer,
@@ -479,6 +480,82 @@ class TypTable:
                     dec_mark=dec_mark,
                     force_sign_m=force_sign_m,
                     force_sign_n=force_sign_n,
+                ),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_currency(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        currency: str,
+        use_subunits: bool = True,
+        decimals: int = 2,
+        drop_trailing_dec_mark: bool = True,
+        use_seps: bool = True,
+        accounting: bool = False,
+        scale_by: float = 1,
+        compact: bool = False,
+        pattern: str = "{x}",
+        sep_mark: str = ",",
+        dec_mark: str = ".",
+        force_sign: bool = False,
+        placement: ttypes.Placement = "left",
+        incl_space: bool = False,
+    ) -> t.Self:
+        """Format selected numeric values with engineering notation.
+
+        Engineering notation is like scientific notation, but the exponent is always
+        a multiple of 3. This makes it convenient for expressing values in SI units
+        (e.g., 1.23E3 = 1.23 k, 1.23E6 = 1.23 M, etc.).
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            currency: The currency to use for the numeric value.
+                This input can be supplied as a 3-letter currency code.
+            use_subunits: An option for whether the subunits portion of
+                a currency value should be displayed.
+            decimals: Number of decimal places.
+            drop_trailing_dec_mark: Whether to remove dangling decimal marks.
+            use_seps: Whether to include thousands separators.
+            accounting: Whether to use accounting style, which wraps negative
+                numbers in parentheses instead of using a minus sign.
+            scale_by: Multiplicative scaling factor before formatting.
+            compact: Whether to compact large numbers (for example, `1K`).
+            pattern: Output pattern containing `{x}` placeholder.
+            sep_mark: Thousands separator character.
+            dec_mark: Decimal mark character.
+            force_sign: Whether to always show explicit sign symbols.
+            placement: Where to place the currency sign. Can be `left` or `right`.
+            incl_space: An option for whether to include a space between the
+                value and the currency sign.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Currency(
+                    currency=currency,
+                    use_subunits=use_subunits,
+                    decimals=decimals,
+                    drop_trailing_dec_mark=drop_trailing_dec_mark,
+                    use_seps=use_seps,
+                    accounting=accounting,
+                    scale_by=scale_by,
+                    compact=compact,
+                    pattern=pattern,
+                    sep_mark=sep_mark,
+                    dec_mark=dec_mark,
+                    force_sign=force_sign,
+                    placement=placement,
+                    incl_space=incl_space,
                 ),
                 columns,
                 rows,

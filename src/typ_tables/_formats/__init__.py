@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 
 import narwhals as nw
 
-from typ_tables import _location, ttypes
+from typ_tables import _locale, _location, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import formatted
 from typ_tables._formats import _numeric
@@ -411,6 +411,99 @@ class Engineering:
                 n_part = "+" + n_part
 
             value_formatted = m_part if small_pos else f"{m_part} #sym.times 10#super[{n_part}]"
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
+
+
+@dataclass
+class Currency:
+    """Format currency columns."""
+
+    currency: str
+    use_subunits: bool
+    decimals: int
+    drop_trailing_dec_mark: bool
+    use_seps: bool
+    accounting: bool
+    scale_by: float
+    compact: bool
+    pattern: str
+    sep_mark: str
+    dec_mark: str
+    force_sign: bool
+    placement: ttypes.Placement
+    incl_space: bool
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting currency values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        value = _coerce_value_to_numeric(value)
+        if not isinstance(value, (float, int)):
+            return value
+
+        if _numeric.is_nan_or_inf(value):
+            return str(value)
+
+        value = value * self.scale_by
+
+        is_positive = value > 0
+        is_negative = value < 0
+
+        currency_symbol = _locale.get_currency_str(self.currency)
+
+        if currency_symbol == "$":
+            currency_symbol = r"\$"
+
+        numeric = Numeric(
+            decimals=self.decimals,
+            n_sigfig=None,
+            drop_trailing_zeros=False,
+            drop_trailing_dec_mark=self.drop_trailing_dec_mark,
+            use_seps=self.use_seps,
+            sep_mark=self.sep_mark,
+            dec_mark=self.dec_mark,
+            force_sign=self.force_sign,
+            accounting=self.accounting,
+            scale_by=self.scale_by,
+            compact=self.compact,
+            pattern=self.pattern,
+        )
+
+        if self.compact:
+            value_formatted = _numeric.format_number_compactly(value=value, config=numeric)
+        else:
+            value_formatted = _numeric.value_to_decimal_notation(value=value, config=numeric)
+
+        # Create a currency pattern for affixing the currency symbol
+        space_character = " " if self.incl_space else ""
+        currency_pattern = (
+            f"{{x}}{space_character}{currency_symbol}"
+            if self.placement == "right"
+            else f"{currency_symbol}{space_character}{{x}}"
+        )
+
+        if is_negative and self.placement == "left":
+            value_formatted = value_formatted.replace("-", "")
+            value_formatted = currency_pattern.replace("{x}", value_formatted)
+            value_formatted = "-" + value_formatted
+        elif is_positive and self.force_sign and self.placement == "left":
+            value_formatted = value_formatted.replace("+", "")
+            value_formatted = currency_pattern.replace("{x}", value_formatted)
+            value_formatted = "+" + value_formatted
+        else:
+            value_formatted = currency_pattern.replace("{x}", value_formatted)
+
+        # Implement minus sign replacement for `x_formatted` or use accounting style
+        if is_negative and self.accounting:
+            value_formatted = f"({_numeric.remove_minus(value_formatted)})"
 
         value_formatted = formatted(value_formatted)
 
