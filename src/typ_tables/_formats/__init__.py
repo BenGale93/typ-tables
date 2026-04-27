@@ -5,13 +5,14 @@ Numeric formatting code is taken from Great-Tables and adapted slightly.
 
 import typing as t
 from dataclasses import asdict, dataclass
+from datetime import date, datetime, time
 
 import narwhals as nw
 
 from typ_tables import _locale, _location, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import formatted
-from typ_tables._formats import _numeric
+from typ_tables._formats import _datetime, _numeric
 
 
 class FormatFn(t.Protocol):
@@ -504,6 +505,157 @@ class Currency:
         # Implement minus sign replacement for `x_formatted` or use accounting style
         if is_negative and self.accounting:
             value_formatted = f"({_numeric.remove_minus(value_formatted)})"
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
+
+
+# Date and time related formatters
+
+
+@dataclass
+class Date:
+    """Format date columns.
+
+    Format input values to date values using one of 17 preset date styles.
+    Input can be in the form of `date` type or as an ISO-8601 string
+    (in the form of `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD`).
+    """
+
+    date_style: ttypes.DateStyle = "iso"
+    pattern: str = "{x}"
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting date values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        if value is None:
+            return None
+
+        # If `value` is a string, we assume it is an ISO date string and convert it to a date object
+        if isinstance(value, str):
+            # Convert the ISO date string to a date object
+            value = datetime.fromisoformat(value).date()
+
+        # Stop if `value` is not a valid date object
+        elif not isinstance(value, date):
+            msg = f"Invalid date object: '{value}'. The object must be a date object."
+            raise ValueError(msg)  # noqa: TRY004
+
+        # Get the date format string based on the `date_style` value
+        date_format_str = _datetime.get_date_format(self.date_style)
+
+        # Format the date object to a string using strftime
+        value_formatted = value.strftime(date_format_str)
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
+
+
+@dataclass
+class Time:
+    """Format time columns.
+
+    Format input values to time values using one of 5 preset time styles.
+    Input can be in the form of `time` values, or strings in the ISO 8601
+    forms of `HH:MM:SS` or `YYYY-MM-DD HH:MM:SS`.
+    """
+
+    time_style: ttypes.TimeStyle = "iso"
+    pattern: str = "{x}"
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting time values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        if value is None:
+            return None
+
+        # If `value` is a string, assume it is an ISO time string and convert it to a time object
+        if isinstance(value, str):
+            # Convert the ISO time string to a time object
+            value = time.fromisoformat(value)
+
+        # Stop if `value` is not a valid time object
+        elif not isinstance(value, time):
+            msg = f"Invalid time object: '{value}'. The object must be a time object."
+            raise ValueError(msg)  # noqa: TRY004
+
+        # Get the time format string based on the `time_style` value
+        time_format_str = _datetime.get_time_format(self.time_style)
+
+        # Format the time object to a string using strftime
+        value_formatted = value.strftime(time_format_str)
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
+
+
+@dataclass
+class Datetime:
+    """Format datetime columns.
+
+    Format input values to datetime values using one of 17 preset date styles
+    and one of 5 preset time styles. Input can be in the form of `datetime` values,
+    or strings in the ISO 8601 forms of `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD`.
+    """
+
+    date_style: ttypes.DateStyle = "iso"
+    time_style: ttypes.TimeStyle = "iso"
+    format_str: str | None = None
+    sep: str = " "
+    pattern: str = "{x}"
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting datetime values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        if value is None:
+            return None
+
+        # If `value` is a string, assume it is an ISO datetime string
+        # and convert it to a datetime object
+        if isinstance(value, str):
+            # Convert the ISO datetime string to a datetime object
+            value = datetime.fromisoformat(value)
+
+        # Stop if `value` is not a valid datetime object
+        elif not isinstance(value, datetime):
+            msg = f"Invalid datetime object: '{value}'. The object must be a datetime object."
+            raise ValueError(msg)  # noqa: TRY004
+
+        if self.format_str is not None:
+            value_formatted = value.strftime(self.format_str)
+        else:
+            # Get the date format string based on the `date_style` value
+            date_format_str = _datetime.get_date_format(self.date_style)
+
+            # Get the time format string based on the `time_style` value
+            time_format_str = _datetime.get_time_format(self.time_style)
+
+            # From the date and time format strings, create a datetime format string
+            datetime_format_str = f"{date_format_str}{self.sep}{time_format_str}"
+
+            # Format the datetime object to a string using strftime
+            value_formatted = value.strftime(datetime_format_str)
 
         value_formatted = formatted(value_formatted)
 

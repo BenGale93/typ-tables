@@ -10,6 +10,8 @@ from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import Typst
 from typ_tables._formats import (
     Currency,
+    Date,
+    Datetime,
     Engineering,
     FString,
     Integer,
@@ -17,6 +19,7 @@ from typ_tables._formats import (
     Percentage,
     Scientific,
     SubMissing,
+    Time,
     fmt,
 )
 from typ_tables._gutter import GutterContainer
@@ -556,6 +559,106 @@ class TypTable:
                     force_sign=force_sign,
                     placement=placement,
                     incl_space=incl_space,
+                ),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_date(
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        date_style: ttypes.DateStyle = "iso",
+        pattern: str = "{x}",
+    ) -> t.Self:
+        """Format selected date values with configurable date rules.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            date_style: The date style to use for formatting.
+            pattern: Output pattern containing `{x}` placeholder.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Date(date_style=date_style, pattern=pattern),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_time(
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        time_style: ttypes.TimeStyle = "iso",
+        pattern: str = "{x}",
+    ) -> t.Self:
+        """Format selected time values with configurable time rules.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            time_style: The time style to use for formatting.
+            pattern: Output pattern containing `{x}` placeholder.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Time(time_style=time_style, pattern=pattern),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_datetime(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        date_style: ttypes.DateStyle = "iso",
+        time_style: ttypes.TimeStyle = "iso",
+        format_str: str | None = None,
+        sep: str = " ",
+        pattern: str = "{x}",
+    ) -> t.Self:
+        """Format selected datetime values with configurable date and time rules.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            date_style: The date style to use for formatting.
+            time_style: The time style to use for formatting.
+            format_str: Optional strftime format string.
+                If provided, date_style and time_style are ignored.
+            sep: Separator between date and time components.
+            pattern: Output pattern containing `{x}` placeholder.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Datetime(
+                    date_style=date_style,
+                    time_style=time_style,
+                    format_str=format_str,
+                    sep=sep,
+                    pattern=pattern,
                 ),
                 columns,
                 rows,

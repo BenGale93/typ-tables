@@ -14,3 +14,31 @@ Gutter = Auto | str
 Relative = str
 
 Placement = t.Literal["left", "right"]
+
+DateStyle = t.Literal[
+    "iso",
+    "wday_month_day_year",
+    "wd_m_day_year",
+    "wday_day_month_year",
+    "month_day_year",
+    "m_day_year",
+    "day_m_year",
+    "day_month_year",
+    "day_month",
+    "day_m",
+    "year",
+    "month",
+    "day",
+    "year.mn.day",
+    "y.mn.day",
+    "year_week",
+    "year_quarter",
+]
+
+TimeStyle = t.Literal[
+    "iso",
+    "iso-short",
+    "h_m_s_p",
+    "h_m_p",
+    "h_p",
+]
