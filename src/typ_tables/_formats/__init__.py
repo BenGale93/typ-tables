@@ -663,3 +663,98 @@ class Datetime:
             value_formatted = self.pattern.replace("{x}", value_formatted)
 
         return value_formatted
+
+
+# True/False formatter
+
+
+TF_FORMATS: dict[str, list[str]] = {
+    "true-false": ["true", "false"],
+    "yes-no": ["yes", "no"],
+    "up-down": ["up", "down"],
+    "check-mark": ["#sym.checkmark", "#sym.crossmark"],
+    "circles": ["#sym.circle.filled", "#sym.circle"],
+    "squares": ["#sym.square.filled", "#sym.square"],
+    "diamonds": ["#sym.diamond.filled", "#sym.diamond"],
+    "arrows": ["#sym.arrow.t", "#sym.arrow.b"],
+    "triangles": ["#sym.triangle.filled.t", "#sym.triangle.filled.b"],
+    "triangles-lr": ["#sym.triangle.filled.r", "#sym.triangle.filled.l"],
+}
+
+
+def _get_tf_vals(
+    tf_style: str, true_val: str | None = None, false_val: str | None = None
+) -> list[str]:
+    """Get the `True`/`False` text values based on the `tf_style`, with optional overrides.
+
+    Args:
+        tf_style: The `True`/`False` mapping style to use.
+        true_val: Optional override for the True value.
+        false_val: Optional override for the False value.
+
+    Returns:
+        A list of two strings representing the `True` and `False` values.
+
+    Raises:
+        ValueError: If `tf_style` is not a valid style.
+    """
+    # Get the base values from the TF_FORMATS dictionary
+    if tf_style not in TF_FORMATS:
+        msg = f"Invalid `tf_style`: {tf_style}. Must be one of {list(TF_FORMATS.keys())}."
+        raise ValueError(msg)
+    tf_vals = TF_FORMATS[tf_style].copy()
+
+    # Override with provided values if any
+    if true_val is not None:
+        tf_vals[0] = true_val
+    if false_val is not None:
+        tf_vals[1] = false_val
+
+    return tf_vals
+
+
+@dataclass
+class Tf:
+    """Format boolean columns.
+
+    Format boolean values using preset styles or custom text values.
+    Supports mapping True/False values to text or symbols.
+    """
+
+    tf_style: ttypes.TfStyle = "true-false"
+    pattern: str = "{x}"
+    true_val: str | None = None
+    false_val: str | None = None
+    na_val: str | None = None
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting boolean values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        # Handle None/NA values
+        if value is None:
+            if self.na_val is None:
+                return None
+            return self.na_val
+
+        # Validate that the value is a boolean
+        if not isinstance(value, bool):
+            msg = f"Expected boolean value or NA, but got {type(value)}."
+            raise ValueError(msg)  # noqa: TRY004
+
+        # Get the True/False text values with overrides
+        tf_vals = _get_tf_vals(
+            tf_style=self.tf_style, true_val=self.true_val, false_val=self.false_val
+        )
+
+        # Get the appropriate text value
+        value_formatted = tf_vals[0] if value else tf_vals[1]
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted

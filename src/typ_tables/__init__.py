@@ -19,6 +19,7 @@ from typ_tables._formats import (
     Percentage,
     Scientific,
     SubMissing,
+    Tf,
     Time,
     fmt,
 )
@@ -659,6 +660,89 @@ class TypTable:
                     format_str=format_str,
                     sep=sep,
                     pattern=pattern,
+                ),
+                columns,
+                rows,
+            )
+        )
+        return self
+
+    def fmt_tf(  # noqa: PLR0913
+        self,
+        columns: ColumnSelector | None = None,
+        rows: RowSelector | None = None,
+        *,
+        tf_style: ttypes.TfStyle = "true-false",
+        pattern: str = "{x}",
+        true_val: str | None = None,
+        false_val: str | None = None,
+        na_val: str | None = None,
+    ) -> t.Self:
+        """Format selected boolean values with configurable True/False rules.
+
+        There can be times where boolean values are useful in a display table. You might want to
+        express a 'yes' or 'no', a 'true' or 'false', or, perhaps use pairings of complementary
+        symbols that make sense in a table. The `fmt_tf()` method has a set of `tf_style=` presets
+        that can be used to quickly map `True`/`False` values to strings, or, symbols like up/down
+        or left/right arrows and open/closed shapes.
+
+        While the presets are nice, you can provide your own mappings through the `true_val=` and
+        `false_val=` arguments. For extra customization, you can also handle missing values with
+        the `na_val=` option.
+
+        Args:
+            columns: Optional column selector limiting where formatting applies.
+            rows: Optional row selector limiting where formatting applies.
+            tf_style: The `True`/`False` mapping style to use. By default this is the short name
+                `"true-false"` which corresponds to the words `"true"` and `"false"`. Two other
+                `tf_style=` values produce words: `"yes-no"` and `"up-down"`. The remaining options
+                involve pairs of symbols (e.g., `"check-mark"` displays a check mark for `True`
+                and an ✗ symbol for `False`).
+            pattern: A formatting pattern that allows for decoration of the formatted value. The
+                formatted value is represented by the `{x}` (which can be used multiple times, if
+                needed) and all other characters will be interpreted as string literals.
+            true_val: While the choice of a `tf_style=` will typically supply the `true_val=` and
+                `false_val=` text, we could override this and supply text for any `True` values.
+                This doesn't need to be used in conjunction with `false_val=`.
+            false_val: While the choice of a `tf_style=` will typically supply the `true_val=` and
+                `false_val=` text, we could override this and supply text for any `False` values.
+                This doesn't need to be used in conjunction with `true_val=`.
+            na_val: None of the `tf_style` presets will replace any missing values encountered in
+                the targeted cells. While we always have the option to use `sub_missing()` for NA
+                replacement, we have the opportunity handle missing values here with the `na_val=`
+                option.
+
+        Returns:
+            The current table instance for chaining.
+
+        Note:
+            Formatting with the `tf_style=` argument:
+
+            We need to supply a preset `tf_style=` value. The following table provides a listing
+            of all `tf_style=` values and their output `True` and `False` values.
+
+            |    | TF Style        | Output                              |
+            |----|-----------------|-------------------------------------|
+            | 1  | `"true-false"`  | `"true"` / `"false"`               |
+            | 2  | `"yes-no"`      | `"yes"` / `"no"`                   |
+            | 3  | `"up-down"`     | `"up"` / `"down"`                  |
+            | 4  | `"check-mark"`  | `#sym.checkmark` / `#sym.crossmark`         |
+            | 5  | `"circles"`     | `#sym.circle.filled` / `#sym.circle`|
+            | 6  | `"squares"`     | `#sym.square.filled` / `#sym.square`|
+            | 7  | `"diamonds"`    | `#sym.diamond.filled` / `#sym.diamond`|
+            | 8  | `"arrows"`      | `#sym.arrow.t` / `#sym.arrow.b` |
+            | 9  | `"triangles"`   | `#sym.triangle.filled.t` / `#sym.triangle.filled.b`|
+            | 10 | `"triangles-lr"`| `#sym.triangle.filled.r` / `#sym.triangle.filled.l`|
+        """
+        self._typ_data.formats.append(
+            fmt(
+                self._df,
+                Tf(
+                    tf_style=tf_style,
+                    pattern=pattern,
+                    true_val=true_val,
+                    false_val=false_val,
+                    na_val=na_val,
                 ),
                 columns,
                 rows,

@@ -42,3 +42,16 @@ TimeStyle = t.Literal[
     "h_m_p",
     "h_p",
 ]
+
+TfStyle = t.Literal[
+    "true-false",
+    "yes-no",
+    "up-down",
+    "check-mark",
+    "circles",
+    "squares",
+    "diamonds",
+    "arrows",
+    "triangles",
+    "triangles-lr",
+]
