@@ -3,6 +3,7 @@
 Numeric formatting code is taken from Great-Tables and adapted slightly.
 """
 
+import math
 import typing as t
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, time
@@ -751,6 +752,115 @@ class Tf:
 
         # Get the appropriate text value
         value_formatted = tf_vals[0] if value else tf_vals[1]
+
+        value_formatted = formatted(value_formatted)
+
+        if self.pattern != "{x}":
+            value_formatted = self.pattern.replace("{x}", value_formatted)
+
+        return value_formatted
+
+
+# Bytes formatter
+
+
+@dataclass
+class Bytes:
+    """Format bytes columns.
+
+    Format numeric values as bytes with human-readable units. Supports either
+    decimal units (powers of 1000, e.g., "kB", "MB") or binary units (powers of
+    1024, e.g., "KiB", "MiB"). Input values are assumed to represent the number
+    of bytes and will be automatically scaled to the appropriate unit.
+    """
+
+    standard: ttypes.BytesStyle = "decimal"
+    decimals: int = 1
+    n_sigfig: int | None = None
+    drop_trailing_zeros: bool = True
+    drop_trailing_dec_mark: bool = True
+    use_seps: bool = True
+    pattern: str = "{x}"
+    sep_mark: str = ","
+    dec_mark: str = "."
+    force_sign: bool = False
+    incl_space: bool = True
+
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting bytes values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    def fmt_value(self, value: object) -> str | None:
+        """Formats an individual value."""
+        value = _coerce_value_to_numeric(value)
+        if not isinstance(value, (float, int)):
+            return value
+
+        if _numeric.is_nan_or_inf(value):
+            return str(value)
+
+        # Truncate all byte values by casting to an integer; this is done because bytes
+        # are always whole numbers
+        value = int(value)
+
+        # Get the `base` value and the `byte_units` list based on the `standard` value
+        if self.standard == "decimal":
+            # This is the 'decimal' standard (the default)
+            base = 1000
+            byte_units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+        else:
+            # This is the 'binary' standard
+            base = 1024
+            byte_units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+
+        # Determine the power index for the value
+        if value == 0:
+            # If the value is zero, then the power index is 1; otherwise, we'd get
+            # an error when trying to calculate the log of zero
+            num_power_idx = 1
+        else:
+            # Otherwise, we can calculate the power index by taking the log of the value
+            # and dividing by the log of the base; we add 1 to the result to account for
+            # the fact that the power index is 1-based (i.e., the first element in the
+            # `byte_units` list is at index 0) --- the final statement ensures that the
+            # power index is always at least 1
+            num_power_idx = math.floor(math.log(abs(value), base)) + 1
+            num_power_idx = max(1, min(len(byte_units), num_power_idx))
+
+        # The `units_str` is obtained by indexing the `byte_units` list with the `num_power_idx`
+        # value; this is the string that will be affixed to the formatted value
+        units_str = byte_units[num_power_idx - 1]
+
+        # Scale `value` by a defined `base` value, this is done by dividing by the
+        # `base` value raised to the power index minus 1 (we subtract 1 because the
+        # power index is 1-based)
+        value = value / base ** (num_power_idx - 1)
+
+        # Format the value to decimal notation; this is done before the `byte_units` text
+        # is affixed to the value
+        numeric_config = Numeric(
+            decimals=self.decimals,
+            n_sigfig=self.n_sigfig,
+            drop_trailing_zeros=self.drop_trailing_zeros,
+            drop_trailing_dec_mark=self.drop_trailing_dec_mark,
+            use_seps=self.use_seps,
+            sep_mark=self.sep_mark,
+            dec_mark=self.dec_mark,
+            force_sign=self.force_sign,
+            accounting=False,
+            scale_by=1,
+            compact=False,
+            pattern="{x}",
+        )
+
+        value_formatted = _numeric.value_to_decimal_notation(value=value, config=numeric_config)
+
+        # Create a `bytes_pattern` object for affixing the `units_str`, which is the
+        # string that represents the byte units
+        space_character = " " if self.incl_space else ""
+        bytes_pattern = f"{{x}}{space_character}{units_str}"
+
+        value_formatted = bytes_pattern.replace("{x}", value_formatted)
 
         value_formatted = formatted(value_formatted)
 

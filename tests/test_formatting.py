@@ -516,3 +516,79 @@ def test_currency_bad_code():
 
     with pytest.raises(ValueError, match=r"'TST' is not a recognised"):
         table.to_typst()
+
+
+@pytest.mark.parametrize(
+    ("args", "result"),
+    [
+        ({}, external("uuid:default-bytes.typ")),
+        ({"rows": [0]}, external("uuid:just-top-row-bytes.typ")),
+        ({"decimals": 5}, external("uuid:five-decimals-bytes.typ")),
+        ({"n_sigfig": 3}, external("uuid:three-sigfig-bytes.typ")),
+        ({"drop_trailing_zeros": True}, external("uuid:drop-trailing-zeros-bytes.typ")),
+        (
+            {"drop_trailing_dec_mark": False, "decimals": 0},
+            external("uuid:drop-trailing-dec-mark-bytes.typ"),
+        ),
+        ({"use_seps": False}, external("uuid:no-separators-bytes.typ")),
+        ({"pattern": "${x}"}, external("uuid:dollar-pattern-bytes.typ")),
+        ({"dec_mark": ",", "sep_mark": "."}, external("uuid:use-different-marks-bytes.typ")),
+        ({"force_sign": True}, external("uuid:force-sign-symbol-bytes.typ")),
+        ({"standard": "binary"}, external("uuid:binary-standard.typ")),
+        ({"incl_space": False}, external("uuid:no-space-bytes.typ")),
+        ({"standard": "binary", "decimals": 2}, external("uuid:binary-two-decimals.typ")),
+    ],
+)
+def test_bytes(table_check, args, result):
+    df = pl.DataFrame(
+        {
+            "bytes": [
+                0,
+                100,
+                1000,
+                1024,
+                1000000,
+                1048576,
+                1000000000,
+                1073741824,
+                1000000000000,
+                1099511627776,
+                None,
+                -100,
+                -1000,
+                -1048576,
+            ],
+        }
+    )
+
+    table = TypTable(df).fmt_bytes(**args)
+    typst_table = table.to_typst()
+
+    assert typst_table == result
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
+
+
+def test_bytes_special_values(table_check):
+    """Test bytes formatter with inf, -inf, and nan values."""
+    df = pl.DataFrame(
+        {
+            "bytes": [
+                float("inf"),
+                float("-inf"),
+                float("nan"),
+                1000.0,
+            ],
+        }
+    )
+
+    table = TypTable(df).fmt_bytes()
+    typst_table = table.to_typst()
+
+    assert typst_table == external("uuid:bytes-special-values.typ")
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0

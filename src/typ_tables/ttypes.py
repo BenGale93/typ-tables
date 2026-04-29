@@ -55,3 +55,5 @@ TfStyle = t.Literal[
     "triangles",
     "triangles-lr",
 ]
+
+BytesStyle = t.Literal["decimal", "binary"]
