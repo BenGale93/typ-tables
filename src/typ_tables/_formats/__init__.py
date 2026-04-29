@@ -14,6 +14,7 @@ from typ_tables import _locale, _location, ttypes
 from typ_tables._constants import ROW_INDEX
 from typ_tables._escape import formatted
 from typ_tables._formats import _datetime, _numeric
+from typ_tables._formats._numeric import NumericSubConfig
 
 
 class FormatFn(t.Protocol):
@@ -152,12 +153,23 @@ class Numeric:
 
         is_negative = value < 0
 
+        sub_config = NumericSubConfig(
+            decimals=self.decimals,
+            n_sigfig=self.n_sigfig,
+            drop_trailing_zeros=self.drop_trailing_zeros,
+            drop_trailing_dec_mark=self.drop_trailing_dec_mark,
+            use_seps=self.use_seps,
+            sep_mark=self.sep_mark,
+            dec_mark=self.dec_mark,
+            force_sign=self.force_sign,
+        )
+
         if nan_or_inf:
             value_formatted = str(value)
         elif self.compact:
-            value_formatted = _numeric.format_number_compactly(value=value, config=self)
+            value_formatted = _numeric.format_number_compactly(value=value, config=sub_config)
         else:
-            value_formatted = _numeric.value_to_decimal_notation(value=value, config=self)
+            value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
         if is_negative and self.accounting:
             value_formatted = f"({_numeric.remove_minus(value_formatted)})"
@@ -227,19 +239,15 @@ class Percentage:
         if not isinstance(value, (float, int)):
             return value
 
-        numeric_config = Numeric(
+        sub_config = NumericSubConfig(
             decimals=self.decimals,
+            n_sigfig=None,
             drop_trailing_zeros=self.drop_trailing_zeros,
             drop_trailing_dec_mark=self.drop_trailing_dec_mark,
-            scale_by=scale_by,
             use_seps=self.use_seps,
             sep_mark=self.sep_mark,
             dec_mark=self.dec_mark,
-            force_sign=False,
-            accounting=False,
-            n_sigfig=None,
-            compact=False,
-            pattern="{x}",
+            force_sign=self.force_sign,
         )
 
         value = value * scale_by
@@ -247,7 +255,7 @@ class Percentage:
         if _numeric.is_nan_or_inf(value):
             return str(value)
 
-        value_formatted = _numeric.value_to_decimal_notation(value=value, config=numeric_config)
+        value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
         is_negative = value < 0
         is_positive = value > 0
@@ -464,7 +472,7 @@ class Currency:
         if currency_symbol == "$":
             currency_symbol = r"\$"
 
-        numeric = Numeric(
+        sub_config = NumericSubConfig(
             decimals=self.decimals,
             n_sigfig=None,
             drop_trailing_zeros=False,
@@ -473,16 +481,12 @@ class Currency:
             sep_mark=self.sep_mark,
             dec_mark=self.dec_mark,
             force_sign=self.force_sign,
-            accounting=self.accounting,
-            scale_by=self.scale_by,
-            compact=self.compact,
-            pattern=self.pattern,
         )
 
         if self.compact:
-            value_formatted = _numeric.format_number_compactly(value=value, config=numeric)
+            value_formatted = _numeric.format_number_compactly(value=value, config=sub_config)
         else:
-            value_formatted = _numeric.value_to_decimal_notation(value=value, config=numeric)
+            value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
         # Create a currency pattern for affixing the currency symbol
         space_character = " " if self.incl_space else ""
@@ -838,7 +842,8 @@ class Bytes:
 
         # Format the value to decimal notation; this is done before the `byte_units` text
         # is affixed to the value
-        numeric_config = Numeric(
+
+        sub_config = NumericSubConfig(
             decimals=self.decimals,
             n_sigfig=self.n_sigfig,
             drop_trailing_zeros=self.drop_trailing_zeros,
@@ -847,13 +852,8 @@ class Bytes:
             sep_mark=self.sep_mark,
             dec_mark=self.dec_mark,
             force_sign=self.force_sign,
-            accounting=False,
-            scale_by=1,
-            compact=False,
-            pattern="{x}",
         )
-
-        value_formatted = _numeric.value_to_decimal_notation(value=value, config=numeric_config)
+        value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
         # Create a `bytes_pattern` object for affixing the `units_str`, which is the
         # string that represents the byte units

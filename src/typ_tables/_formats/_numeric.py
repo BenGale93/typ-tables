@@ -3,9 +3,7 @@
 import math
 import re
 import typing as t
-
-if t.TYPE_CHECKING:
-    from typ_tables._formats import Numeric
+from dataclasses import dataclass
 
 
 def str_detect(string: str, pattern: str) -> bool:
@@ -16,7 +14,19 @@ def remove_minus(string: str) -> str:
     return string.replace("-", "")
 
 
-def format_number_compactly(value: float, config: "Numeric") -> str:
+@dataclass
+class NumericSubConfig:
+    decimals: int
+    n_sigfig: int | None
+    drop_trailing_zeros: bool
+    drop_trailing_dec_mark: bool
+    use_seps: bool
+    sep_mark: str
+    dec_mark: str
+    force_sign: bool
+
+
+def format_number_compactly(value: float, config: NumericSubConfig) -> str:
     if value == 0:
         return "0"
 
@@ -46,7 +56,7 @@ def format_number_compactly(value: float, config: "Numeric") -> str:
     return suffix_pattern.replace("{x}", value_formatted)
 
 
-def value_to_decimal_notation(value: float, config: "Numeric") -> str:
+def value_to_decimal_notation(value: float, config: NumericSubConfig) -> str:
     """Decimal notation.
 
     Returns a string value with the correct precision or fixed number of decimal places (with
@@ -188,7 +198,6 @@ def get_number_profile(value: float, n_sigfig: int) -> tuple[str, int, bool]:
     exponent to get the decimal mark to the proper location, and (3) a boolean
     value that's True if the value is less than zero (i.e., negative).
     """
-    value = float(value)
     is_negative = value < 0
     value = abs(value)
 
@@ -284,7 +293,6 @@ def is_nan_or_inf(value: float) -> NaNorInf:
 
 def _get_sci_parts(value: float, n_sigfig: int) -> tuple[bool, str, int, int]:
     """Returns the properties for constructing a number in scientific notation."""
-    value = float(value)
     sig_digits, power, is_negative = get_number_profile(value, n_sigfig)
 
     dot_power = -(n_sigfig - 1)
