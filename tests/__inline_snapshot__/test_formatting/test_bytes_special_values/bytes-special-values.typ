@@ -17,7 +17,7 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  [\-inf],
+  [-inf],
 ),
   table.cell(
   colspan: 1,

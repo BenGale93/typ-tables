@@ -5,6 +5,7 @@ Numeric formatting code is taken from Great-Tables and adapted slightly.
 
 import math
 import typing as t
+from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, time
 
@@ -120,8 +121,61 @@ def _coerce_value_to_numeric(value: object) -> float | int | str | None:
     return value
 
 
+def _apply_pattern(value: str, pattern: str) -> str:
+    value = formatted(value)
+    if pattern != "{x}":
+        value = pattern.replace("{x}", value)
+    return value
+
+
+def _apply_accounting(value: str, is_negative: bool) -> str:  # noqa: FBT001
+    if is_negative:
+        return f"({_numeric.remove_minus(value)})"
+    return value
+
+
+def _create_affix_pattern(  # noqa: PLR0913
+    value_formatted: str,
+    affix: str,
+    placement: ttypes.Placement,
+    *,
+    incl_space: bool,
+    is_negative: bool,
+    is_positive: bool,
+    force_sign: bool,
+) -> str:
+    space_character = " " if incl_space else ""
+    affix_pattern = (
+        f"{{x}}{space_character}{affix}"
+        if placement == "right"
+        else f"{affix}{space_character}{{x}}"
+    )
+
+    if is_negative and placement == "left":
+        value_formatted = value_formatted.replace("-", "")
+        value_formatted = affix_pattern.replace("{x}", value_formatted)
+        value_formatted = "-" + value_formatted
+    elif is_positive and force_sign and placement == "left":
+        value_formatted = value_formatted.replace("+", "")
+        value_formatted = affix_pattern.replace("{x}", value_formatted)
+        value_formatted = "+" + value_formatted
+    else:
+        value_formatted = affix_pattern.replace("{x}", value_formatted)
+    return value_formatted
+
+
+class CellFormatter(ABC):
+    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+        """Formatting numeric values in the given columns and rows."""
+        return _format_by_cell(data, cols, rows, self.fmt_value)
+
+    @abstractmethod
+    def fmt_value(self, value: object) -> str | None:
+        pass
+
+
 @dataclass
-class Numeric:
+class Numeric(CellFormatter):
     """Format numeric columns."""
 
     decimals: int
@@ -137,11 +191,7 @@ class Numeric:
     force_sign: bool
     pattern: str
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting numeric values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
-
-    def fmt_value(self, value: object) -> str | None:  # pragma: no cover
+    def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
         value = _coerce_value_to_numeric(value)
         if not isinstance(value, (float, int)):
@@ -171,19 +221,14 @@ class Numeric:
         else:
             value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
-        if is_negative and self.accounting:
-            value_formatted = f"({_numeric.remove_minus(value_formatted)})"
+        if self.accounting:
+            value_formatted = _apply_accounting(value_formatted, is_negative)
 
-        value_formatted = formatted(value_formatted)
-
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 @dataclass
-class Integer:
+class Integer(CellFormatter):
     """Format integer columns."""
 
     use_seps: bool
@@ -193,10 +238,6 @@ class Integer:
     sep_mark: str
     force_sign: bool
     pattern: str
-
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting integer values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
 
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
@@ -212,7 +253,7 @@ class Integer:
 
 
 @dataclass
-class Percentage:
+class Percentage(CellFormatter):
     """Format percentage columns."""
 
     decimals: int
@@ -227,10 +268,6 @@ class Percentage:
     force_sign: bool
     placement: ttypes.Placement
     incl_space: bool
-
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting percentage values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
 
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
@@ -250,49 +287,34 @@ class Percentage:
             force_sign=self.force_sign,
         )
 
-        value = value * scale_by
-
-        if _numeric.is_nan_or_inf(value):
-            return str(value)
-
-        value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
-
         is_negative = value < 0
-        is_positive = value > 0
-
-        percent_mark = "%"
-
-        space_character = " " if self.incl_space else ""
-        percent_pattern = (
-            f"{{x}}{space_character}{percent_mark}"
-            if self.placement == "right"
-            else f"{percent_mark}{space_character}{{x}}"
-        )
-
-        if is_negative and self.placement == "left":
-            value_formatted = value_formatted.replace("-", "")
-            value_formatted = percent_pattern.replace("{x}", value_formatted)
-            value_formatted = "-" + value_formatted
-        elif is_positive and self.force_sign and self.placement == "left":
-            value_formatted = value_formatted.replace("+", "")
-            value_formatted = percent_pattern.replace("{x}", value_formatted)
-            value_formatted = "+" + value_formatted
+        if _numeric.is_nan_or_inf(value):
+            value_formatted = str(value)
         else:
-            value_formatted = percent_pattern.replace("{x}", value_formatted)
+            value = value * scale_by
+            value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
-        value_formatted = formatted(value_formatted)
+            is_positive = value > 0
 
-        if is_negative and self.accounting:
-            value_formatted = f"({_numeric.remove_minus(value_formatted)})"
+            percent_mark = "%"
+            value_formatted = _create_affix_pattern(
+                value_formatted,
+                percent_mark,
+                placement=self.placement,
+                incl_space=self.incl_space,
+                is_negative=is_negative,
+                is_positive=is_positive,
+                force_sign=self.force_sign,
+            )
 
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
+        if self.accounting:
+            value_formatted = _apply_accounting(value_formatted, is_negative)
 
-        return value_formatted
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 @dataclass
-class Scientific:
+class Scientific(CellFormatter):
     """Format scientific columns."""
 
     decimals: int
@@ -306,32 +328,21 @@ class Scientific:
     force_sign_m: bool
     force_sign_n: bool
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting scientific values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
-
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
         value = _coerce_value_to_numeric(value)
         if not isinstance(value, (float, int)):
             return value
 
-        nan_or_inf = _numeric.is_nan_or_inf(value)
-
-        value = value * self.scale_by
-
-        if nan_or_inf:
+        if _numeric.is_nan_or_inf(value):
             value_formatted = str(value)
         else:
+            value = value * self.scale_by
             is_positive = value > 0
 
-            value_sci_notn = _numeric.value_to_scientific_notation(
-                value=value,
-                decimals=self.decimals,
-                n_sigfig=self.n_sigfig,
-                dec_mark=self.dec_mark,
-            )
-            sci_parts = value_sci_notn.split("E")
+            value_notn = self._to_notation(value)
+
+            sci_parts = value_notn.split("E")
 
             m_part, n_part = sci_parts
 
@@ -350,16 +361,19 @@ class Scientific:
 
             value_formatted = m_part if small_pos else f"{m_part} #sym.times 10#super[{n_part}]"
 
-        value_formatted = formatted(value_formatted)
+        return _apply_pattern(value_formatted, self.pattern)
 
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
+    def _to_notation(self, value: float) -> str:
+        return _numeric.value_to_scientific_notation(
+            value=value,
+            decimals=self.decimals,
+            n_sigfig=self.n_sigfig,
+            dec_mark=self.dec_mark,
+        )
 
 
 @dataclass
-class Engineering:
+class Engineering(Scientific):
     """Format engineering columns.
 
     Engineering notation is like scientific notation, but the exponent is always
@@ -378,60 +392,17 @@ class Engineering:
     force_sign_m: bool
     force_sign_n: bool
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting engineering values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
-
-    def fmt_value(self, value: object) -> str | None:
-        """Formats an individual value."""
-        value = _coerce_value_to_numeric(value)
-        if not isinstance(value, (float, int)):
-            return value
-
-        nan_or_inf = _numeric.is_nan_or_inf(value)
-
-        value = value * self.scale_by
-
-        if nan_or_inf:
-            value_formatted = str(value)
-        else:
-            is_positive = value > 0
-
-            value_eng_notn = _numeric.value_to_engineering_notation(
-                value=value,
-                decimals=self.decimals,
-                n_sigfig=self.n_sigfig,
-                dec_mark=self.dec_mark,
-            )
-            eng_parts = value_eng_notn.split("E")
-
-            m_part, n_part = eng_parts
-
-            if self.drop_trailing_zeros:
-                m_part = m_part.rstrip("0")
-            if self.drop_trailing_dec_mark:
-                m_part = m_part.rstrip(".")
-
-            if is_positive and self.force_sign_m:
-                m_part = f"+{m_part}"
-
-            small_pos = _numeric.has_sci_order_zero(value=value)
-
-            if self.force_sign_n and not _numeric.str_detect(n_part, "-"):
-                n_part = "+" + n_part
-
-            value_formatted = m_part if small_pos else f"{m_part} #sym.times 10#super[{n_part}]"
-
-        value_formatted = formatted(value_formatted)
-
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
+    def _to_notation(self, value: float) -> str:
+        return _numeric.value_to_engineering_notation(
+            value=value,
+            decimals=self.decimals,
+            n_sigfig=self.n_sigfig,
+            dec_mark=self.dec_mark,
+        )
 
 
 @dataclass
-class Currency:
+class Currency(CellFormatter):
     """Format currency columns."""
 
     currency: str
@@ -449,81 +420,60 @@ class Currency:
     placement: ttypes.Placement
     incl_space: bool
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting currency values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
-
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
         value = _coerce_value_to_numeric(value)
         if not isinstance(value, (float, int)):
             return value
 
-        if _numeric.is_nan_or_inf(value):
-            return str(value)
-
-        value = value * self.scale_by
-
-        is_positive = value > 0
         is_negative = value < 0
 
-        currency_symbol = _locale.get_currency_str(self.currency)
-
-        if currency_symbol == "$":
-            currency_symbol = r"\$"
-
-        sub_config = NumericSubConfig(
-            decimals=self.decimals,
-            n_sigfig=None,
-            drop_trailing_zeros=False,
-            drop_trailing_dec_mark=self.drop_trailing_dec_mark,
-            use_seps=self.use_seps,
-            sep_mark=self.sep_mark,
-            dec_mark=self.dec_mark,
-            force_sign=self.force_sign,
-        )
-
-        if self.compact:
-            value_formatted = _numeric.format_number_compactly(value=value, config=sub_config)
+        if _numeric.is_nan_or_inf(value):
+            value_formatted = str(value)
         else:
-            value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
+            value = value * self.scale_by
 
-        # Create a currency pattern for affixing the currency symbol
-        space_character = " " if self.incl_space else ""
-        currency_pattern = (
-            f"{{x}}{space_character}{currency_symbol}"
-            if self.placement == "right"
-            else f"{currency_symbol}{space_character}{{x}}"
-        )
+            is_positive = value > 0
 
-        if is_negative and self.placement == "left":
-            value_formatted = value_formatted.replace("-", "")
-            value_formatted = currency_pattern.replace("{x}", value_formatted)
-            value_formatted = "-" + value_formatted
-        elif is_positive and self.force_sign and self.placement == "left":
-            value_formatted = value_formatted.replace("+", "")
-            value_formatted = currency_pattern.replace("{x}", value_formatted)
-            value_formatted = "+" + value_formatted
-        else:
-            value_formatted = currency_pattern.replace("{x}", value_formatted)
+            currency_symbol = _locale.get_currency_str(self.currency)
 
-        # Implement minus sign replacement for `x_formatted` or use accounting style
-        if is_negative and self.accounting:
-            value_formatted = f"({_numeric.remove_minus(value_formatted)})"
+            if currency_symbol == "$":
+                currency_symbol = r"\$"
 
-        value_formatted = formatted(value_formatted)
+            sub_config = NumericSubConfig(
+                decimals=self.decimals,
+                n_sigfig=None,
+                drop_trailing_zeros=False,
+                drop_trailing_dec_mark=self.drop_trailing_dec_mark,
+                use_seps=self.use_seps,
+                sep_mark=self.sep_mark,
+                dec_mark=self.dec_mark,
+                force_sign=self.force_sign,
+            )
 
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
+            if self.compact:
+                value_formatted = _numeric.format_number_compactly(value=value, config=sub_config)
+            else:
+                value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
-        return value_formatted
+            value_formatted = _create_affix_pattern(
+                value_formatted,
+                currency_symbol,
+                placement=self.placement,
+                incl_space=self.incl_space,
+                is_negative=is_negative,
+                is_positive=is_positive,
+                force_sign=self.force_sign,
+            )
 
+        if self.accounting:
+            value_formatted = _apply_accounting(value_formatted, is_negative)
 
-# Date and time related formatters
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 @dataclass
-class Date:
+class Date(CellFormatter):
     """Format date columns.
 
     Format input values to date values using one of 17 preset date styles.
@@ -533,10 +483,6 @@ class Date:
 
     date_style: ttypes.DateStyle = "iso"
     pattern: str = "{x}"
-
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting date values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
 
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
@@ -559,16 +505,11 @@ class Date:
         # Format the date object to a string using strftime
         value_formatted = value.strftime(date_format_str)
 
-        value_formatted = formatted(value_formatted)
-
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 @dataclass
-class Time:
+class Time(CellFormatter):
     """Format time columns.
 
     Format input values to time values using one of 5 preset time styles.
@@ -578,10 +519,6 @@ class Time:
 
     time_style: ttypes.TimeStyle = "iso"
     pattern: str = "{x}"
-
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting time values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
 
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
@@ -604,16 +541,11 @@ class Time:
         # Format the time object to a string using strftime
         value_formatted = value.strftime(time_format_str)
 
-        value_formatted = formatted(value_formatted)
-
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 @dataclass
-class Datetime:
+class Datetime(CellFormatter):
     """Format datetime columns.
 
     Format input values to datetime values using one of 17 preset date styles
@@ -626,10 +558,6 @@ class Datetime:
     format_str: str | None = None
     sep: str = " "
     pattern: str = "{x}"
-
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting datetime values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
 
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
@@ -662,15 +590,7 @@ class Datetime:
             # Format the datetime object to a string using strftime
             value_formatted = value.strftime(datetime_format_str)
 
-        value_formatted = formatted(value_formatted)
-
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
-
-
-# True/False formatter
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 TF_FORMATS: dict[str, list[str]] = {
@@ -719,7 +639,7 @@ def _get_tf_vals(
 
 
 @dataclass
-class Tf:
+class Tf(CellFormatter):
     """Format boolean columns.
 
     Format boolean values using preset styles or custom text values.
@@ -731,10 +651,6 @@ class Tf:
     true_val: str | None = None
     false_val: str | None = None
     na_val: str | None = None
-
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting boolean values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
 
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
@@ -757,19 +673,11 @@ class Tf:
         # Get the appropriate text value
         value_formatted = tf_vals[0] if value else tf_vals[1]
 
-        value_formatted = formatted(value_formatted)
-
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
-
-
-# Bytes formatter
+        return _apply_pattern(value_formatted, self.pattern)
 
 
 @dataclass
-class Bytes:
+class Bytes(CellFormatter):
     """Format bytes columns.
 
     Format numeric values as bytes with human-readable units. Supports either
@@ -790,10 +698,6 @@ class Bytes:
     force_sign: bool = False
     incl_space: bool = True
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
-        """Formatting bytes values in the given columns and rows."""
-        return _format_by_cell(data, cols, rows, self.fmt_value)
-
     def fmt_value(self, value: object) -> str | None:
         """Formats an individual value."""
         value = _coerce_value_to_numeric(value)
@@ -801,70 +705,65 @@ class Bytes:
             return value
 
         if _numeric.is_nan_or_inf(value):
-            return str(value)
-
-        # Truncate all byte values by casting to an integer; this is done because bytes
-        # are always whole numbers
-        value = int(value)
-
-        # Get the `base` value and the `byte_units` list based on the `standard` value
-        if self.standard == "decimal":
-            # This is the 'decimal' standard (the default)
-            base = 1000
-            byte_units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+            value_formatted = str(value)
         else:
-            # This is the 'binary' standard
-            base = 1024
-            byte_units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+            # Truncate all byte values by casting to an integer; this is done because bytes
+            # are always whole numbers
+            value = int(value)
 
-        # Determine the power index for the value
-        if value == 0:
-            # If the value is zero, then the power index is 1; otherwise, we'd get
-            # an error when trying to calculate the log of zero
-            num_power_idx = 1
-        else:
-            # Otherwise, we can calculate the power index by taking the log of the value
-            # and dividing by the log of the base; we add 1 to the result to account for
-            # the fact that the power index is 1-based (i.e., the first element in the
-            # `byte_units` list is at index 0) --- the final statement ensures that the
-            # power index is always at least 1
-            num_power_idx = math.floor(math.log(abs(value), base)) + 1
-            num_power_idx = max(1, min(len(byte_units), num_power_idx))
+            # Get the `base` value and the `byte_units` list based on the `standard` value
+            if self.standard == "decimal":
+                # This is the 'decimal' standard (the default)
+                base = 1000
+                byte_units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+            else:
+                # This is the 'binary' standard
+                base = 1024
+                byte_units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
 
-        # The `units_str` is obtained by indexing the `byte_units` list with the `num_power_idx`
-        # value; this is the string that will be affixed to the formatted value
-        units_str = byte_units[num_power_idx - 1]
+            # Determine the power index for the value
+            if value == 0:
+                # If the value is zero, then the power index is 1; otherwise, we'd get
+                # an error when trying to calculate the log of zero
+                num_power_idx = 1
+            else:
+                # Otherwise, we can calculate the power index by taking the log of the value
+                # and dividing by the log of the base; we add 1 to the result to account for
+                # the fact that the power index is 1-based (i.e., the first element in the
+                # `byte_units` list is at index 0) --- the final statement ensures that the
+                # power index is always at least 1
+                num_power_idx = math.floor(math.log(abs(value), base)) + 1
+                num_power_idx = max(1, min(len(byte_units), num_power_idx))
 
-        # Scale `value` by a defined `base` value, this is done by dividing by the
-        # `base` value raised to the power index minus 1 (we subtract 1 because the
-        # power index is 1-based)
-        value = value / base ** (num_power_idx - 1)
+            # The `units_str` is obtained by indexing the `byte_units` list with the `num_power_idx`
+            # value; this is the string that will be affixed to the formatted value
+            units_str = byte_units[num_power_idx - 1]
 
-        # Format the value to decimal notation; this is done before the `byte_units` text
-        # is affixed to the value
+            # Scale `value` by a defined `base` value, this is done by dividing by the
+            # `base` value raised to the power index minus 1 (we subtract 1 because the
+            # power index is 1-based)
+            value = value / base ** (num_power_idx - 1)
 
-        sub_config = NumericSubConfig(
-            decimals=self.decimals,
-            n_sigfig=self.n_sigfig,
-            drop_trailing_zeros=self.drop_trailing_zeros,
-            drop_trailing_dec_mark=self.drop_trailing_dec_mark,
-            use_seps=self.use_seps,
-            sep_mark=self.sep_mark,
-            dec_mark=self.dec_mark,
-            force_sign=self.force_sign,
-        )
-        value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
+            # Format the value to decimal notation; this is done before the `byte_units` text
+            # is affixed to the value
 
-        # Create a `bytes_pattern` object for affixing the `units_str`, which is the
-        # string that represents the byte units
-        space_character = " " if self.incl_space else ""
-        bytes_pattern = f"{{x}}{space_character}{units_str}"
+            sub_config = NumericSubConfig(
+                decimals=self.decimals,
+                n_sigfig=self.n_sigfig,
+                drop_trailing_zeros=self.drop_trailing_zeros,
+                drop_trailing_dec_mark=self.drop_trailing_dec_mark,
+                use_seps=self.use_seps,
+                sep_mark=self.sep_mark,
+                dec_mark=self.dec_mark,
+                force_sign=self.force_sign,
+            )
+            value_formatted = _numeric.value_to_decimal_notation(value=value, config=sub_config)
 
-        value_formatted = bytes_pattern.replace("{x}", value_formatted)
+            # Create a `bytes_pattern` object for affixing the `units_str`, which is the
+            # string that represents the byte units
+            space_character = " " if self.incl_space else ""
+            bytes_pattern = f"{{x}}{space_character}{units_str}"
 
-        value_formatted = formatted(value_formatted)
+            value_formatted = bytes_pattern.replace("{x}", value_formatted)
 
-        if self.pattern != "{x}":
-            value_formatted = self.pattern.replace("{x}", value_formatted)
-
-        return value_formatted
+        return _apply_pattern(value_formatted, self.pattern)
