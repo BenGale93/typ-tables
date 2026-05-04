@@ -7,6 +7,19 @@ requires-python = ">=3.11"
 dependencies = ["narwhals>=2.7.0"]
 license = "MIT"
 authors = [{ name = "Benjamin Askew-Gale" }]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Visualization",
+]
+keywords = ["tables", "Typst"]
+
+[project.urls]
+homepage = "https://github.com/BenGale93/typ-tables"
+documentation = "https://bengale93.github.io/typ-tables/"
 
 [dependency-groups]
 dev = [
