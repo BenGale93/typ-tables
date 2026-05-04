@@ -34,5 +34,5 @@ To include the table in your Typst report you can write the resulting Typst
 string to a file and include it.
 
 ```typst
-include "table.typ"
+#include "table.typ"
 ```
