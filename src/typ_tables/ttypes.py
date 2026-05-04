@@ -1,4 +1,4 @@
-"""Typ-Table Types."""
+"""Shared public type aliases used by TypTable APIs."""
 
 import typing as t
 
@@ -6,14 +6,27 @@ from narwhals import DataFrame
 from narwhals.typing import IntoDataFrameT
 
 Data = DataFrame[IntoDataFrameT]
+"""Narwhals eager DataFrame used internally after input normalization."""
 
 Alignment = t.Literal["start", "end", "left", "center", "right", "top", "horizon", "bottom"]
+"""Typst alignment keyword for table cell content."""
 Auto = t.Literal["auto"]
+"""Typst automatic value keyword."""
 
 Gutter = Auto | str
+"""Typst gutter value.
+
+Use `"auto"` for Typst's automatic spacing, or a Typst-compatible string for a
+specific gutter value.
+"""
 Relative = str
+"""Typst relative length value.
+
+Use a Typst-compatible string such as `"10pt"`, `"1em"`, or `"20%"`.
+"""
 
 Placement = t.Literal["left", "right"]
+"""Side placement keyword."""
 
 DateStyle = t.Literal[
     "iso",
@@ -34,6 +47,7 @@ DateStyle = t.Literal[
     "year_week",
     "year_quarter",
 ]
+"""Named date formatting style."""
 
 TimeStyle = t.Literal[
     "iso",
@@ -42,6 +56,7 @@ TimeStyle = t.Literal[
     "h_m_p",
     "h_p",
 ]
+"""Named time formatting style."""
 
 TfStyle = t.Literal[
     "true-false",
@@ -55,5 +70,7 @@ TfStyle = t.Literal[
     "triangles",
     "triangles-lr",
 ]
+"""Named true/false formatting style."""
 
 BytesStyle = t.Literal["decimal", "binary"]
+"""Named byte-size formatting standard."""

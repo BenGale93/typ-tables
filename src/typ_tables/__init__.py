@@ -62,7 +62,13 @@ def _create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
 
 
 class TypTable:
-    """User-facing builder for converting DataFrames into Typst tables."""
+    """Build a Typst table from a DataFrame-like object.
+
+    `TypTable` stores the source data plus table configuration such as
+    formatting rules, labels, styling, row stubs, row groups, and Typst table
+    options. Input data is normalized with Narwhals, so any eager DataFrame-like
+    object supported by Narwhals can be used.
+    """
 
     def __init__(
         self, df: IntoDataFrame, rowname_col: str | None = None, groupname_col: str | None = None
@@ -99,6 +105,10 @@ class TypTable:
     def tab_header(self, title: str | Typst, subtitle: str | Typst | None = None) -> t.Self:
         """Set table title and optional subtitle.
 
+        The header is rendered above the column-label row and spans the full
+        table width. This method changes only that title/subtitle region; it
+        does not change column labels, row labels, or body cells.
+
         Args:
             title: Title text or raw Typst.
             subtitle: Optional subtitle text or raw Typst.
@@ -112,6 +122,10 @@ class TypTable:
     def tab_figure(self, caption: str | Typst | None = None) -> t.Self:
         """Configure an optional figure caption wrapper around the table.
 
+        When `caption` is provided, the rendered Typst table is wrapped in a
+        Typst figure and the caption is attached to that figure. Passing `None`
+        disables the figure wrapper and leaves the table itself unchanged.
+
         Args:
             caption: Caption text or raw Typst. `None` disables wrapping.
 
@@ -123,6 +137,11 @@ class TypTable:
 
     def tab_stubhead(self, label: str | Typst) -> t.Self:
         """Set the label shown in the stub header cell.
+
+        The stub head is the top-left header cell above the row-label stub
+        column. This method changes only that stub-head label; it does not
+        rename row labels or data columns. The cell is only visible when the
+        table has a stub column.
 
         Args:
             label: Stub header label text or raw Typst.
@@ -137,6 +156,12 @@ class TypTable:
         self, locator: locators.Loc, text: TextStyle | None = None, cell: CellStyle | None = None
     ) -> t.Self:
         """Add style rules for a specific table region.
+
+        Locators define which table region receives the supplied text style,
+        cell style, or both. Use `LocHeader` for the title/subtitle region,
+        `LocColumnLabels` for column names, `LocStub` for row labels,
+        `LocStubhead` for the top-left stub label, `LocBody` for data cells,
+        and `LocRowGroup` for row-group labels.
 
         Args:
             locator: Target region selector (for example `locators.LocHeader`).
@@ -324,20 +349,17 @@ class TypTable:
         placement: ttypes.Placement = "right",
         incl_space: bool = False,
     ) -> t.Self:
-        """Format selected numeric values with configurable numeric rules.
+        """Format selected numeric values as percentages.
 
         Args:
             columns: Optional column selector limiting where formatting applies.
             rows: Optional row selector limiting where formatting applies.
             decimals: Number of decimal places.
-            n_sigfig: Optional number of significant figures.
             drop_trailing_zeros: Whether to remove trailing zero digits.
             drop_trailing_dec_mark: Whether to remove dangling decimal marks.
             scale_values: Should the values be scaled through multiplication by 100?
             use_seps: Whether to include thousands separators.
             accounting: Whether to use accounting-style negatives.
-            scale_by: Multiplicative scaling factor before formatting.
-            compact: Whether to compact large numbers (for example, `1K`).
             pattern: Output pattern containing `{x}` placeholder.
             sep_mark: Thousands separator character.
             dec_mark: Decimal mark character.
@@ -388,7 +410,7 @@ class TypTable:
         force_sign_m: bool = False,
         force_sign_n: bool = False,
     ) -> t.Self:
-        """Format selected numeric values with configurable numeric rules.
+        """Format selected numeric values in scientific notation.
 
         Args:
             columns: Optional column selector limiting where formatting applies.
@@ -448,9 +470,9 @@ class TypTable:
     ) -> t.Self:
         """Format selected numeric values with engineering notation.
 
-        Engineering notation is like scientific notation, but the exponent is always
-        a multiple of 3. This makes it convenient for expressing values in SI units
-        (e.g., 1.23E3 = 1.23 k, 1.23E6 = 1.23 M, etc.).
+        Engineering notation is like scientific notation, but the exponent is
+        always a multiple of 3. This makes it convenient for expressing values
+        in SI units, such as `1.23E3` for thousands or `1.23E6` for millions.
 
         Args:
             columns: Optional column selector limiting where formatting applies.
@@ -512,11 +534,11 @@ class TypTable:
         placement: ttypes.Placement = "left",
         incl_space: bool = False,
     ) -> t.Self:
-        """Format selected numeric values with engineering notation.
+        """Format selected numeric values as currency.
 
-        Engineering notation is like scientific notation, but the exponent is always
-        a multiple of 3. This makes it convenient for expressing values in SI units
-        (e.g., 1.23E3 = 1.23 k, 1.23E6 = 1.23 M, etc.).
+        Currency symbols are resolved from the supplied three-letter currency
+        code. Numeric formatting options follow the same conventions as
+        `fmt_number`.
 
         Args:
             columns: Optional column selector limiting where formatting applies.
@@ -846,6 +868,10 @@ class TypTable:
     ) -> t.Self:
         """Set text alignment for selected columns.
 
+        Alignment applies to both column-label cells and body cells for the
+        selected columns. It does not affect unselected columns, row-group
+        labels, or the table title/subtitle.
+
         Args:
             align: Target alignment value.
             columns: Optional column selector; defaults to all columns.
@@ -859,6 +885,10 @@ class TypTable:
 
     def cols_hide(self, columns: ColumnSelector | None = None) -> t.Self:
         """Hide selected columns from the rendered output.
+
+        Hidden columns are omitted completely, including their column labels and
+        body cells. The source data is not modified, so later calls can still
+        refer to hidden columns by their original names.
 
         Args:
             columns: Optional column selector; defaults to all columns.
@@ -874,6 +904,10 @@ class TypTable:
         self, cases: dict[str, str | Typst] | None = None, **kwargs: str | Typst
     ) -> t.Self:
         """Set explicit labels for one or more columns.
+
+        Labels replace the displayed column names without changing the source
+        data or the selectors used by later calls. This method changes only
+        column-label text; it does not format body values.
 
         Args:
             cases: Optional mapping of column names to new labels.
@@ -891,6 +925,10 @@ class TypTable:
     ) -> t.Self:
         """Relabel selected columns using a mapping function.
 
+        The function receives each selected source column name and returns the
+        label to display. This method changes only the visible column labels;
+        source column names and body values are unchanged.
+
         Args:
             fn: Function receiving current column name and returning new label.
             columns: Optional column selector; defaults to all columns.
@@ -907,17 +945,35 @@ class TypTable:
     def set_table_inset(
         self, inset: str | Sides[ttypes.Relative] | dict[str, ttypes.Relative]
     ) -> t.Self:
-        """How much to pad the cells' content for all cells in the table."""
+        """Set default padding for every table cell.
+
+        This controls table-level cell inset. Region-specific `CellStyle`
+        rules can still override inset for targeted cells.
+
+        Args:
+            inset: Typst inset value, per-side `Sides`, or dictionary accepted
+                by `Sides`.
+
+        Returns:
+            The current table instance for chaining.
+        """
         if isinstance(inset, dict):
             inset = Sides(**inset)
         self._typ_data.inset = inset
         return self
 
     def set_table_stroke(self, stroke: str) -> t.Self:
-        """Set the table level stroke.
+        """Set the table-level stroke.
 
-        Note:
-            Can be a function, the raw string is used within the template.
+        This controls the default stroke passed to Typst's `table` function.
+        Region-specific cell styles can still override strokes for targeted
+        cells.
+
+        Args:
+            stroke: Raw Typst stroke expression.
+
+        Returns:
+            The current table instance for chaining.
         """
         self._typ_data.stroke = stroke
         return self
@@ -928,7 +984,19 @@ class TypTable:
         row_gutter: ttypes.Gutter | None = None,
         column_gutter: ttypes.Gutter | None = None,
     ) -> t.Self:
-        """Set the table level gutter parameters."""
+        """Set spacing between rows and columns.
+
+        `gutter` sets Typst's general table gutter. `row_gutter` and
+        `column_gutter` override spacing in one direction.
+
+        Args:
+            gutter: Default row and column gutter.
+            row_gutter: Row-only gutter override.
+            column_gutter: Column-only gutter override.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.gutters.gutter = GutterContainer(gutter)
         self._typ_data.gutters.row_gutter = GutterContainer(row_gutter)
         self._typ_data.gutters.column_gutter = GutterContainer(column_gutter)
@@ -936,7 +1004,14 @@ class TypTable:
         return self
 
     def clear_defaults(self) -> t.Self:
-        """Clears all the typ-table default styling."""
+        """Clear all typ-tables default styling.
+
+        This removes typ-tables' opinionated default styles and resets the
+        table-level stroke to Typst's default-style baseline.
+
+        Returns:
+            The current table instance for chaining.
+        """
         self._typ_data.default_styles.clear()
         self._typ_data.stroke = "1pt + black"
         return self

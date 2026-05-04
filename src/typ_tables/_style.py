@@ -10,40 +10,55 @@ from typ_tables._escape import Typst, escape_value
 from typ_tables.ttypes import Alignment, Auto, Data, Relative
 
 Fill = str
+"""Typst fill value.
+
+Use any Typst-compatible paint string, such as `"red"` or `"#f2f2f2"`.
+"""
 Length = str
+"""Typst length value.
+
+Use a Typst-compatible string such as `"10pt"`, `"1em"`, or `"0.2cm"`.
+"""
 Stroke = str
+"""Typst stroke value.
+
+Use any Typst-compatible stroke string, such as `"1pt + black"`.
+"""
 FontStyle = t.Literal["normal", "italic", "oblique"]
+"""Typst font style keyword."""
 FontWeight = (
     t.Literal[
         "thin", "extralight", "light", "regular", "medium", "semibold", "bold", "extrabold", "black"
     ]
     | int
 )
+"""Typst font weight keyword or numeric font weight."""
 
 T = t.TypeVar("T")
 
 
 @dataclass(slots=True)
 class Sides(t.Generic[T]):
-    """Represents per-side values for Typst properties.
+    """Describe per-side values for Typst cell properties.
 
-    Attributes:
-        rest: Default value for unspecified sides.
-        x: Horizontal value applied to left and right.
-        y: Vertical value applied to top and bottom.
-        top: Top-side value.
-        right: Right-side value.
-        left: Left-side value.
-        bottom: Bottom-side value.
+    Use this helper for properties that can vary by side, such as `inset` and
+    `stroke`. Only fields with non-`None` values are emitted to Typst.
     """
 
     rest: T | None = None
+    """Fallback value for sides without a more specific value."""
     x: T | None = None
+    """Horizontal value applied to the left and right sides."""
     y: T | None = None
+    """Vertical value applied to the top and bottom sides."""
     top: T | None = None
+    """Top-side value."""
     right: T | None = None
+    """Right-side value."""
     left: T | None = None
+    """Left-side value."""
     bottom: T | None = None
+    """Bottom-side value."""
 
     def __str__(self) -> str:
         """Render the sides object as a Typst-style named tuple string.
@@ -94,7 +109,19 @@ class Sides(t.Generic[T]):
 
 
 Inset = Relative | Sides[Relative] | dict[str, str]
+"""Cell inset value.
+
+Use a [`Relative`][typ_tables.ttypes.Relative] value for uniform inset,
+[`Sides`][typ_tables.style.Sides] for per-side inset, or a dictionary accepted
+by `Sides`.
+"""
 FullStroke = Stroke | Sides[Stroke] | dict[str, str]
+"""Stroke value accepted by style fields.
+
+Use a [`Stroke`][typ_tables.style.Stroke] value for a uniform stroke,
+[`Sides`][typ_tables.style.Sides] for per-side stroke, or a dictionary accepted
+by `Sides`.
+"""
 
 
 def _coerce_sides(attr: t.Any) -> t.Any:
@@ -222,18 +249,34 @@ def _resolve_style_to_single_style(instance: _DataclassInstance) -> dict[str, t.
 
 @dataclass
 class TextStyle:
-    """Text-level style properties applied to table cell content."""
+    """Text-level style properties for selected table cells.
+
+    These fields map to Typst `text(...)` arguments. Values are written as Typst
+    strings, except for `fractions`, which is rendered as a boolean. Scalar
+    values apply the same style everywhere the locator selects. Lists and
+    Narwhals expressions resolve one value per data row for row-based locators.
+    """
 
     font: str | list[str] | nw.Expr | None = None
+    """Font family name."""
     style: FontStyle | list[FontStyle] | nw.Expr | None = None
+    """Font [`FontStyle`][typ_tables.style.FontStyle]."""
     weight: FontWeight | list[FontWeight] | nw.Expr | None = None
+    """Font [`FontWeight`][typ_tables.style.FontWeight]."""
     stretch: str | list[str] | nw.Expr | None = None
+    """Font stretch value."""
     size: Length | list[Length] | nw.Expr | None = None
+    """Text size as a [`Length`][typ_tables.style.Length] value."""
     fill: Fill | list[Fill] | nw.Expr | None = None
+    """Text [`Fill`][typ_tables.style.Fill] color or paint."""
     stroke: FullStroke | list[FullStroke] | nw.Expr | None = None
+    """Text [`FullStroke`][typ_tables.style.FullStroke]."""
     tracking: Length | list[Length] | nw.Expr | None = None
+    """Additional spacing between glyphs as a [`Length`][typ_tables.style.Length] value."""
     spacing: Relative | list[Relative] | nw.Expr | None = None
+    """Additional spacing between words as a [`Relative`][typ_tables.ttypes.Relative] value."""
     fractions: bool | list[bool] | nw.Expr | None = None
+    """Whether Typst should render numeric fractions specially."""
 
     def __post_init__(self) -> None:
         """Coerces types."""
@@ -321,12 +364,23 @@ class CellStyleForCell:
 
 @dataclass
 class CellStyle:
-    """Cell-level style properties applied to table cell content."""
+    """Cell-level style properties for selected table cells.
+
+    These fields map to Typst `table.cell(...)` arguments. Scalar values apply
+    the same style everywhere the locator selects. Lists and Narwhals
+    expressions resolve one value per data row for row-based locators.
+    """
 
     inset: Inset | list[Inset] | nw.Expr | None = None
+    """Cell padding/inset as an [`Inset`][typ_tables.style.Inset] value."""
     align: Auto | Alignment | list[Auto | Alignment] | nw.Expr | None = None
+    """Cell content [`Alignment`][typ_tables.ttypes.Alignment] or
+    [`Auto`][typ_tables.ttypes.Auto].
+    """
     fill: Fill | list[Fill] | nw.Expr | None = None
+    """Cell background [`Fill`][typ_tables.style.Fill] color or paint."""
     stroke: FullStroke | list[FullStroke] | nw.Expr | None = None
+    """Cell border [`FullStroke`][typ_tables.style.FullStroke]."""
 
     def __post_init__(self) -> None:
         """Coerces types."""

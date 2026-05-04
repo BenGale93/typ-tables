@@ -17,10 +17,11 @@ class StyledLoc:
 
 
 class Loc(t.Protocol):
-    """Base marker for table style locator targets.
+    """Protocol implemented by all public table style locators.
 
-    This class is used as a common type for location-specific style selectors.
-    Subclasses identify concrete table regions (for example, header cells).
+    Pass a locator to `TypTable.tab_style` to choose which table region receives
+    the supplied text and cell styles. Concrete locator classes select regions
+    such as the header, body cells, row stub, or row-group labels.
     """
 
     def _apply_style(
@@ -50,7 +51,11 @@ class StyledLocHeader(StyledLoc):
 
 @dataclass
 class LocHeader:
-    """Marker locator selecting the table header region."""
+    """Select the table header title and subtitle region.
+
+    This locator targets the heading created by `TypTable.tab_header`, not the
+    column-label row. Use `LocColumnLabels` to style column names.
+    """
 
     def _apply_style(
         self,
@@ -102,10 +107,24 @@ class StyledLocBody(StyledLoc):
 
 @dataclass
 class LocBody:
-    """Marker locator selecting the table body region."""
+    """Select table body cells.
+
+    By default, all body cells are selected. Use `rows`, `columns`, or both to
+    limit the style rule to a subset of the body.
+    """
 
     columns: ColumnSelector | None = None
+    """Columns to select in the body.
+
+    Accepts any [`ColumnSelector`][typ_tables.ColumnSelector]. `None` selects
+    all body columns.
+    """
     rows: RowSelector | None = None
+    """Rows to select in the body.
+
+    Accepts any [`RowSelector`][typ_tables.RowSelector]. `None` selects all
+    body rows.
+    """
 
     def _apply_style(
         self,
@@ -149,9 +168,18 @@ class StyledLocColumnLabels(StyledLoc):
 
 @dataclass
 class LocColumnLabels:
-    """Marker locator selecting the table column labels."""
+    """Select column-label cells.
+
+    Column-label cells are the header cells that display data column names above
+    the body. Use `columns` to style labels for only some data columns.
+    """
 
     columns: ColumnSelector | None = None
+    """Columns whose labels should be selected.
+
+    Accepts any [`ColumnSelector`][typ_tables.ColumnSelector]. `None` selects
+    all column labels.
+    """
 
     def _apply_style(
         self,
@@ -187,7 +215,11 @@ class StyledLocStubhead(StyledLoc):
 
 @dataclass
 class LocStubhead:
-    """Marker locator selecting the stub head."""
+    """Select the stub-head cell.
+
+    The stub head is the top-left header cell above the row-label stub column.
+    Its visible label is set with `TypTable.tab_stubhead`.
+    """
 
     def _apply_style(
         self,
@@ -229,9 +261,19 @@ class StyledLocStub(StyledLoc):
 
 @dataclass
 class LocStub:
-    """Marker locator selecting the table stub region."""
+    """Select row-label cells in the table stub.
+
+    The stub is the left-hand column created from `rowname_col`. By default, all
+    stub cells are selected. Use `rows` to limit the style rule to specific row
+    labels.
+    """
 
     rows: RowSelector | None = None
+    """Rows whose stub cells should be selected.
+
+    Accepts any [`RowSelector`][typ_tables.RowSelector]. `None` selects all
+    stub rows.
+    """
 
     def _apply_style(
         self,
@@ -288,9 +330,19 @@ class StyledLocRowGroup(StyledLoc):
 
 @dataclass
 class LocRowGroup:
-    """Marker locator selecting the table row groups."""
+    """Select row-group label cells.
+
+    Row-group labels are created from `groupname_col`. By default, all row-group
+    labels are selected. Use `group` to limit styling to one or more group
+    labels.
+    """
 
     group: str | list[str] | None = None
+    """Row-group label or labels to select.
+
+    `None` selects every row group. A string selects the matching group label.
+    A list selects all matching labels in the list.
+    """
 
     def _apply_style(
         self,

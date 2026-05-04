@@ -1,4 +1,4 @@
-"""Public interface to locators."""
+"""Public styling locators for targeting table regions."""
 
 from typ_tables._locators import (
     Loc,

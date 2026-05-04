@@ -9,7 +9,23 @@ from typ_tables import ttypes
 from typ_tables._constants import ROW_INDEX
 
 ColumnSelector = ncs.Selector | list[str] | str | list[int] | int
+"""A Type alias for all the types that can be used to select columns.
+
+A ColumnSelector can be either:
+    - A [Narwhals Selector](https://narwhals-dev.github.io/narwhals/api-reference/selectors/)
+    - A list of column names.
+    - A column name.
+    - A list of column indices.
+    - A column index.
+"""
 RowSelector = nw.Expr | list[int] | int
+"""A Type alias for all the types that can be used to select rows.
+
+A RowSelector can be either:
+    - A [Narwhals Expression](https://narwhals-dev.github.io/narwhals/api-reference/dataframe/#narwhals.dataframe.DataFrame.filter) that filters a DataFrame.
+    - A list of row indices.
+    - A row index.
+"""
 
 
 def resolve_columns(data: ttypes.Data, selector: ColumnSelector | None = None) -> list[str]:

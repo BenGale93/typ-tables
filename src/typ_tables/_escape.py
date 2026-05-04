@@ -6,7 +6,13 @@ ESCAPE_PATTERN = re.compile(r"([\\#*_`$<>@\[\]=+\-/~])")
 
 
 class Typst(str):
-    """Typst text."""
+    """Raw Typst markup that should not be escaped.
+
+    Wrap strings in `Typst` when you intentionally want Typst syntax to be
+    interpreted by the rendered document. Plain strings are escaped so special
+    Typst characters are displayed as text; `Typst` values are passed through
+    unchanged.
+    """
 
     __slots__ = ()
 

@@ -16,3 +16,6 @@ alias l := lint
 @lint:
     uv run ruff format .
     uv run ruff check . --fix
+
+@docs:
+    uv run --group docs zensical serve
