@@ -4,6 +4,8 @@ With Typ-Tables you can easily create tables in Python for
 [Typst](https://typst.app/docs/) reports. This library is heavily inspired by
 [Great-Tables](https://posit-dev.github.io/great-tables/articles/intro.html).
 
+To install, run `uv add typ-tables`
+
 You can create tables that look like:
 
 ![rendered table](./images/readme_snippet.png)
@@ -25,7 +27,7 @@ df = pl.DataFrame(
 )
 
 table = TypTable(df)
-result = table.to_typst()
+result: str = table.to_typst()
 ```
 
 To include the table in your Typst report you can write the resulting Typst
