@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  MINIMUM_PYTHON: "3.12"
+  MINIMUM_PYTHON: "3.11"
 
 on:
   push:
@@ -55,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        python: [ 3.12, 3.13, 3.14 ]
+        python: [ 3.11, 3.12, 3.13, 3.14 ]
 
     env:
       PYTHON: ${{ matrix.python }}
