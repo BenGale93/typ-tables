@@ -1,6 +1,6 @@
 ---
 name: New Feature
-description: Suggest a new feature.
+about: Suggest a new feature.
 labels: [feature]
 ---
 

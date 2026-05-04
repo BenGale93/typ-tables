@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-description: Report a bug in typ-tables
+about: Report a bug in typ-tables
 labels: [bug]
 ---
 
