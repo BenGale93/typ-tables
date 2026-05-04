@@ -1,7 +1,7 @@
 [project]
 name = "typ-tables"
 dynamic = ["version"]
-description = "Add your description here"
+description = "Generate Typst Tables from DataFrames."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["narwhals>=2.7.0"]
