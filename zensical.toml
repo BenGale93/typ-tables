@@ -11,7 +11,7 @@
 # The site_name is shown in the page header and the browser window title
 #
 # Read more: https://zensical.org/docs/setup/basics/#site_name
-site_name = "Typ-Table Documentation"
+site_name = "Typ-Tables Documentation"
 
 # The site_description is included in the HTML head and should contain a
 # meaningful description of the site content for use by search engines.
@@ -44,7 +44,14 @@ Copyright &copy; 2026 The authors
 # can be defined using TOML syntax.
 #
 # Read more: https://zensical.org/docs/setup/navigation/
-nav = ["index.md", "quickstart.md", "typ_table.md", "locators.md", "style.md", "typst.md"]
+nav = [
+  "index.md",
+  "quickstart.md",
+  "typ_table.md",
+  "locators.md",
+  "style.md",
+  "typst.md",
+]
 
 # With the "extra_css" option you can add your own CSS styling to customize
 # your Zensical project according to your needs. You can add any number of
