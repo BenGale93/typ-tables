@@ -34,3 +34,12 @@ string to a file and include it.
 ```typst
 #include "table.typ"
 ```
+
+## TODO
+
+- [ ] Header spanners
+- [ ] Footnotes
+- [ ] Source notes
+- [ ] Summary rows
+- [ ] Better locale support
+- [ ] Pipe method
