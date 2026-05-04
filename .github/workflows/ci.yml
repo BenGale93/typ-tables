@@ -46,7 +46,8 @@ jobs:
         run: uv python install ${{ matrix.python}}
 
       - name: Run type check
-        run: uv run pyrefly check --output-format=github
+        run: |
+          uv run pyrefly check src/ tests/ --config pyproject.toml --output-format=github
 
   test:
     name: test py${{ matrix.python }} on ${{ matrix.os }}
