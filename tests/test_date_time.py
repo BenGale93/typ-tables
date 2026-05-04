@@ -24,6 +24,21 @@ from typ_tables import TypTable
         ({"date_style": "year_quarter"}, external("uuid:year-quarter.typ")),
         ({"pattern": "Date: {x}"}, external("uuid:date-pattern.typ")),
     ],
+    ids=[
+        "default",
+        "just-top-row",
+        "month-day-year",
+        "wd-m-day-year",
+        "day-month-year",
+        "year-only",
+        "month-only",
+        "day-only",
+        "year-mn-day",
+        "y-mn-day",
+        "year-week",
+        "year-quarter",
+        "pattern",
+    ],
 )
 def test_date(table_check, args, result):
     df = pl.DataFrame(
@@ -90,6 +105,15 @@ def test_date_invalid_object():
         ({"time_style": "h_m_p"}, external("uuid:h-m-p-time.typ")),
         ({"time_style": "h_p"}, external("uuid:h-p-time.typ")),
         ({"pattern": "Time: {x}"}, external("uuid:time-pattern.typ")),
+    ],
+    ids=[
+        "default",
+        "just-top-row",
+        "iso-short",
+        "h-m-s-p",
+        "h-m-p",
+        "h-p",
+        "pattern",
     ],
 )
 def test_time(table_check, args, result):
@@ -162,6 +186,17 @@ def test_time_invalid_object():
         ({"sep": " - "}, external("uuid:sep-dash.typ")),
         ({"sep": "T"}, external("uuid:sep-t.typ")),
         ({"pattern": "Datetime: {x}"}, external("uuid:datetime-pattern.typ")),
+    ],
+    ids=[
+        "default",
+        "just-top-row",
+        "mdy-hmsp",
+        "wdmdy-hmp",
+        "dmy-hp",
+        "year-iso",
+        "sep-dash",
+        "sep-t",
+        "pattern",
     ],
 )
 def test_datetime(table_check, args, result):

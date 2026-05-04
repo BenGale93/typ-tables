@@ -18,7 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/ruff-action@v3
-      - run: ruff check
+        with:
+          args: check
 
   format:
     runs-on: ubuntu-latest
@@ -26,7 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/ruff-action@v3
-      - run: ruff format
+        with:
+          args: format
 
   typing:
     runs-on: ubuntu-latest
@@ -34,10 +36,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: facebook/pyrefly@main
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "0.61.0"
-          python-version: "3.12"
+          # Install a specific version of uv.
+          version: "0.11.8"
+
+      - name: Set up Python
+        run: uv python install ${{ matrix.python}}
+
+      - name: Run type check
+        run: uv run pyrefly check --output-format=github
 
   test:
     name: test py${{ matrix.python }} on ${{ matrix.os }}

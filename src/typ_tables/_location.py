@@ -22,7 +22,8 @@ RowSelector = nw.Expr | list[int] | int
 """A Type alias for all the types that can be used to select rows.
 
 A RowSelector can be either:
-    - A [Narwhals Expression](https://narwhals-dev.github.io/narwhals/api-reference/dataframe/#narwhals.dataframe.DataFrame.filter) that filters a DataFrame.
+    - A [Narwhals Expression](https://narwhals-dev.github.io/narwhals/api-reference/dataframe/#narwhals.dataframe.DataFrame.filter)
+        that filters a DataFrame.
     - A list of row indices.
     - A row index.
 """

@@ -29,6 +29,23 @@ from typ_tables import TypTable
             external("uuid:custom-all-values.typ"),
         ),
     ],
+    ids=[
+        "default",
+        "just-top-row",
+        "yes-no-style",
+        "up-down-style",
+        "check-mark-style",
+        "circles-style",
+        "squares-style",
+        "diamonds-style",
+        "arrows-style",
+        "triangles-style",
+        "triangles-lr-style",
+        "pattern",
+        "custom-values",
+        "na-value",
+        "custom-all-values",
+    ],
 )
 def test_fmt_tf(table_check, args, result):
     """Test fmt_tf with various configurations."""

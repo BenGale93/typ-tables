@@ -111,6 +111,23 @@ class TestFString:
         ({"compact": True, "n_sigfig": 3}, external("uuid:compact-sigfigs.typ")),
         ({"use_seps": False, "n_sigfig": 3}, external("uuid:no-seps-sigfigs.typ")),
     ],
+    ids=[
+        "default",
+        "just-top-row",
+        "five-decimals",
+        "three-sigfig",
+        "drop-trailing-zeros",
+        "drop-trailing-dec-mark",
+        "no-separators",
+        "accounting",
+        "scale-by-ten",
+        "compact",
+        "dollar-pattern",
+        "different-marks",
+        "force-sign",
+        "compact-sigfigs",
+        "no-seps-sigfigs",
+    ],
 )
 def test_numeric(table_check, args, result):
     df = pl.DataFrame(
@@ -205,6 +222,16 @@ def test_string_column_fmt_numeric_and_integer(table_check):
         ({"pattern": "${x}"}, external("uuid:dollar-pattern-int.typ")),
         ({"force_sign": True}, external("uuid:force-sign-symbol-int.typ")),
     ],
+    ids=[
+        "default",
+        "just-top-row",
+        "no-separators",
+        "accounting",
+        "scale-by-ten",
+        "compact",
+        "dollar-pattern",
+        "force-sign",
+    ],
 )
 def test_integer(table_check, args, result):
     df = pl.DataFrame(
@@ -277,6 +304,22 @@ def test_integer(table_check, args, result):
         ({"incl_space": True}, external("uuid:include-space.typ")),
         ({"force_sign": True, "placement": "left"}, external("uuid:force-sign-and-placement.typ")),
     ],
+    ids=[
+        "default",
+        "just-top-row",
+        "five-decimals",
+        "drop-trailing-zeros",
+        "drop-trailing-dec-mark",
+        "no-separators",
+        "accounting",
+        "scale-values",
+        "dollar-pattern",
+        "different-marks",
+        "force-sign",
+        "placement-left",
+        "include-space",
+        "force-sign-and-placement",
+    ],
 )
 def test_percentage(table_check, args, result):
     df = pl.DataFrame(
@@ -327,6 +370,18 @@ def test_percentage(table_check, args, result):
         ({"pattern": "${x}"}, external("uuid:dollar-pattern-sci.typ")),
         ({"dec_mark": ",", "sep_mark": "."}, external("uuid:use-different-marks-sci.typ")),
         ({"force_sign_m": True, "force_sign_n": True}, external("uuid:force-sign-sci.typ")),
+    ],
+    ids=[
+        "default",
+        "just-top-row",
+        "five-decimals",
+        "three-sigfig",
+        "drop-trailing-zeros",
+        "drop-trailing-dec-mark",
+        "scale-by-ten",
+        "dollar-pattern",
+        "different-marks",
+        "force-sign",
     ],
 )
 def test_scientific(table_check, args, result):
@@ -395,6 +450,18 @@ def test_scientific(table_check, args, result):
         ({"pattern": "${x}"}, external("uuid:dollar-pattern-eng.typ")),
         ({"dec_mark": ",", "sep_mark": "."}, external("uuid:use-different-marks-eng.typ")),
         ({"force_sign_m": True, "force_sign_n": True}, external("uuid:force-sign-eng.typ")),
+    ],
+    ids=[
+        "default",
+        "just-top-row",
+        "five-decimals",
+        "three-sigfig",
+        "drop-trailing-zeros",
+        "drop-trailing-dec-mark",
+        "scale-by-ten",
+        "dollar-pattern",
+        "different-marks",
+        "force-sign",
     ],
 )
 def test_engineering(table_check, args, result):
@@ -475,6 +542,23 @@ def test_engineering(table_check, args, result):
             external("uuid:force-sign-and-currency.typ"),
         ),
     ],
+    ids=[
+        "default-usd",
+        "default-gbp",
+        "just-top-row",
+        "five-decimals",
+        "drop-trailing-dec-mark",
+        "no-separators",
+        "accounting",
+        "compact-euros",
+        "scale-by-ten",
+        "dollar-pattern",
+        "different-marks",
+        "force-sign",
+        "placement-right",
+        "include-space",
+        "force-sign-and-currency",
+    ],
 )
 def test_currency(table_check, args, result):
     df = pl.DataFrame(
@@ -537,6 +621,21 @@ def test_currency_bad_code():
         ({"standard": "binary"}, external("uuid:binary-standard.typ")),
         ({"incl_space": False}, external("uuid:no-space-bytes.typ")),
         ({"standard": "binary", "decimals": 2}, external("uuid:binary-two-decimals.typ")),
+    ],
+    ids=[
+        "default",
+        "just-top-row",
+        "five-decimals",
+        "three-sigfig",
+        "drop-trailing-zeros",
+        "drop-trailing-dec-mark",
+        "no-separators",
+        "dollar-pattern",
+        "different-marks",
+        "force-sign",
+        "binary-standard",
+        "no-space",
+        "binary-two-decimals",
     ],
 )
 def test_bytes(table_check, args, result):
