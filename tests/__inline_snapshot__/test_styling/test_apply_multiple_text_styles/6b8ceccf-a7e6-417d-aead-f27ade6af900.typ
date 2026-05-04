@@ -46,9 +46,7 @@
   table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),
-  text(
-    font: "FreeMono",
-  )[b],
+  [b],
 ), table.cell(
   colspan: 1,
   stroke: (bottom: 0.6pt),

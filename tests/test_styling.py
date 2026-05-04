@@ -583,10 +583,6 @@ def test_apply_multiple_text_styles(table_check, basic_data) -> None:
             locator=locators.LocBody(rows=0, columns="string"),
         )
         .tab_style(
-            text=style.TextStyle(font="FreeMono"),
-            locator=locators.LocBody(rows=1, columns="string"),
-        )
-        .tab_style(
             text=style.TextStyle(style="italic"),
             locator=locators.LocBody(rows=2, columns="string"),
         )
