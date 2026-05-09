@@ -263,7 +263,7 @@ class TypData:
         columns = self.boxhead.get_stub_and_default_columns()
         n_cols = len(columns)
         rows = []
-        cell_styles = self._build_cell_style_index(data, columns)
+        cell_styles = self._build_cell_style_index(original_data, columns)
         row_group_styles = self._build_row_group_styles(original_data)
 
         prev_group_info = None
