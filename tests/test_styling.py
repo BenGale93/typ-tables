@@ -275,6 +275,30 @@ class TestStyleBody:
 
         assert len(warnings) == 0
 
+    def test_fill_body_row_expr_uses_source_data_after_formatting(self, table_check) -> None:
+        df = pl.DataFrame(
+            {
+                "item": ["A", "B", "C"],
+                "margin": [0.37, 0.41, 0.52],
+            }
+        )
+
+        table = (
+            TypTable(df, rowname_col="item")
+            .fmt_percentage(columns="margin", decimals=1)
+            .tab_style(
+                locator=locators.LocBody(columns="margin", rows=nw.col("margin") >= 0.4),
+                cell=style.CellStyle(fill="rgb(232, 246, 239)"),
+            )
+        )
+        result = table.to_typst()
+
+        assert result.count("fill: rgb(232, 246, 239)") == 2
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
     def test_fill_body_based_on_list(self, table_check, basic_data) -> None:
         table = (
             TypTable(basic_data)
