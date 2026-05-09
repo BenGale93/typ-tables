@@ -10,3 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fix
 
 * Fix not being able to use expression to style columns that had been formatted.
+
+### Documented
+
+* Comparison between pure Typst and `typ-tables`.
