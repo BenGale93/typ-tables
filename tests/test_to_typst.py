@@ -1,3 +1,4 @@
+import narwhals as nw
 import polars as pl
 import pytest
 from inline_snapshot import external
@@ -148,6 +149,28 @@ class TestBasic:
         result = table.to_typst()
 
         assert result == external("uuid:80b276c0-46d7-48d4-98a6-10588ca067f0.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
+class TestPipe:
+    def test_pipe_applies_styling(self, table_check, basic_data):
+        def colour_max(tbl: TypTable, columns: list[str]) -> TypTable:
+            for column in columns:
+                tbl = tbl.tab_style(
+                    cell=style.CellStyle(fill="red"),
+                    locator=locators.LocBody(
+                        columns=column, rows=(nw.col(column) == nw.col(column).max())
+                    ),
+                )
+            return tbl
+
+        table = TypTable(basic_data).pipe(colour_max, ["int", "float"])
+        result = table.to_typst()
+
+        assert result == external("uuid:c0eafe10-e482-472d-abb3-f109130918db.typ")
 
         warnings = table_check(result)
 
