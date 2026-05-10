@@ -61,6 +61,9 @@ def _create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
     return typ.figure.add_figure_args(table_str)
 
 
+P = t.ParamSpec("P")
+
+
 class TypTable:
     """Build a Typst table from a DataFrame-like object.
 
@@ -100,6 +103,38 @@ class TypTable:
             Complete Typst string representing the table.
         """
         return _create_table_string(self._df, self._typ_data)
+
+    def pipe(
+        self, func: t.Callable[t.Concatenate[t.Self, P], t.Self], *args: P.args, **kwargs: P.kwargs
+    ) -> t.Self:
+        """Method to apply a function on a TypTable object in a method call chain.
+
+        Args:
+            func: A function that takes a TypTable as the first argument, and then any number
+                of positional or keyword arguments. It then returns a TypTable object.
+            *args: The optional positional arguments that func needs.
+            **kwargs: The optional keyword arguments that func needs.
+
+        Example:
+            ```python
+            def colour_max(tbl: TypTable, columns: list[str]) -> TypTable:
+                for column in columns:
+                    tbl = tbl.tab_style(
+                        cell=style.CellStyle(fill="red"),
+                        locator=locators.LocBody(
+                            columns=column, rows=(nw.col(column) == nw.col(column).max())
+                        ),
+                    )
+                return tbl
+
+
+            TypTable(data).pipe(colour_max, ["column_a", "column_b"])
+            ```
+
+        Returns:
+            The current table instance for chaining.
+        """
+        return func(self, *args, **kwargs)
 
     # Modifying parts of a Table Methods ----
     def tab_header(self, title: str | Typst, subtitle: str | Typst | None = None) -> t.Self:

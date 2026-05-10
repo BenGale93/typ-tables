@@ -91,3 +91,8 @@ typst = (
 ::: typ_tables.TypTable.set_gutter
 
 ::: typ_tables.TypTable.clear_defaults
+
+
+## Pipeline
+
+::: typ_tables.TypTable.pipe
