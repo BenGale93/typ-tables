@@ -1,3 +1,5 @@
+set dotenv-required
+
 default: lint type_check test
 
 alias t := test
@@ -19,3 +21,8 @@ alias l := lint
 
 @docs:
     uv run --group docs zensical serve
+
+release version:
+    git tag {{version}}
+    uv build --clear
+    uv publish --token $UV_PUBLISH_TOKEN
