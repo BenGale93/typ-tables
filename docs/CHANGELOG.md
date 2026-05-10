@@ -1,1 +1,0 @@
-/home/galeb/programming/python_projects/typ-tables/CHANGELOG.md
