@@ -5,7 +5,7 @@ default: lint type_check test
 alias t := test
 
 @test *FLAGS:
-    uv run pytest tests/ {{FLAGS}}
+    uv run pytest tests/ {{ FLAGS }}
     uv run coverage report --fail-under=100
 
 alias tc := type_check
@@ -23,6 +23,6 @@ alias l := lint
     uv run --group docs zensical serve
 
 release version:
-    git tag {{version}}
+    git tag {{ version }}
     uv build --clear
     uv publish --token $UV_PUBLISH_TOKEN
