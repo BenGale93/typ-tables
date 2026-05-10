@@ -40,6 +40,7 @@ site_url = "https://bengale93.github.io/typ-tables/"
 nav = [
   "index.md",
   "quickstart.md",
+  "pure_typst_vs_typ_tables.md",
   "typ_table.md",
   "locators.md",
   "style.md",
