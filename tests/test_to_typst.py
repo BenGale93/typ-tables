@@ -3,6 +3,7 @@ import polars as pl
 import pytest
 from inline_snapshot import external
 from narwhals import selectors as ncs
+from narwhals.exceptions import ColumnNotFoundError
 
 from typ_tables import TypTable, locators, style
 from typ_tables._escape import Typst
@@ -206,6 +207,128 @@ class TestHideColumns:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestMoveColumns:
+    @staticmethod
+    def _assert_labels_in_order(result: str, labels: list[str]) -> None:
+        label_positions = [result.index(f"[{label}]") for label in labels]
+
+        assert label_positions == sorted(label_positions)
+
+    def test_move_single_column(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_move("float", after="string")
+        result = table.to_typst()
+
+        assert result == external("uuid:81197461-2706-41c2-b8a5-ccada0dbbd52.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_multiple_columns(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_move(["string", "int"], after="float")
+        result = table.to_typst()
+
+        assert result == external("uuid:04e22e70-6836-48af-bf96-5012136db122.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_after_column_cannot_be_moved(self, basic_data):
+        with pytest.raises(
+            ValueError,
+            match=(
+                r"Cannot move columns \['string', 'int'\] after 'string' because 'string' is one "
+                r"of the columns being moved\. Choose an `after` column that is not included in "
+                r"`columns`\."
+            ),
+        ):
+            TypTable(basic_data).cols_move(["string", "int"], after="string")
+
+    def test_move_with_stub_and_group_columns(self, table_check):
+        df = pl.DataFrame(
+            {
+                "group": ["citrus", "citrus", "berry"],
+                "fruit": ["orange", "lemon", "strawberry"],
+                "count": [12, 8, 24],
+                "price": [1.25, 0.8, 3.5],
+            }
+        )
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df, rowname_col="fruit", groupname_col="group").cols_move(
+            "price", after="fruit"
+        )
+        result = table.to_typst()
+
+        self._assert_labels_in_order(result, ["price", "count"])
+        assert "[citrus]" in result
+        assert "[berry]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_with_selector(self, table_check):
+        df = pl.DataFrame(
+            {
+                "int": [1, 2],
+                "float": [1.5, 2.5],
+                "string": ["a", "b"],
+            }
+        )
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).cols_move(ncs.numeric(), after="string")
+        result = table.to_typst()
+
+        self._assert_labels_in_order(result, ["string", "int", "float"])
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_with_column_index(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_move(2, after="string")
+        result = table.to_typst()
+
+        self._assert_labels_in_order(result, ["string", "float", "int"])
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_hidden_column(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_hide("int").cols_move("int", after="float")
+        result = table.to_typst()
+
+        assert "[int]" not in result
+        self._assert_labels_in_order(result, ["string", "float"])
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_after_hidden_column(self, table_check, basic_data):
+        table = TypTable(basic_data).cols_hide("int").cols_move("string", after="int")
+        result = table.to_typst()
+
+        assert "[int]" not in result
+        self._assert_labels_in_order(result, ["string", "float"])
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_unknown_column(self, basic_data):
+        with pytest.raises(ColumnNotFoundError, match=r"missing"):
+            TypTable(basic_data).cols_move("missing", after="string")
+
+    def test_move_after_unknown_column(self, basic_data):
+        with pytest.raises(ColumnNotFoundError, match=r"missing"):
+            TypTable(basic_data).cols_move("float", after="missing")
 
 
 class TestLabelColumns:

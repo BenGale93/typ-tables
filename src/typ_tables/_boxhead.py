@@ -34,6 +34,20 @@ class Boxhead(list[ColInfo]):
         """Number of columns the boxhead will render to."""
         return len(self.get_stub_and_default_columns())
 
+    def reorder(self, columns: list[str]) -> t.Self:
+        boxh_cols = [col.var for col in self]
+
+        if set(columns) != set(boxh_cols):  # pragma: no cover
+            msg = "Reordering vars must contain all boxhead vars."
+            raise ValueError(msg)
+
+        new_boxhead = []
+        for col in columns:
+            indx = boxh_cols.index(col)
+            new_boxhead.append(self[indx])
+
+        return type(self)(new_boxhead)
+
     def set_cols_hidden(self, col_names: t.Iterable[str]) -> None:
         """Sets the columns as hidden."""
         for col in self:
