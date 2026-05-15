@@ -6,7 +6,7 @@ import polars as pl
 import pytest
 from inline_snapshot import external, snapshot
 
-from typ_tables import Sides, TypTable, _style, locators, style
+from typ_tables import Sides, TypTable, _style, locators, style, ttypes
 
 
 class TestAttributesMatch:
@@ -284,6 +284,7 @@ class TestStyleBody:
         )
 
         table = (
+            # pyrefly: ignore [bad-argument-type]
             TypTable(df, rowname_col="item")
             .fmt_percentage(columns="margin", decimals=1)
             .tab_style(
@@ -300,11 +301,18 @@ class TestStyleBody:
         assert len(warnings) == 0
 
     def test_fill_body_based_on_list(self, table_check, basic_data) -> None:
+        alignment: list[ttypes.Auto | ttypes.Alignment] = [
+            "left",
+            "right",
+            "top",
+            "bottom",
+            "horizon",
+        ]
         table = (
             TypTable(basic_data)
             .tab_style(
                 text=style.TextStyle(fill=["red", "blue", "red", "yellow", "purple"]),
-                cell=style.CellStyle(align=["left", "right", "top", "bottom", "horizon"]),
+                cell=style.CellStyle(align=alignment),
                 locator=locators.LocBody(),
             )
             .tab_header("Table Header")
@@ -649,6 +657,7 @@ def test_apply_multiple_text_styles(table_check, basic_data) -> None:
 def test_test_fractions(table_check) -> None:
     data = pl.DataFrame({"Fractions": ["1/2", "1/3"]})
     table = (
+        # pyrefly: ignore [bad-argument-type]
         TypTable(data)
         .tab_style(
             text=style.TextStyle(fractions=True),

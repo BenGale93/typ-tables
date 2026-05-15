@@ -62,6 +62,7 @@ class TestFString:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df).fmt(f_string="^{}*", columns="string")
         result = table.to_typst()
 
@@ -79,6 +80,7 @@ class TestFString:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df).fmt(f_string="^{}*", columns="string").fmt(f_string="_{}_")
         result = table.to_typst()
 
@@ -169,6 +171,7 @@ def test_numeric(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_number(**args)
     typst_table = table.to_typst()
 
@@ -182,6 +185,7 @@ def test_numeric(table_check, args, result):
 def test_numeric_string_column(table_check):
     df = pl.DataFrame({"string": ["stuff", "1.2653"]})
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_number()
     typst_table = table.to_typst()
 
@@ -200,6 +204,7 @@ def test_string_column_fmt_numeric_and_integer(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_number(columns="string").fmt_integer(columns="other_string")
     typst_table = table.to_typst()
 
@@ -273,6 +278,7 @@ def test_integer(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_integer(**args)
     typst_table = table.to_typst()
 
@@ -344,6 +350,7 @@ def test_percentage(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_percentage(**args)
     typst_table = table.to_typst()
 
@@ -424,6 +431,7 @@ def test_scientific(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_scientific(**args)
     typst_table = table.to_typst()
 
@@ -504,6 +512,7 @@ def test_engineering(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_engineering(**args)
     typst_table = table.to_typst()
 
@@ -583,6 +592,7 @@ def test_currency(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_currency(**args)
     typst_table = table.to_typst()
 
@@ -596,6 +606,7 @@ def test_currency(table_check, args, result):
 def test_currency_bad_code():
     df = pl.DataFrame({"test": [10]})
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_currency(currency="TST")
 
     with pytest.raises(ValueError, match=r"'TST' is not a recognised"):
@@ -660,6 +671,7 @@ def test_bytes(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_bytes(**args)
     typst_table = table.to_typst()
 
@@ -683,6 +695,7 @@ def test_bytes_special_values(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_bytes()
     typst_table = table.to_typst()
 

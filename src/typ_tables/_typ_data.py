@@ -7,6 +7,8 @@ from functools import cached_property
 from string import Template
 from textwrap import indent
 
+from narwhals.typing import IntoDataFrame, IntoDataFrameT
+
 from typ_tables import _locators, ttypes
 from typ_tables._boxhead import Boxhead, ColInfo
 from typ_tables._escape import Typst, escape_value
@@ -135,13 +137,13 @@ class TypData:
     figure: Figure
     styles: list[_locators.StyledLoc] = field(default_factory=list)
     stubhead: str | Typst | None = None
-    inset: str | Sides = "0% + 5pt"
+    inset: str | Sides[ttypes.Relative] = "0% + 5pt"
     stroke: str = "none"
     gutters: Gutters = field(default_factory=Gutters)
 
     @classmethod
     def from_data(
-        cls, df: ttypes.Data, rowname_col: str | None, groupname_col: str | None
+        cls, df: ttypes.Data[IntoDataFrame], rowname_col: str | None, groupname_col: str | None
     ) -> t.Self:
         """Build `TypData` initialized from a source dataset.
 
@@ -164,7 +166,7 @@ class TypData:
             figure=Figure(),
         )
 
-    def format_df(self, df: ttypes.Data) -> ttypes.Data:
+    def format_df(self, df: ttypes.Data[IntoDataFrameT]) -> ttypes.Data[IntoDataFrameT]:
         """Apply all registered formatters to a dataset in order.
 
         Args:
@@ -200,7 +202,7 @@ class TypData:
         """
         return str(len(self.boxhead))
 
-    def header(self, original_data: ttypes.Data) -> str:
+    def header(self, original_data: ttypes.Data[IntoDataFrame]) -> str:
         """Render table header rows, including optional title and stub divider.
 
         Args:
@@ -249,7 +251,9 @@ class TypData:
 
         return f"{formatted_title}table.header({header})"
 
-    def body(self, data: ttypes.Data, original_data: ttypes.Data) -> str:
+    def body(
+        self, data: ttypes.Data[IntoDataFrame], original_data: ttypes.Data[IntoDataFrame]
+    ) -> str:
         """Render Typst rows for table body data.
 
         Args:
@@ -278,7 +282,7 @@ class TypData:
         return "\n  ".join(rows)
 
     def _build_cell_style_index(
-        self, data: ttypes.Data, columns: list[ColInfo]
+        self, data: ttypes.Data[IntoDataFrame], columns: list[ColInfo]
     ) -> dict[_locators.CellPos, StyleHolder]:
         """Precompute merged styles for each addressable body cell."""
         styles: dict[_locators.CellPos, StyleHolder] = {}
@@ -299,7 +303,9 @@ class TypData:
 
         return styles
 
-    def _build_row_group_styles(self, original_data: ttypes.Data) -> _locators.RowGroupStyles:
+    def _build_row_group_styles(
+        self, original_data: ttypes.Data[IntoDataFrame]
+    ) -> _locators.RowGroupStyles:
         """Collect row-group style assignments resolved against source data."""
         row_group_styles = _locators.RowGroupStyles()
         row_group_col = self.boxhead.get_group_column_name()
@@ -332,7 +338,7 @@ class TypData:
 
     def _render_data_row(
         self,
-        data: ttypes.Data,
+        data: ttypes.Data[IntoDataFrame],
         row_idx: int,
         columns: list[ColInfo],
         cell_styles: dict[_locators.CellPos, StyleHolder],

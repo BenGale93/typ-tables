@@ -8,12 +8,16 @@ from typ_tables import _location
 
 
 @pytest.fixture
-def col_data_polars() -> nw.DataFrame:
+# pyrefly: ignore [bad-specialization]
+def col_data_polars() -> nw.DataFrame[pl.DataFrame]:
+    # pyrefly: ignore [no-matching-overload]
     return nw.from_native(pl.DataFrame({"a": [], "b": [], "c": []}), eager_only=True)
 
 
 @pytest.fixture
-def col_data_pandas() -> nw.DataFrame:
+# pyrefly: ignore [bad-specialization]
+def col_data_pandas() -> nw.DataFrame[pd.DataFrame]:
+    # pyrefly: ignore [no-matching-overload]
     return nw.from_native(pd.DataFrame({"a": [], "b": [], "c": []}), eager_only=True)
 
 
@@ -38,7 +42,9 @@ class TestResolveColumns:
 
 
 @pytest.fixture
-def row_data() -> nw.DataFrame:
+# pyrefly: ignore [bad-specialization]
+def row_data() -> nw.DataFrame[pl.DataFrame]:
+    # pyrefly: ignore [no-matching-overload]
     return nw.from_native(pl.DataFrame({"data": [1, 2, 3, 4, 5]}), eager_only=True)
 
 

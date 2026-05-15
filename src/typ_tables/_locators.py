@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 import narwhals as nw
+from narwhals.typing import IntoDataFrame
 
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns, resolve_rows
 from typ_tables._style import CellStyle, StyleHolder, TextStyle
@@ -26,7 +27,7 @@ class Loc(t.Protocol):
 
     def _apply_style(
         self,
-        data: Data,
+        data: Data[IntoDataFrame],
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLoc:
@@ -59,7 +60,7 @@ class LocHeader:
 
     def _apply_style(
         self,
-        data: Data,  # noqa: ARG002
+        data: Data[IntoDataFrame],  # noqa: ARG002
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocHeader:
@@ -97,7 +98,7 @@ class StyledLocBody(StyledLoc):
     columns: ColumnSelector | None = None
     rows: RowSelector | None = None
 
-    def resolve(self, data: Data) -> list[CellPos]:
+    def resolve(self, data: Data[IntoDataFrame]) -> list[CellPos]:
         """Resolve which cells in data to apply the style to."""
         columns = resolve_columns(data, self.columns)
         rows = resolve_rows(data, self.rows)
@@ -128,7 +129,7 @@ class LocBody:
 
     def _apply_style(
         self,
-        data: Data,
+        data: Data[IntoDataFrame],
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocBody:
@@ -161,7 +162,7 @@ class StyledLocColumnLabels(StyledLoc):
     style: StyleHolder
     columns: ColumnSelector | None = None
 
-    def resolve(self, data: Data) -> list[str]:
+    def resolve(self, data: Data[IntoDataFrame]) -> list[str]:
         """Resolve which columns in data to apply the style to."""
         return resolve_columns(data, self.columns)
 
@@ -183,7 +184,7 @@ class LocColumnLabels:
 
     def _apply_style(
         self,
-        data: Data,  # noqa: ARG002
+        data: Data[IntoDataFrame],  # noqa: ARG002
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocColumnLabels:
@@ -223,7 +224,7 @@ class LocStubhead:
 
     def _apply_style(
         self,
-        data: Data,  # noqa: ARG002
+        data: Data[IntoDataFrame],  # noqa: ARG002
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocStubhead:
@@ -252,7 +253,7 @@ class StyledLocStub(StyledLoc):
     style: list[StyleHolder]
     rows: RowSelector | None = None
 
-    def resolve(self, data: Data, rowname_col: str) -> list[CellPos]:
+    def resolve(self, data: Data[IntoDataFrame], rowname_col: str) -> list[CellPos]:
         """Resolve which cells in data to apply the style to."""
         rows = resolve_rows(data, self.rows)
 
@@ -277,7 +278,7 @@ class LocStub:
 
     def _apply_style(
         self,
-        data: Data,
+        data: Data[IntoDataFrame],
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocStub:
@@ -313,7 +314,7 @@ class StyledLocRowGroup(StyledLoc):
     style: StyleHolder
     group: str | list[str] | None = None
 
-    def resolve(self, data: Data, group_key: str) -> Groups:
+    def resolve(self, data: Data[IntoDataFrame], group_key: str) -> Groups:
         """Resolve which cells in data to apply the style to."""
         unique_values = [
             str(v) for v in data.select(nw.col(group_key).unique())[group_key].to_list()
@@ -346,7 +347,7 @@ class LocRowGroup:
 
     def _apply_style(
         self,
-        data: Data,  # noqa: ARG002
+        data: Data[IntoDataFrame],  # noqa: ARG002
         text: TextStyle | None = None,
         cell: CellStyle | None = None,
     ) -> StyledLocRowGroup:

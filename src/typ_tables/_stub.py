@@ -4,6 +4,7 @@ import typing as t
 from dataclasses import dataclass, field
 
 import narwhals as nw
+from narwhals.typing import IntoDataFrame
 
 from typ_tables import _constants, ttypes
 
@@ -41,7 +42,7 @@ class GroupRows(list[GroupRowInfo]):
     """List of grouping rows."""
 
     @classmethod
-    def from_data(cls, data: ttypes.Data, group_key: str) -> t.Self:
+    def from_data(cls, data: ttypes.Data[IntoDataFrame], group_key: str) -> t.Self:
         """Create an instance from the underlying data."""
         group_map: dict[t.Any, list[int]] = {}
         unique_values = data.select(nw.col(group_key).unique())
@@ -101,7 +102,10 @@ class Stub:
 
     @classmethod
     def from_data(
-        cls, data: ttypes.Data, rowname_col: str | None = None, groupname_col: str | None = None
+        cls,
+        data: ttypes.Data[IntoDataFrame],
+        rowname_col: str | None = None,
+        groupname_col: str | None = None,
     ) -> t.Self:
         """Create an instance from the underlying data."""
         # Obtain a list of row indices from the data and initialize
@@ -131,7 +135,7 @@ class Stub:
     def group_indices_map(self) -> list[tuple[int, GroupRowInfo | None]]:
         return self.group_rows.indices_map(len(self.rows))
 
-    def update_group_row_labels(self, data: ttypes.Data, boxhead: "Boxhead") -> None:
+    def update_group_row_labels(self, data: ttypes.Data[IntoDataFrame], boxhead: "Boxhead") -> None:
         """Updates the group row labels based on the formatted data."""
         rowgroup_var = boxhead.get_group_column_name()
         if rowgroup_var is None:

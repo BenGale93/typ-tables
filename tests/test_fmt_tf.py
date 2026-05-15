@@ -56,6 +56,7 @@ def test_fmt_tf(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns="bool", **args)
     typst_table = table.to_typst()
 
@@ -76,6 +77,7 @@ def test_fmt_tf_multiple_columns(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns=["bool1", "bool2"], tf_style="yes-no")
     typst_table = table.to_typst()
 
@@ -96,6 +98,7 @@ def test_fmt_tf_all_boolean_columns(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(tf_style="arrows")
     typst_table = table.to_typst()
 
@@ -117,6 +120,7 @@ def test_fmt_tf_non_boolean_column_raises():
     df = df.with_columns(pl.col("mixed").cast(pl.String))
     df = df.with_columns(pl.lit("not_a_bool").alias("mixed"))
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns="mixed")
 
     with pytest.raises(ValueError, match="Expected boolean value or NA"):
@@ -145,6 +149,7 @@ def test_fmt_tf_none_without_na_val(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns="bool")
     typst_table = table.to_typst()
 
@@ -163,6 +168,7 @@ def test_fmt_tf_pattern_with_na_val(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns="bool", tf_style="yes-no", pattern="[{x}]", na_val="?")
     typst_table = table.to_typst()
 
@@ -181,6 +187,7 @@ def test_fmt_tf_override_true_only(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns="bool", true_val="PASS")
     typst_table = table.to_typst()
 
@@ -199,6 +206,7 @@ def test_fmt_tf_override_false_only(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_tf(columns="bool", false_val="FAIL")
     typst_table = table.to_typst()
 

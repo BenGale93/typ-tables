@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from datetime import date, datetime, time
 
 import narwhals as nw
+from narwhals.typing import IntoDataFrame, IntoDataFrameT
 
 from typ_tables import _locale, _location, ttypes
 from typ_tables._constants import ROW_INDEX
@@ -21,7 +22,9 @@ from typ_tables._formats._numeric import NumericSubConfig
 class FormatFn(t.Protocol):
     """Protocol defining a formatting function."""
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+    def fmt(
+        self, data: ttypes.Data[IntoDataFrameT], cols: list[str], rows: list[int]
+    ) -> ttypes.Data[IntoDataFrameT]:
         """Formats the data in the given columns and rows."""
 
 
@@ -33,13 +36,13 @@ class Formatter:
     cols: list[str]
     rows: list[int]
 
-    def fmt(self, data: ttypes.Data) -> ttypes.Data:
+    def fmt(self, data: ttypes.Data[IntoDataFrameT]) -> ttypes.Data[IntoDataFrameT]:
         """Formats the given data."""
         return self.func.fmt(data, self.cols, self.rows)
 
 
 def fmt(
-    data: ttypes.Data,
+    data: ttypes.Data[IntoDataFrame],
     func: FormatFn,
     columns: _location.ColumnSelector | None = None,
     rows: _location.RowSelector | None = None,
@@ -64,7 +67,9 @@ class SubMissing:
 
     missing_text: str = ""
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+    def fmt(
+        self, data: ttypes.Data[IntoDataFrameT], cols: list[str], rows: list[int]
+    ) -> ttypes.Data[IntoDataFrameT]:
         """Formatting missing values in the given columns and rows."""
         whens = []
         for col in cols:
@@ -84,15 +89,20 @@ class FString:
 
     f_string: str
 
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+    def fmt(
+        self, data: ttypes.Data[IntoDataFrameT], cols: list[str], rows: list[int]
+    ) -> ttypes.Data[IntoDataFrameT]:
         """Formats values in the given columns and rows."""
         whens = [_create_when(col, rows, nw.format(self.f_string, nw.col(col))) for col in cols]
         return data.with_columns(whens)
 
 
 def _format_by_cell(
-    data: ttypes.Data, cols: list[str], rows: list[int], fmt_value: t.Callable[[object], str | None]
-) -> ttypes.Data:
+    data: ttypes.Data[IntoDataFrameT],
+    cols: list[str],
+    rows: list[int],
+    fmt_value: t.Callable[[object], str | None],
+) -> ttypes.Data[IntoDataFrameT]:
     unique_rows = set(rows)
     new_cols = []
     for col in cols:
@@ -165,7 +175,9 @@ def _create_affix_pattern(  # noqa: PLR0913
 
 
 class CellFormatter(ABC):
-    def fmt(self, data: ttypes.Data, cols: list[str], rows: list[int]) -> ttypes.Data:
+    def fmt(
+        self, data: ttypes.Data[IntoDataFrameT], cols: list[str], rows: list[int]
+    ) -> ttypes.Data[IntoDataFrameT]:
         """Formatting numeric values in the given columns and rows."""
         return _format_by_cell(data, cols, rows, self.fmt_value)
 
