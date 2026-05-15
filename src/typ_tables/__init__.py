@@ -976,6 +976,54 @@ class TypTable:
         self._typ_data.boxhead.set_cols_label(new_labels)
         return self
 
+    def cols_move(self, columns: ColumnSelector, after: str) -> t.Self:
+        """Move one or more columns after another column.
+
+        The selected columns are removed from their current positions and
+        inserted immediately after `after`. When multiple columns are selected,
+        their relative order is preserved. Column selectors are resolved against
+        the user-visible table columns, so integer selectors do not count the
+        internal row index column.
+
+        Args:
+            columns: Column selector identifying the columns to move.
+            after: Name of the column that the selected columns should follow.
+
+        Raises:
+            ValueError: If `after` is one of the columns being moved.
+            ColumnNotFoundError: If `columns` or `after` reference unknown columns.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        all_columns = [col.var for col in self._typ_data.boxhead]
+        column_data = self._df.select(all_columns)
+
+        columns_to_move = resolve_columns(column_data, columns)
+        column_after = resolve_columns(column_data, after)[0]
+
+        if column_after in columns_to_move:
+            msg = (
+                f"Cannot move columns {columns_to_move!r} after {column_after!r} because "
+                f"{column_after!r} is one of the columns being moved. Choose an `after` "
+                "column that is not included in `columns`."
+            )
+            raise ValueError(msg)
+
+        other_columns = [col for col in all_columns if col not in columns_to_move]
+
+        indx = other_columns.index(column_after)
+
+        final_vars = [
+            *other_columns[: indx + 1],
+            *columns_to_move,
+            *other_columns[indx + 1 :],
+        ]
+
+        self._typ_data.boxhead = self._typ_data.boxhead.reorder(final_vars)
+
+        return self
+
     # Table option methods ----
     def set_table_inset(
         self, inset: str | Sides[ttypes.Relative] | dict[str, ttypes.Relative]
