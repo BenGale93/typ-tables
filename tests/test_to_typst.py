@@ -13,6 +13,7 @@ class TestBasic:
         df = pl.DataFrame({})
 
         with pytest.raises(ValueError, match=r"Data must have at least one column."):
+            # pyrefly: ignore [bad-argument-type]
             TypTable(df)
 
     def test_to_typst_string_int_float(self, table_check) -> None:
@@ -24,6 +25,7 @@ class TestBasic:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df)
         result = table.to_typst()
 
@@ -55,6 +57,7 @@ class TestBasic:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df)
         result = table.to_typst()
 
@@ -73,6 +76,7 @@ class TestBasic:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df, rowname_col="string")
         result = table.to_typst()
 
@@ -101,6 +105,7 @@ class TestBasic:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df, rowname_col="string").tab_header(title="Title Here")
         result = table.to_typst()
 
@@ -119,6 +124,7 @@ class TestBasic:
             }
         )
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df, rowname_col="string").tab_stubhead(label="Test")
         result = table.to_typst()
 
@@ -138,6 +144,7 @@ class TestBasic:
         )
 
         table = (
+            # pyrefly: ignore [bad-argument-type]
             TypTable(df)
             .tab_style(
                 cell=style.CellStyle(align="right", inset=style.Sides(bottom="20pt")),
@@ -303,6 +310,7 @@ class TestEdgeCases:
     def test_column_label_with_underscore(self, table_check):
         df = pl.DataFrame({"test_name": ["stuff", "more_stuff"]})
 
+        # pyrefly: ignore [bad-argument-type]
         table = TypTable(df)
 
         result = table.to_typst()

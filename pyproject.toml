@@ -44,7 +44,7 @@ test = [
   "pandas>=3.0.0",
   "pyarrow>=20.0.0",
 ]
-typing = ["pyrefly>=0.61.0"]
+typing = ["pyrefly>=1.0.0"]
 typing-test = [{ include-group = "test" }, { include-group = "typing" }]
 
 [project.scripts]
@@ -98,3 +98,14 @@ filterwarnings = [
 
 [tool.inline-snapshot]
 format-command = "uv run ruff format --stdin-filename {filename}"
+
+[tool.pyrefly]
+preset = "strict"
+
+errors = { missing-override-decorator = "ignore" }
+
+[[tool.pyrefly.sub-config]]
+matches = "tests/**/*.py"
+
+[tool.pyrefly.sub-config.errors]
+implicit-any-parameter = "ignore"

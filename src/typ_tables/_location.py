@@ -4,6 +4,7 @@ from contextlib import suppress
 
 import narwhals as nw
 from narwhals import selectors as ncs
+from narwhals.typing import IntoDataFrame
 
 from typ_tables import ttypes
 from typ_tables._constants import ROW_INDEX
@@ -29,7 +30,9 @@ A RowSelector can be either:
 """
 
 
-def resolve_columns(data: ttypes.Data, selector: ColumnSelector | None = None) -> list[str]:
+def resolve_columns(
+    data: ttypes.Data[IntoDataFrame], selector: ColumnSelector | None = None
+) -> list[str]:
     """Resolve the column names and positions based on the selection expression."""
     if isinstance(selector, int):
         selector = [selector]
@@ -54,7 +57,9 @@ def resolve_columns(data: ttypes.Data, selector: ColumnSelector | None = None) -
     return columns
 
 
-def resolve_rows(data: ttypes.Data, selector: RowSelector | None = None) -> list[int]:
+def resolve_rows(
+    data: ttypes.Data[IntoDataFrame], selector: RowSelector | None = None
+) -> list[int]:
     """Resolve the rows the selector expression is selecting."""
     if isinstance(selector, int):
         return [selector]

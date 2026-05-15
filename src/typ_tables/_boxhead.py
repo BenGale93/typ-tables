@@ -4,6 +4,8 @@ import typing as t
 import warnings
 from dataclasses import dataclass
 
+from narwhals.typing import IntoDataFrame
+
 from typ_tables import _constants, _escape, ttypes
 
 ColType = t.Literal["default", "stub", "row_group", "hidden"]
@@ -76,7 +78,7 @@ class Boxhead(list[ColInfo]):
 
     @classmethod
     def from_data(
-        cls, data: ttypes.Data, rowname_col: str | None, groupname_col: str | None
+        cls, data: ttypes.Data[IntoDataFrame], rowname_col: str | None, groupname_col: str | None
     ) -> t.Self:
         """Creates boxhead from the given data."""
         boxhead = cls([])

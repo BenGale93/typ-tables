@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass, field, fields
 from textwrap import indent
 
 import narwhals as nw
+from narwhals.typing import IntoDataFrame
 
 from typ_tables._escape import Typst, escape_value
 from typ_tables.ttypes import Alignment, Auto, Data, Relative
@@ -217,7 +218,7 @@ class _DataclassInstance(t.Protocol):
 
 
 def _resolve_style_to_list_of_styles(
-    instance: _DataclassInstance, data: Data
+    instance: _DataclassInstance, data: Data[IntoDataFrame]
 ) -> dict[str, list[t.Any]]:
     n_rows = len(data)
     resolved_fields: dict[str, list[t.Any]] = {}
@@ -282,7 +283,7 @@ class TextStyle:
         """Coerces types."""
         self.stroke = _coerce_sides(self.stroke)
 
-    def resolve(self, data: Data) -> list[TextStyleForCell]:
+    def resolve(self, data: Data[IntoDataFrame]) -> list[TextStyleForCell]:
         """Resolve the text style into a list of text styles for each cell in a column."""
         resolved_fields = _resolve_style_to_list_of_styles(self, data)
         return [
@@ -387,7 +388,7 @@ class CellStyle:
         self.inset = _coerce_sides(self.inset)
         self.stroke = _coerce_sides(self.stroke)
 
-    def resolve(self, data: Data) -> list[CellStyleForCell]:
+    def resolve(self, data: Data[IntoDataFrame]) -> list[CellStyleForCell]:
         """Resolve the cell style into a list of cell styles for each cell in a column."""
         resolved_fields = _resolve_style_to_list_of_styles(self, data)
         return [

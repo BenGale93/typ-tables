@@ -30,7 +30,7 @@ from typ_tables._typ_data import TABLE_TEMPLATE, Figure, Heading, TypData
 from typ_tables.style import CellStyle, Sides, TextStyle
 
 
-def _create_table_string(original_data: ttypes.Data, typ: TypData) -> str:
+def _create_table_string(original_data: ttypes.Data[IntoDataFrame], typ: TypData) -> str:
     """Render a complete Typst table string from data and table state.
 
     Args:

@@ -53,6 +53,7 @@ def test_date(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_date(**args)
     typst_table = table.to_typst()
 
@@ -76,6 +77,7 @@ def test_date_from_string(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_date()
     typst_table = table.to_typst()
 
@@ -89,6 +91,7 @@ def test_date_from_string(table_check):
 def test_date_invalid_object():
     df = pl.DataFrame({"date": [10]})
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_date()
 
     with pytest.raises(ValueError, match="Invalid date object"):
@@ -129,6 +132,7 @@ def test_time(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_time(**args)
     typst_table = table.to_typst()
 
@@ -152,6 +156,7 @@ def test_time_from_string(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_time()
     typst_table = table.to_typst()
 
@@ -165,6 +170,7 @@ def test_time_from_string(table_check):
 def test_time_invalid_object():
     df = pl.DataFrame({"time": [10]})
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_time()
 
     with pytest.raises(ValueError, match="Invalid time object"):
@@ -212,6 +218,7 @@ def test_datetime(table_check, args, result):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_datetime(**args)
     typst_table = table.to_typst()
 
@@ -235,6 +242,7 @@ def test_datetime_from_string(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_datetime()
     typst_table = table.to_typst()
 
@@ -258,6 +266,7 @@ def test_datetime_with_format_str(table_check):
         }
     )
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_datetime(format_str="%Y/%m/%d %H:%M")
     typst_table = table.to_typst()
 
@@ -271,6 +280,7 @@ def test_datetime_with_format_str(table_check):
 def test_datetime_invalid_object():
     df = pl.DataFrame({"datetime": [10]})
 
+    # pyrefly: ignore [bad-argument-type]
     table = TypTable(df).fmt_datetime()
 
     with pytest.raises(ValueError, match="Invalid datetime object"):

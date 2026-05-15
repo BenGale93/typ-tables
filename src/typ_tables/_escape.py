@@ -14,7 +14,7 @@ class Typst(str):
     unchanged.
     """
 
-    __slots__ = ()
+    __slots__: tuple[()] = ()
 
 
 START = "<typst>"
