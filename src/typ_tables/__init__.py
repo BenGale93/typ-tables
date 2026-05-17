@@ -26,7 +26,9 @@ from typ_tables._formats import (
 )
 from typ_tables._gutter import GutterContainer
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns
+from typ_tables._spanners import Spanner
 from typ_tables._typ_data import TABLE_TEMPLATE, Figure, Heading, TypData
+from typ_tables._utils import OrderedSet
 from typ_tables.style import CellStyle, Sides, TextStyle
 
 
@@ -209,6 +211,67 @@ class TypTable:
         styled_loc = locator._apply_style(self._df, text, cell)
 
         self._typ_data.styles.append(styled_loc)
+        return self
+
+    def tab_spanner(  # noqa: PLR0913
+        self,
+        label: str | Typst,
+        columns: ColumnSelector | None = None,
+        spanners: str | list[str] | None = None,
+        level: int | None = None,
+        id_: str | None = None,
+        gather: bool = True,  # noqa: FBT001, FBT002
+    ) -> t.Self:
+        """Add a column spanner above selected columns or existing spanners.
+
+        A spanner is a header cell that spans multiple columns. Select columns
+        directly with `columns`, or select existing spanners by ID with
+        `spanners` to create a higher-level grouped header. When `level` is not
+        provided, the spanner is placed on the lowest level that does not
+        overlap existing spanners.
+
+        Args:
+            label: Spanner label text or raw Typst.
+            columns: Optional selector for columns to include in the spanner.
+            spanners: Optional existing spanner ID or IDs whose columns should
+                be included in the new spanner.
+            level: Optional zero-based spanner level. If provided, overlapping
+                spanners on that level have the new spanner's columns removed.
+            id_: Optional unique identifier for the spanner. Defaults to
+                `str(label)`.
+            gather: Whether to move directly selected columns next to the first
+                selected column when adding a bottom-level spanner.
+
+        Raises:
+            NotImplementedError: If neither `columns` nor `spanners` is provided.
+            ValueError: If `level` is negative, `id_` duplicates an existing
+                spanner ID, or a referenced spanner ID does not exist.
+            ColumnNotFoundError: If `columns` references unknown columns.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        selected_columns: list[str] = [] if columns is None else resolve_columns(self._df, columns)
+
+        if isinstance(spanners, str):
+            spanners = [spanners]
+        selected_spanners: list[str] = [] if spanners is None else spanners
+
+        if not len(selected_columns) and not len(selected_spanners):
+            msg = "columns/spanners must be specified."
+            raise NotImplementedError(msg)
+
+        spanner_column_names = self._typ_data.spanners.get_columns(selected_spanners).as_list()
+
+        column_names = OrderedSet([*selected_columns, *spanner_column_names]).as_list()
+
+        spanner = Spanner.from_data(label=label, spanning=column_names, id_=id_)
+
+        level = self._typ_data.spanners.add_spanner(spanner, level=level)
+
+        if gather and not len(spanner_column_names) and level == 0 and len(column_names) > 1:
+            return self.cols_move(column_names[1:], column_names[0])
+
         return self
 
     # Formatting Methods ----

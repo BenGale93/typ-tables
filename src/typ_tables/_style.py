@@ -501,6 +501,9 @@ class DefaultStyles:
     header_cells: StyleHolder = field(
         default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
     )
+    spanner_cells: StyleHolder = field(
+        default_factory=lambda: StyleHolder(cell=CellStyleForCell(align="center", stroke="1.2pt"))
+    )
     stub_header_cell: StyleHolder = field(
         default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1.2pt")))
     )
@@ -520,6 +523,7 @@ class DefaultStyles:
         """Sets text and cell styles to None for all style holders."""
         self.header.clear()
         self.header_cells.clear()
+        self.spanner_cells.clear()
         self.stub_header_cell.clear()
         self.stub_cell.clear()
         self.body_cell.clear()
