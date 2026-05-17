@@ -26,6 +26,7 @@ jobs:
           # Install a specific version of uv.
           version: "0.11.8"
       - run: uv sync --group docs
+      - run: cp CHANGELOG.md docs/changelog.md
       - run: uv run --no-sync zensical build --clean
       - uses: actions/upload-pages-artifact@v5
         with:

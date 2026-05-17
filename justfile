@@ -20,7 +20,11 @@ alias l := lint
     uv run ruff check . --fix
 
 @docs:
+    just sync_changelog
     uv run --group docs zensical serve
+
+@sync_changelog:
+    cp CHANGELOG.md docs/changelog.md
 
 release version:
     git tag {{ version }}
