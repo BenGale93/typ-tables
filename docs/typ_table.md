@@ -40,6 +40,8 @@ typst = (
 
 ::: typ_tables.TypTable.tab_stubhead
 
+::: typ_tables.TypTable.tab_spanner
+
 ## Styling the Table
 
 ::: typ_tables.TypTable.tab_style

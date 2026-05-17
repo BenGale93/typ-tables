@@ -14,6 +14,7 @@ from typ_tables._boxhead import Boxhead, ColInfo
 from typ_tables._escape import Typst, escape_value
 from typ_tables._formats import Formatter
 from typ_tables._gutter import Gutters
+from typ_tables._spanners import Spanners
 from typ_tables._stub import Stub
 from typ_tables._style import DefaultStyles, Sides, StyleHolder
 
@@ -135,6 +136,7 @@ class TypData:
     substitute: list[Formatter]
     heading: Heading
     figure: Figure
+    spanners: Spanners = field(default_factory=Spanners)
     styles: list[_locators.StyledLoc] = field(default_factory=list)
     stubhead: str | Typst | None = None
     inset: str | Sides[ttypes.Relative] = "0% + 5pt"
@@ -249,7 +251,20 @@ class TypData:
 
         formatted_title = self.heading.to_typst(n_col, header_style)
 
-        return f"{formatted_title}table.header({header})"
+        spanners = list(reversed(self.spanners.build_spanners([col.var for col in columns])))
+
+        spanner_style = self.default_styles.spanner_cells
+
+        if spanners:
+            spanner_rows = [
+                " ".join([span_cell.to_typst(spanner_style) for span_cell in row])
+                for row in spanners
+            ]
+            spanner_text = ", ".join(f"table.header({cells})" for cells in spanner_rows) + ", "
+        else:
+            spanner_text = ""
+
+        return f"{formatted_title}{spanner_text}table.header({header})"
 
     def body(
         self, data: ttypes.Data[IntoDataFrame], original_data: ttypes.Data[IntoDataFrame]

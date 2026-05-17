@@ -86,6 +86,35 @@ table = table.tab_style(
 Column positions refer to the source data columns. Column labels set with
 `cols_label()` do not change the source column names used by selectors.
 
+## Column Spanners
+
+Use `tab_spanner()` to add grouped header cells above one or more columns. By
+default, directly selected columns are moved together so the spanner can cover a
+contiguous block.
+
+```python
+table = (
+    TypTable(df, rowname_col="product")
+    .tab_spanner("Financials", columns=["revenue", "margin"])
+    .fmt_currency(columns="revenue", currency="USD")
+    .fmt_percentage(columns="margin", decimals=1)
+)
+```
+
+Set `id_` when you want to reference a spanner later. Existing spanners can be
+selected with the `spanners` argument to create a higher-level grouped header.
+
+```python
+table = (
+    TypTable(df, rowname_col="product")
+    .tab_spanner("Financials", columns=["revenue", "margin"], id_="financials")
+    .tab_spanner("Activity", columns="units", id_="activity")
+    .tab_spanner("Sales", spanners=["financials", "activity"])
+)
+```
+
+Pass `gather=False` if you want to preserve the current column order.
+
 ## Selecting Rows
 
 Formatting and body/stub styling methods can also accept a `rows` argument. You
