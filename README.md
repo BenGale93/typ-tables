@@ -1,8 +1,6 @@
 # typ-tables
 
-Inspired by
-[great_tables](https://posit-dev.github.io/great-tables/articles/intro.html), a
-way to turn DataFrames into Typst tables.
+Inspired by great-tables, a way to turn DataFrames into Typst tables.
 
 To install, run `uv add typ-tables`
 
@@ -34,3 +32,10 @@ string to a file and include it.
 ```typst
 #include "table.typ"
 ```
+
+## Documentation
+
+For more, check out the
+[documentation](https://bengale93.github.io/typ-tables/changelog/). The
+[great_tables](https://posit-dev.github.io/great-tables/articles/intro.html)
+documentation is also useful as many of the examples work in `typ-tables`.
