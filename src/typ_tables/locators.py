@@ -6,6 +6,7 @@ from typ_tables._locators import (
     LocColumnLabels,
     LocHeader,
     LocRowGroup,
+    LocSpanner,
     LocStub,
     LocStubhead,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "LocColumnLabels",
     "LocHeader",
     "LocRowGroup",
+    "LocSpanner",
     "LocStub",
     "LocStubhead",
 ]

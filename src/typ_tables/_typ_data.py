@@ -215,56 +215,114 @@ class TypData:
             header rules.
         """
         columns = self.boxhead.get_stub_and_default_columns()
+        header = self._render_column_label_header(original_data, columns)
+        formatted_title = self._render_heading(len(columns))
+        spanner_text = self._render_spanner_headers(columns)
 
-        column_label_stylers: dict[str, StyleHolder] = {}
+        return f"{formatted_title}{spanner_text}table.header({header})"
+
+    def _render_column_label_header(
+        self,
+        original_data: ttypes.Data[IntoDataFrame],
+        columns: list[ColInfo],
+    ) -> str:
+        """Render the header row containing the stub head and column labels."""
+        column_label_styles = self._build_column_label_styles(original_data)
+        stub_head_style = self._build_stub_head_style()
+
+        header_cells = [
+            self._render_column_label_cell(col, column_label_styles, stub_head_style)
+            for col in columns
+        ]
+
+        return " ".join(header_cells)
+
+    def _build_column_label_styles(
+        self, original_data: ttypes.Data[IntoDataFrame]
+    ) -> dict[str, StyleHolder]:
+        """Collect merged styles for each styled column-label cell."""
+        column_label_styles: dict[str, StyleHolder] = {}
+        for style_info in self.styles:
+            if not isinstance(style_info, _locators.StyledLocColumnLabels):
+                continue
+
+            columns_to_style = style_info.resolve(original_data)
+            for column_to_style in columns_to_style:
+                current_style = column_label_styles.get(
+                    column_to_style, self.default_styles.header_cells
+                )
+                column_label_styles[column_to_style] = current_style | style_info.style
+
+        return column_label_styles
+
+    def _build_stub_head_style(self) -> StyleHolder:
+        """Collect the merged style for the stub-head cell."""
         stub_head_style = self.default_styles.stub_header_cell
         for style_info in self.styles:
-            if isinstance(style_info, _locators.StyledLocColumnLabels):
-                columns_to_style = style_info.resolve(original_data)
-                for column_to_style in columns_to_style:
-                    current_style = column_label_stylers.get(
-                        column_to_style, self.default_styles.header_cells
-                    )
-                    column_label_stylers[column_to_style] = current_style | style_info.style
-            elif isinstance(style_info, _locators.StyledLocStubhead):
+            if isinstance(style_info, _locators.StyledLocStubhead):
                 stub_head_style = stub_head_style | style_info.style
 
-        headers = []
-        for col in columns:
-            if col.col_type == "stub":
-                header_cell = stub_head_style.to_typst(self.stubhead or "")
-            else:
-                header_cell_style = column_label_stylers.get(
-                    col.var, self.default_styles.header_cells
-                )
-                header_cell = header_cell_style.to_typst(col.name)
-            headers.append(header_cell)
+        return stub_head_style
 
-        header = " ".join(headers)
+    def _render_column_label_cell(
+        self,
+        col: ColInfo,
+        column_label_styles: dict[str, StyleHolder],
+        stub_head_style: StyleHolder,
+    ) -> str:
+        """Render one cell in the column-label header row."""
+        if col.col_type == "stub":
+            return stub_head_style.to_typst(self.stubhead or "")
 
-        n_col = len(columns)
+        header_cell_style = column_label_styles.get(col.var, self.default_styles.header_cells)
+        return header_cell_style.to_typst(col.name)
 
+    def _render_heading(self, n_col: int) -> str:
+        """Render optional title/subtitle rows above the column labels."""
         header_style = self.default_styles.header
         for style_info in self.styles:
             if isinstance(style_info, _locators.StyledLocHeader):
                 header_style = header_style | style_info.style
 
-        formatted_title = self.heading.to_typst(n_col, header_style)
+        return self.heading.to_typst(n_col, header_style)
 
+    def _render_spanner_headers(self, columns: list[ColInfo]) -> str:
+        """Render all configured spanner rows above the column labels."""
         spanners = list(reversed(self.spanners.build_spanners([col.var for col in columns])))
+        if not spanners:
+            return ""
 
-        spanner_style = self.default_styles.spanner_cells
+        spanner_styles = self._build_spanner_styles()
+        spanner_rows = [
+            " ".join(
+                span_cell.to_typst(
+                    spanner_styles.get(span_cell.id_, self.default_styles.spanner_cells)
+                )
+                for span_cell in row
+            )
+            for row in spanners
+        ]
 
-        if spanners:
-            spanner_rows = [
-                " ".join([span_cell.to_typst(spanner_style) for span_cell in row])
-                for row in spanners
-            ]
-            spanner_text = ", ".join(f"table.header({cells})" for cells in spanner_rows) + ", "
-        else:
-            spanner_text = ""
+        return ", ".join(f"table.header({cells})" for cells in spanner_rows) + ", "
 
-        return f"{formatted_title}{spanner_text}table.header({header})"
+    def _build_spanner_styles(self) -> dict[str | None, StyleHolder]:
+        """Collect merged styles keyed by spanner id."""
+        spanner_styles: dict[str | None, StyleHolder] = dict.fromkeys(
+            self.spanners.get_ids(), self.default_styles.spanner_cells
+        )
+        for style_info in self.styles:
+            if isinstance(style_info, _locators.StyledLocSpanner):
+                if style_info.spanner_ids is None:
+                    for id_, style in spanner_styles.items():
+                        spanner_styles[id_] = style | style_info.style
+                else:
+                    for spanner_id in style_info.spanner_ids:
+                        current_spanner_style = spanner_styles.get(
+                            spanner_id, self.default_styles.spanner_cells
+                        )
+                        spanner_styles[spanner_id] = current_spanner_style | style_info.style
+
+        return spanner_styles
 
     def body(
         self, data: ttypes.Data[IntoDataFrame], original_data: ttypes.Data[IntoDataFrame]
