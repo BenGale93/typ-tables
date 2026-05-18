@@ -534,6 +534,63 @@ class TestStyleStubhead:
         assert len(warnings) == 0
 
 
+class TestStyleSpanner:
+    def test_fill_all_spanners(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_spanner("Integers", columns="int", id_="ints")
+            .tab_spanner("Floats", columns="float", id_="floats")
+            .tab_spanner("Numeric", spanners=["ints", "floats"])
+            .tab_style(
+                text=style.TextStyle(fill="blue"),
+                locator=locators.LocSpanner(),
+            )
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:72d5440a-4202-4723-9d74-a79f610c14ea.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_level_1_spanner(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_spanner("Integers", columns="int", id_="ints")
+            .tab_spanner("Floats", columns="float", id_="floats")
+            .tab_spanner("Numeric", spanners=["ints", "floats"])
+            .tab_style(
+                text=style.TextStyle(fill="blue"),
+                locator=locators.LocSpanner(spanner_ids=["Numeric"]),
+            )
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:7b7e77fe-3990-4a22-95eb-853914d0dda8.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_blue_stroke_spanner(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_spanner("Numeric", columns=["int", "float"])
+            .tab_style(
+                cell=style.CellStyle(stroke="blue + 1.2pt"),
+                locator=locators.LocSpanner(spanner_ids=["Numeric"]),
+            )
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:c3f23c37-ba4f-42ca-9d9c-3f70a9798e79.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 class TestSetInset:
     def test_inset_dict(self, table_check, basic_data):
         table = (
@@ -716,6 +773,29 @@ def test_clear_style(table_check, basic_data):
     result = table.to_typst()
 
     assert result == external("uuid:18e3eacb-9137-4f4a-9b64-6229932c8ab2.typ")
+
+    warnings = table_check(result)
+
+    assert len(warnings) == 0
+
+
+def test_multiple_components_that_are_styled(table_check, group_data):
+    table = (
+        TypTable(group_data, rowname_col="fruit", groupname_col="group")
+        .tab_style(
+            text=style.TextStyle(fill="red"),
+            locator=locators.LocStub(),
+        )
+        .tab_spanner("Count", columns="count")
+        .tab_style(
+            text=style.TextStyle(fill="red"),
+            locator=locators.LocSpanner(),
+        )
+        .tab_header("Table Header")
+    )
+    result = table.to_typst()
+
+    assert result == external("uuid:5d9052a3-6556-417e-b97a-123c5e55eb4b.typ")
 
     warnings = table_check(result)
 

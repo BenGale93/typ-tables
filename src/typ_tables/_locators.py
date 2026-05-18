@@ -409,3 +409,46 @@ class RowGroupStyles:
                 group_cell_style = group_cell_style | style_for_groups.style
 
         return group_cell_style
+
+
+@dataclass
+class StyledLocSpanner(StyledLoc):
+    """Styled marker locator selecting the table spanner region."""
+
+    style: StyleHolder
+    spanner_ids: list[str] | None = None
+
+
+@dataclass
+class LocSpanner:
+    """Select spanners in the table header.
+
+    Spanners are the labels above one or more column labels.
+    """
+
+    spanner_ids: list[str] | None = None
+    """Spanner IDs to target. The default `None` means all spanners will be targeted."""
+
+    def _apply_style(
+        self,
+        data: Data[IntoDataFrame],  # noqa: ARG002
+        text: TextStyle | None = None,
+        cell: CellStyle | None = None,
+    ) -> StyledLocSpanner:
+        """Build a styled spanner locator.
+
+        Args:
+            data: Source data used for row-level style resolution.
+            text: Optional text style selector for stub rows.
+            cell: Optional cell style selector for stub rows.
+
+        Returns:
+            Styled stub locator with per-row style holders.
+        """
+        text_style_for_cell = text.get_single() if text is not None else None
+        cell_style_for_cell = cell.get_single() if cell is not None else None
+
+        return StyledLocSpanner(
+            style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
+            spanner_ids=self.spanner_ids,
+        )
