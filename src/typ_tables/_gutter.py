@@ -11,12 +11,6 @@ class GutterContainer:
 
     value: ttypes.Gutter | None = None
 
-    def __str__(self) -> str:
-        """Typst string representation of the gutter."""
-        if self.value is None:
-            return "()"
-        return self.value
-
     def __bool__(self) -> bool:
         return bool(self.value)
 

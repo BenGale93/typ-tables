@@ -10,8 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * `tab_spanner` method for adding grouped column headers.
+* `LocSpanner` for targeting spanners for styling.
 * `cols_move` method for moving table columns after another column.
 * Pipe method for applying functions to `TypTable` objects in a method chain.
+
+### Changed
+
+* Changed rendering pipeline to centralise string concatenation.
 
 ## 0.1.4 - 2026-05-10
 

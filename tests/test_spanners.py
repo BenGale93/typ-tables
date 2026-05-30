@@ -2,7 +2,9 @@ import pytest
 from inline_snapshot import external, snapshot
 
 from typ_tables import TypTable, _style
+from typ_tables._rendering import Cell, Content
 from typ_tables._spanners import Spanner, SpannerCell, Spanners
+from typ_tables._style import CellStyleForCell
 
 
 class TestSpannerCell:
@@ -12,15 +14,20 @@ class TestSpannerCell:
             cell=_style.CellStyleForCell(align="center", stroke="1.2pt")
         )
 
-        assert cell.to_typst(style_holder) == snapshot("""\
-table.cell(
-  colspan: 2,
-  align: center,
-  [Numeric
+        assert cell.to_typst(style_holder) == snapshot(
+            Cell(
+                content=Content(
+                    value="""\
+
+  Numeric
   #v(5pt)
-  #place(bottom + center, line(length: 100%, stroke: 1.2pt))],
-),\
-""")
+  #place(bottom + center, line(length: 100%, stroke: 1.2pt))\
+"""
+                ),
+                colspan=2,
+                cell_style=CellStyleForCell(align="center"),
+            )
+        )
 
     def test_to_typst_labeled_cell_uses_only_bottom_stroke_for_rule(self):
         cell = SpannerCell(label="Numeric", id_="numeric", colspan=2)
@@ -31,15 +38,20 @@ table.cell(
             )
         )
 
-        assert cell.to_typst(style_holder) == snapshot("""\
-table.cell(
-  colspan: 2,
-  align: center,
-  [Numeric
+        assert cell.to_typst(style_holder) == snapshot(
+            Cell(
+                content=Content(
+                    value="""\
+
+  Numeric
   #v(5pt)
-  #place(bottom + center, line(length: 100%, stroke: 1.2pt))],
-),\
-""")
+  #place(bottom + center, line(length: 100%, stroke: 1.2pt))\
+"""
+                ),
+                colspan=2,
+                cell_style=CellStyleForCell(align="center"),
+            )
+        )
 
     def test_to_typst_escapes_special_characters_in_label(self):
         cell = SpannerCell(label="Growth #1 [net]", id_="growth", colspan=2)
@@ -47,15 +59,20 @@ table.cell(
             cell=_style.CellStyleForCell(align="center", stroke="1.2pt")
         )
 
-        assert cell.to_typst(style_holder) == snapshot("""\
-table.cell(
-  colspan: 2,
-  align: center,
-  [Growth \\#1 \\[net\\]
+        assert cell.to_typst(style_holder) == snapshot(
+            Cell(
+                content=Content(
+                    value="""\
+
+  Growth \\#1 \\[net\\]
   #v(5pt)
-  #place(bottom + center, line(length: 100%, stroke: 1.2pt))],
-),\
-""")
+  #place(bottom + center, line(length: 100%, stroke: 1.2pt))\
+"""
+                ),
+                colspan=2,
+                cell_style=CellStyleForCell(align="center"),
+            )
+        )
 
     def test_to_typst_blank_cell_drops_stroke(self):
         cell = SpannerCell(label="", id_=None, colspan=1)
@@ -63,26 +80,27 @@ table.cell(
             cell=_style.CellStyleForCell(align="center", stroke="1.2pt")
         )
 
-        assert cell.to_typst(style_holder) == snapshot("""\
-table.cell(
-  colspan: 1,
-  align: center,
-  [],
-),\
-""")
+        assert cell.to_typst(style_holder) == snapshot(
+            Cell(content=Content(value=""), cell_style=CellStyleForCell(align="center"))
+        )
 
     def test_to_typst_labeled_cell_without_cell_style_uses_no_rule_stroke(self):
         cell = SpannerCell(label="Numeric", id_="numeric", colspan=2)
         style_holder = _style.StyleHolder()
 
-        assert cell.to_typst(style_holder) == snapshot("""\
-table.cell(
-  colspan: 2,
-  [Numeric
+        assert cell.to_typst(style_holder) == snapshot(
+            Cell(
+                content=Content(
+                    value="""\
+
+  Numeric
   #v(5pt)
-  #place(bottom + center, line(length: 100%, stroke: none))],
-),\
-""")
+  #place(bottom + center, line(length: 100%, stroke: none))\
+"""
+                ),
+                colspan=2,
+            )
+        )
 
 
 class TestSpanners:

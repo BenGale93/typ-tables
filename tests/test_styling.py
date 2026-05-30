@@ -4,7 +4,7 @@ import narwhals as nw
 import narwhals.selectors as ncs
 import polars as pl
 import pytest
-from inline_snapshot import external, snapshot
+from inline_snapshot import external
 
 from typ_tables import Sides, TypTable, _style, locators, style, ttypes
 
@@ -48,26 +48,6 @@ class TestMergeStyles:
 
         assert merged_style.stroke == _style.Sides(right="1pt", bottom="1pt")
 
-    def test_merge_style_holder_none_is_replaced(self):
-        holder_1 = _style.StyleHolder(text=None, cell=None)
-        holder_2 = _style.StyleHolder(
-            text=_style.TextStyleForCell(font="test"), cell=_style.CellStyleForCell(align="end")
-        )
-
-        new_holder = holder_1 | holder_2
-
-        assert holder_2 == new_holder
-
-    def test_merge_style_holder_default_and_none(self):
-        holder_1 = _style.StyleHolder(
-            text=_style.TextStyleForCell(font="test"), cell=_style.CellStyleForCell(align="end")
-        )
-        holder_2 = _style.StyleHolder(text=None, cell=None)
-
-        new_holder = holder_1 | holder_2
-
-        assert holder_1 == new_holder
-
     def test_merge_style_holder_recursive_merge(self):
         holder_1 = _style.StyleHolder(
             text=_style.TextStyleForCell(weight="bold"), cell=_style.CellStyleForCell(fill="red")
@@ -80,56 +60,6 @@ class TestMergeStyles:
 
         assert new_holder.text == _style.TextStyleForCell(font="test", weight="bold")
         assert new_holder.cell == _style.CellStyleForCell(align="end", fill="red")
-
-
-class TestApplyStyle:
-    def test_apply_no_style(self):
-        content = "Test content"
-        style_holder = _style.StyleHolder()
-
-        assert style_holder.to_typst(content) == snapshot("[Test content],")
-
-    def test_apply_no_style_blank_stylers(self):
-        content = "Test content"
-        style_holder = _style.StyleHolder(
-            cell=_style.CellStyleForCell(), text=_style.TextStyleForCell()
-        )
-
-        assert style_holder.to_typst(content) == snapshot("[Test content],")
-
-    def test_apply_cell_style(self):
-        content = "Test content"
-        cell_style = _style.CellStyleForCell(align="right")
-        style_holder = _style.StyleHolder(cell=cell_style)
-
-        assert style_holder.to_typst(content) == snapshot("""\
-table.cell(
-  align: right,
-  [Test content],
-),\
-""")
-
-    def test_apply_text_size_style(self):
-        content = "Test content"
-        text_style = _style.TextStyleForCell(size="20pt")
-        style_holder = _style.StyleHolder(text=text_style)
-
-        assert style_holder.to_typst(content) == snapshot("""\
-text(
-  size: 20pt,
-)[Test content],\
-""")
-
-    def test_apply_text_fill_style(self):
-        content = "Test content"
-        text_style = _style.TextStyleForCell(fill="red")
-        style_holder = _style.StyleHolder(text=text_style)
-
-        assert style_holder.to_typst(content) == snapshot("""\
-text(
-  fill: red,
-)[Test content],\
-""")
 
 
 class TestCellStyle:

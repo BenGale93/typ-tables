@@ -8,7 +8,7 @@ import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns, resolve_rows
-from typ_tables._style import CellStyle, StyleHolder, TextStyle
+from typ_tables._style import CellStyle, CellStyleForCell, StyleHolder, TextStyle, TextStyleForCell
 from typ_tables.ttypes import Data
 
 
@@ -74,8 +74,8 @@ class LocHeader:
         Returns:
             Styled header locator with resolved style values.
         """
-        text_style_for_cell = text.get_single() if text is not None else None
-        cell_style_for_cell = cell.get_single() if cell is not None else None
+        text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
+        cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
 
         return StyledLocHeader(
             style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell)
@@ -144,8 +144,12 @@ class LocBody:
             Styled body locator with per-row style holders.
         """
         n_rows = len(data)
-        text_styles_for_cells = text.resolve(data) if text is not None else [None] * n_rows
-        cell_styles_for_cells = cell.resolve(data) if cell is not None else [None] * n_rows
+        text_styles_for_cells = (
+            text.resolve(data) if text is not None else [TextStyleForCell()] * n_rows
+        )
+        cell_styles_for_cells = (
+            cell.resolve(data) if cell is not None else [CellStyleForCell()] * n_rows
+        )
         style_holders = []
         for text_style, cell_style in zip(
             text_styles_for_cells, cell_styles_for_cells, strict=True
@@ -198,8 +202,8 @@ class LocColumnLabels:
         Returns:
             Styled column labels locator with per-row style holders.
         """
-        text_style_for_cell = text.get_single() if text is not None else None
-        cell_style_for_cell = cell.get_single() if cell is not None else None
+        text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
+        cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
 
         return StyledLocColumnLabels(
             style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
@@ -238,8 +242,8 @@ class LocStubhead:
         Returns:
             Styled stub head locator with per-row style holders.
         """
-        text_style_for_cell = text.get_single() if text is not None else None
-        cell_style_for_cell = cell.get_single() if cell is not None else None
+        text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
+        cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
 
         return StyledLocStubhead(
             style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
@@ -293,8 +297,12 @@ class LocStub:
             Styled stub locator with per-row style holders.
         """
         n_rows = len(data)
-        text_styles_for_cells = text.resolve(data) if text is not None else [None] * n_rows
-        cell_styles_for_cells = cell.resolve(data) if cell is not None else [None] * n_rows
+        text_styles_for_cells = (
+            text.resolve(data) if text is not None else [TextStyleForCell()] * n_rows
+        )
+        cell_styles_for_cells = (
+            cell.resolve(data) if cell is not None else [CellStyleForCell()] * n_rows
+        )
         style_holders = []
         for text_style, cell_style in zip(
             text_styles_for_cells, cell_styles_for_cells, strict=True
@@ -361,8 +369,8 @@ class LocRowGroup:
         Returns:
             Styled row-group locator with resolved style values.
         """
-        text_style_for_cell = text.get_single() if text is not None else None
-        cell_style_for_cell = cell.get_single() if cell is not None else None
+        text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
+        cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
 
         return StyledLocRowGroup(
             style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
@@ -445,8 +453,8 @@ class LocSpanner:
         Returns:
             Styled stub locator with per-row style holders.
         """
-        text_style_for_cell = text.get_single() if text is not None else None
-        cell_style_for_cell = cell.get_single() if cell is not None else None
+        text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
+        cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
 
         return StyledLocSpanner(
             style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
