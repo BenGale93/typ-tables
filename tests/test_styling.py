@@ -521,6 +521,60 @@ class TestStyleSpanner:
         assert len(warnings) == 0
 
 
+class TestStyleFooter:
+    def test_fill_footer_text_and_align_cell(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_footer("Note here")
+            .tab_style(
+                text=style.TextStyle(fill="blue"),
+                cell=style.CellStyle(align="right"),
+                locator=locators.LocFooter(),
+            )
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:6a1a76ce-4231-47b7-88a2-23a0856b45ec.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_multiple_footer_styles_merge(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_style(
+                text=style.TextStyle(fill="blue"),
+                cell=style.CellStyle(inset=style.Sides(top="5pt", bottom="5pt")),
+                locator=locators.LocFooter(),
+            )
+            .tab_style(
+                text=style.TextStyle(weight="bold"),
+                cell=style.CellStyle(stroke=style.Sides(top="red + 1pt")),
+                locator=locators.LocFooter(),
+            )
+            .tab_footer("Note here")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:0f5d2271-90b2-4c42-89ca-c27a06bf0ca7.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_footer_style_based_on_expr_fails(self, basic_data) -> None:
+        with pytest.raises(
+            TypeError, match=r"Expected only scalars in style field: `fill` for this location."
+        ):
+            _ = TypTable(basic_data).tab_style(
+                text=style.TextStyle(
+                    fill=nw.when(nw.col("int") < 100).then(nw.lit("blue")).otherwise(nw.lit("red"))
+                ),
+                locator=locators.LocFooter(),
+            )
+
+
 class TestSetInset:
     def test_inset_dict(self, table_check, basic_data):
         table = (
@@ -722,6 +776,7 @@ def test_multiple_components_that_are_styled(table_check, group_data):
             locator=locators.LocSpanner(),
         )
         .tab_header("Table Header")
+        .tab_footer("Table Footer")
     )
     result = table.to_typst()
 

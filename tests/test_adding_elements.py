@@ -55,3 +55,39 @@ class TestTabFigure:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestTabFooter:
+    def test_string_note(self, table_check, basic_data) -> None:
+        table = TypTable(basic_data).tab_footer(note="Note here")
+        result = table.to_typst()
+
+        assert result == external("uuid:daba0a3e-ef91-40a3-8111-3e98b003dbee.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_typst_note(self, table_check, basic_data) -> None:
+        table = TypTable(basic_data).tab_footer(note=Typst("#underline[Note here]"))
+        result = table.to_typst()
+
+        assert result == external("uuid:85c090a2-6e48-4918-989b-7902237a5a9f.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_multiple_notes(self, table_check, basic_data) -> None:
+        table = (
+            TypTable(basic_data)
+            .tab_footer(note=Typst("#underline[Note here]"))
+            .tab_footer(note="Another note")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:26c6d1d2-6eb8-4393-a5b7-cad03629ff0a.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0

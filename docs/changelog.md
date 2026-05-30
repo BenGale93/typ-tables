@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `LocSpanner` for targeting spanners for styling.
 * `cols_move` method for moving table columns after another column.
 * Pipe method for applying functions to `TypTable` objects in a method chain.
+* `tab_footer` method for adding table footer notes.
+* `LocFooter` for targeting the footer for styling.
 
 ### Changed
 

@@ -14,4 +14,5 @@
   [#table.cell(colspan: 2, stroke: (bottom: 1pt))[group\_b]],
   [#table.cell(stroke: (right: 1pt, bottom: 0.6pt))[#text(fill: red)[pear]]], [#table.cell(stroke: (bottom: 0.6pt))[73]],
   [#table.cell(stroke: (right: 1pt, bottom: 0.6pt))[#text(fill: red)[kiwi]]], [#table.cell(stroke: (bottom: 0.6pt))[477]],
+  table.footer[#table.cell(colspan: 2, stroke: (top: 1.2pt, bottom: 1.2pt))[Table Footer]],
 )

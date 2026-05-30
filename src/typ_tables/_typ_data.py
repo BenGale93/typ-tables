@@ -13,6 +13,7 @@ from typ_tables._escape import Typst, escape_value
 from typ_tables._formats import Formatter
 from typ_tables._gutter import Gutters
 from typ_tables._rendering import Cell, Content, Figure, Header, Renderable
+from typ_tables._rendering.table import Footer
 from typ_tables._spanners import Spanners
 from typ_tables._stub import Stub
 from typ_tables._style import DefaultStyles, Sides, StyleHolder
@@ -113,6 +114,7 @@ class TypData:
     spanners: Spanners = field(default_factory=Spanners)
     styles: list[_locators.StyledLoc] = field(default_factory=list)
     stubhead: str | Typst = ""
+    footer_notes: list[str | Typst] = field(default_factory=list)
     inset: str | Sides[ttypes.Relative] | None = None
     stroke: str | None = "none"
     gutters: Gutters = field(default_factory=Gutters)
@@ -197,6 +199,41 @@ class TypData:
         headers.append(self._get_column_label_header(original_data, columns))
 
         return headers
+
+    def footer(self) -> Footer | None:
+        """Build renderable table footer row.
+
+        Returns:
+            Optional footer row containing optional heading, spanners, and column labels.
+        """
+        if not self.footer_notes:
+            return None
+        footer_content = Typst("\\ ".join(escape_value(c) for c in self.footer_notes))
+
+        columns = self.boxhead.get_stub_and_default_columns()
+
+        n_cols = len(columns)
+
+        footer_style = self._build_footer_style()
+
+        return Footer(
+            [
+                Cell(
+                    content=Content(footer_content, text_style=footer_style.text),
+                    colspan=n_cols,
+                    cell_style=footer_style.cell,
+                )
+            ]
+        )
+
+    def _build_footer_style(self) -> StyleHolder:
+        """Collect the merged style for the footer cell."""
+        footer_style = self.default_styles.footer_cell
+        for style_info in self.styles:
+            if isinstance(style_info, _locators.StyledLocFooter):
+                footer_style = footer_style | style_info.style
+
+        return footer_style
 
     def _get_column_label_header(
         self,

@@ -412,6 +412,11 @@ class DefaultStyles:
     row_group: StyleHolder = field(
         default_factory=lambda: StyleHolder(cell=CellStyleForCell(stroke=Sides(bottom="1pt")))
     )
+    footer_cell: StyleHolder = field(
+        default_factory=lambda: StyleHolder(
+            cell=CellStyleForCell(stroke=Sides(top="1.2pt", bottom="1.2pt"))
+        )
+    )
 
     def clear(self) -> None:
         """Sets text and cell styles to None for all style holders."""
