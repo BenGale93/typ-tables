@@ -460,3 +460,38 @@ class LocSpanner:
             style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
             spanner_ids=self.spanner_ids,
         )
+
+
+@dataclass
+class StyledLocFooter(StyledLoc):
+    """Styled marker locator selecting the table footer."""
+
+    style: StyleHolder
+
+
+@dataclass
+class LocFooter:
+    """Select the footer cell."""
+
+    def _apply_style(
+        self,
+        data: Data[IntoDataFrame],  # noqa: ARG002
+        text: TextStyle | None = None,
+        cell: CellStyle | None = None,
+    ) -> StyledLocFooter:
+        """Build a styled footer locator.
+
+        Args:
+            data: Source data used for row-level style resolution.
+            text: Optional text style selector for body rows.
+            cell: Optional cell style selector for body rows.
+
+        Returns:
+            Styled stub head locator with per-row style holders.
+        """
+        text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
+        cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
+
+        return StyledLocFooter(
+            style=StyleHolder(text=text_style_for_cell, cell=cell_style_for_cell),
+        )

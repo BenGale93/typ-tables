@@ -54,6 +54,7 @@ def _create_table_string(original_data: ttypes.Data[IntoDataFrame], typ: TypData
         alignment=typ.alignment(),
         inset=typ.inset,
         headers=typ.header(data),
+        footer=typ.footer(),
         body=typ.body(data, original_data),
     )
 
@@ -184,6 +185,22 @@ class TypTable:
             The current table instance for chaining.
         """
         self._typ_data.stubhead = label
+        return self
+
+    def tab_footer(self, note: str | Typst) -> t.Self:
+        """Add a note to the table footer.
+
+        Footer notes are rendered below the table body in a single footer cell
+        that spans the full table width. Repeated calls append additional notes
+        to the same footer, separated by Typst line breaks.
+
+        Args:
+            note: Footer note text or raw Typst.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.footer_notes.append(note)
         return self
 
     def tab_style(

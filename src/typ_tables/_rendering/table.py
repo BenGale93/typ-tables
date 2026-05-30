@@ -30,6 +30,25 @@ class Header:
 
 
 @dataclass
+class Footer:
+    content: list[Cell] = field(default_factory=list)
+    repeat: bool = True
+
+    def render(self) -> str:
+        args: list[str] = []
+        if not self.repeat:
+            args.append("repeat: false,")
+
+        row_content = "".join([c.render() for c in self.content])
+        if args:
+            joined_args = " ".join(args)
+            prefix = f"table.footer({joined_args})"
+        else:
+            prefix = "table.footer"
+        return f"{prefix}{row_content}"
+
+
+@dataclass
 class Table:
     columns: str | None = None
     column_gutter: Gutter | None = None
@@ -40,6 +59,7 @@ class Table:
 
     headers: list[Header] = field(default_factory=list)
     body: list[list[Cell]] = field(default_factory=list)
+    footer: Footer | None = None
 
     def render(self) -> str:
         args = [
@@ -58,8 +78,10 @@ class Table:
         if headers:
             inner.append(headers + ",")
         if body:
-            inner.append(body + ",\n")
-        elif inner:
+            inner.append(body + ",")
+        if self.footer:
+            inner.append(self.footer.render() + ",\n")
+        if (inner and not body and not self.footer) or (body and not self.footer):
             inner[-1] += "\n"
 
         joined_inner = "\n  ".join(inner)

@@ -1,7 +1,7 @@
 from inline_snapshot import snapshot
 
 from typ_tables._escape import Typst
-from typ_tables._rendering import Cell, Content, Figure, Header, Table
+from typ_tables._rendering import Cell, Content, Figure, Footer, Header, Table
 from typ_tables._style import CellStyleForCell, Sides, TextStyleForCell
 
 
@@ -65,6 +65,29 @@ def test_header_renders_level_repeat_and_cells() -> None:
     assert header.render() == snapshot(
         "table.header(repeat: false, level: 2,)[#table.cell(align: left)[Name]]"
         "[#table.cell(align: right)[Score]]"
+    )
+
+
+def test_footer_renders_cells() -> None:
+    footer = Footer(
+        content=[
+            Cell(Content("Note")),
+        ],
+    )
+
+    assert footer.render() == snapshot("table.footer[Note]")
+
+
+def test_footer_renders_repeat_and_cells() -> None:
+    footer = Footer(
+        content=[
+            Cell(Content("Note"), colspan=3),
+        ],
+        repeat=False,
+    )
+
+    assert footer.render() == snapshot(
+        "table.footer(repeat: false,)[#table.cell(colspan: 3)[Note]]"
     )
 
 
