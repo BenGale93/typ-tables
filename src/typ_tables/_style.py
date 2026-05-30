@@ -2,12 +2,10 @@
 
 import typing as t
 from dataclasses import asdict, dataclass, field, fields
-from textwrap import indent
 
 import narwhals as nw
 from narwhals.typing import IntoDataFrame
 
-from typ_tables._escape import Typst, escape_value
 from typ_tables.ttypes import Alignment, Auto, Data, Relative
 
 Fill = str
@@ -133,17 +131,6 @@ def _coerce_sides(attr: t.Any) -> t.Any:
     return attr
 
 
-CELL_PROPERTY_INDENT = " " * 2
-
-
-def _to_typst(v: object, *, wrap: bool = False) -> object:
-    if wrap and isinstance(v, str):
-        return f'"{_to_typst(v, wrap=False)}"'
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    return v
-
-
 @dataclass
 class TextStyleForCell:
     """Text style for an individual cell in a table."""
@@ -158,35 +145,6 @@ class TextStyleForCell:
     tracking: Length | None = None
     spacing: Relative | None = None
     fractions: bool | None = None
-
-    def to_typst(self, body: str) -> str:
-        """Wrap a body string in a Typst `text(...)` call when configured.
-
-        Args:
-            body: Pre-rendered Typst cell body to style.
-
-        Returns:
-            The original body if no text properties are set, otherwise a
-            `text(...)` block wrapping `body`.
-        """
-        text_snippets = ["text("]
-
-        for f in fields(self):
-            name = f.name
-            value = getattr(self, name)
-            if value is None:
-                continue
-
-            wrap = "wrap" in f.metadata
-            v = _to_typst(value, wrap=wrap)
-
-            text_snippets.append(indent(f"{name}: {v},", CELL_PROPERTY_INDENT))
-
-        if len(text_snippets) == 1:
-            return body
-
-        text_snippets.append(f"){body}")
-        return "\n".join(text_snippets)
 
     def __or__(self, value: object) -> t.Self:
         """Merge two text styles, preferring values from `value` when set.
@@ -309,35 +267,6 @@ class CellStyleForCell:
     fill: Fill | None = None
     stroke: Stroke | Sides[Stroke] | None = None
 
-    def to_typst(self, body: str, colspan: int | None = None) -> str:
-        """Wrap a body string in a Typst `table.cell(...)` call when configured.
-
-        Args:
-            body: Pre-rendered Typst body string.
-            colspan: Optional number of columns spanned by the cell.
-
-        Returns:
-            The original body if no cell properties are set and `colspan` is
-            not provided, otherwise a `table.cell(...)` block wrapping `body`.
-        """
-        cell_snippets = ["table.cell("]
-        if colspan is not None:
-            cell_snippets.append(indent(f"colspan: {colspan},", CELL_PROPERTY_INDENT))
-
-        for f in fields(self):
-            name = f.name
-            value = getattr(self, name)
-            if value:
-                cell_snippets.append(indent(f"{name}: {value},", CELL_PROPERTY_INDENT))
-
-        if len(cell_snippets) == 1:
-            return body
-
-        cell_snippets.append(indent(body, CELL_PROPERTY_INDENT))
-
-        cell_snippets.append("),")
-        return "\n".join(cell_snippets)
-
     def __or__(self, value: object) -> t.Self:
         """Merge two cell styles, preferring values from `value` when set.
 
@@ -414,27 +343,8 @@ class StyleHolder:
         cell: Optional cell-level style settings.
     """
 
-    text: TextStyleForCell | None = None
-    cell: CellStyleForCell | None = None
-
-    def to_typst(self, body: str | Typst, colspan: int | None = None) -> str:
-        """Render a value into a fully styled Typst cell snippet.
-
-        Args:
-            body: Raw value or pre-escaped Typst content.
-            colspan: Optional number of columns the cell spans.
-
-        Returns:
-            A Typst snippet with value escaping plus text and cell wrappers
-            applied when configured.
-        """
-        body = f"[{escape_value(body)}],"
-        if self.text:
-            body = self.text.to_typst(body)
-        if self.cell or (colspan is not None and colspan > 1):
-            cell = CellStyleForCell() if self.cell is None else self.cell
-            body = cell.to_typst(body, colspan)
-        return body
+    text: TextStyleForCell = field(default_factory=TextStyleForCell)
+    cell: CellStyleForCell = field(default_factory=CellStyleForCell)
 
     def __or__(self, value: object) -> t.Self:
         """Merge two style holders, preferring values from `value` when set.
@@ -450,25 +360,9 @@ class StyleHolder:
         if not isinstance(value, StyleHolder):  # pragma: no cover
             return NotImplemented
 
-        match (self.text, value.text):
-            case (None, TextStyleForCell()):
-                new_text = value.text
-            case (TextStyleForCell(), None):
-                new_text = self.text
-            case (TextStyleForCell(), TextStyleForCell()):
-                new_text = self.text | value.text
-            case _:
-                new_text = None
+        new_text = self.text | value.text
 
-        match (self.cell, value.cell):
-            case (None, CellStyleForCell()):
-                new_cell = value.cell
-            case (CellStyleForCell(), None):
-                new_cell = self.cell
-            case (CellStyleForCell(), CellStyleForCell()):
-                new_cell = self.cell | value.cell
-            case _:
-                new_cell = None
+        new_cell = self.cell | value.cell
 
         return type(self)(text=new_text, cell=new_cell)
 
@@ -485,8 +379,8 @@ class StyleHolder:
 
     def clear(self) -> None:
         """Clears all the styles from the holder."""
-        self.text = None
-        self.cell = None
+        self.text = TextStyleForCell()
+        self.cell = CellStyleForCell()
 
 
 @dataclass

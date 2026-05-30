@@ -26,8 +26,9 @@ from typ_tables._formats import (
 )
 from typ_tables._gutter import GutterContainer
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns
+from typ_tables._rendering import Table
 from typ_tables._spanners import Spanner
-from typ_tables._typ_data import TABLE_TEMPLATE, Figure, Heading, TypData
+from typ_tables._typ_data import FigureArgs, Heading, TypData
 from typ_tables._utils import OrderedSet
 from typ_tables.style import CellStyle, Sides, TextStyle
 
@@ -45,22 +46,18 @@ def _create_table_string(original_data: ttypes.Data[IntoDataFrame], typ: TypData
     data = typ.format_df(original_data).drop(ROW_INDEX)
     typ.stub.update_group_row_labels(data, typ.boxhead)
 
-    columns = typ.columns()
-    alignment = typ.alignment()
-    header = typ.header(data)
-    body = typ.body(data, original_data)
-
-    table_str = TABLE_TEMPLATE.substitute(
-        columns=columns,
-        alignment=alignment,
-        header=header,
-        body=body,
-        inset=typ.inset,
+    typst_table = Table(
+        columns=typ.columns(),
+        row_gutter=typ.gutters.row.value,
+        column_gutter=typ.gutters.column.value,
         stroke=typ.stroke,
-        row_gutter=typ.gutters.row,
-        column_gutter=typ.gutters.column,
+        alignment=typ.alignment(),
+        inset=typ.inset,
+        headers=typ.header(data),
+        body=typ.body(data, original_data),
     )
-    return typ.figure.add_figure_args(table_str)
+
+    return typ.figure.to_typst(typst_table).render()
 
 
 P = t.ParamSpec("P")
@@ -169,7 +166,7 @@ class TypTable:
         Returns:
             The current table instance for chaining.
         """
-        self._typ_data.figure = Figure(caption)
+        self._typ_data.figure = FigureArgs(caption)
         return self
 
     def tab_stubhead(self, label: str | Typst) -> t.Self:

@@ -1,70 +1,10 @@
 #table(
   columns: 3,
-  column-gutter: (),
-  row-gutter: (),
   stroke: none,
   align: (auto, auto, auto),
-  inset: 0% + 5pt,
-  
-  table.header(
-    table.cell(
-      colspan: 3,
-      inset: (bottom: 20pt),
-      align: right,
-      stroke: (top: 1.2pt, bottom: 1.2pt),
-      text(
-        size: 15pt,
-        fill: blue,
-      )[Test Header],
-    ),
-  ),
-  table.header(table.cell(
-  stroke: (bottom: 1.2pt),
-  [int],
-), table.cell(
-  stroke: (bottom: 1.2pt),
-  [float],
-), table.cell(
-  stroke: (bottom: 1.2pt),
-  [string],
-),),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [10],
-), table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [1e-06],
-), table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [a],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [10000],
-), table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [0.1368753],
-), table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [b],
-),
-  table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [1000000],
-), table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [163985.8374],
-), table.cell(
-  colspan: 1,
-  stroke: (bottom: 0.6pt),
-  [c],
-),
+  table.header[#table.cell(colspan: 3, inset: (bottom: 20pt), align: right, stroke: (top: 1.2pt, bottom: 1.2pt))[#text(size: 15pt, fill: blue)[Test Header]]],
+  table.header[#table.cell(stroke: (bottom: 1.2pt))[int]][#table.cell(stroke: (bottom: 1.2pt))[float]][#table.cell(stroke: (bottom: 1.2pt))[string]],
+  [#table.cell(stroke: (bottom: 0.6pt))[10]], [#table.cell(stroke: (bottom: 0.6pt))[1e-06]], [#table.cell(stroke: (bottom: 0.6pt))[a]],
+  [#table.cell(stroke: (bottom: 0.6pt))[10000]], [#table.cell(stroke: (bottom: 0.6pt))[0.1368753]], [#table.cell(stroke: (bottom: 0.6pt))[b]],
+  [#table.cell(stroke: (bottom: 0.6pt))[1000000]], [#table.cell(stroke: (bottom: 0.6pt))[163985.8374]], [#table.cell(stroke: (bottom: 0.6pt))[c]],
 )

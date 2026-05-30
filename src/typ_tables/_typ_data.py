@@ -4,8 +4,6 @@ import typing as t
 import warnings
 from dataclasses import dataclass, field
 from functools import cached_property
-from string import Template
-from textwrap import indent
 
 from narwhals.typing import IntoDataFrame, IntoDataFrameT
 
@@ -14,22 +12,15 @@ from typ_tables._boxhead import Boxhead, ColInfo
 from typ_tables._escape import Typst, escape_value
 from typ_tables._formats import Formatter
 from typ_tables._gutter import Gutters
+from typ_tables._rendering import Cell, Content, Figure, Header, Renderable
 from typ_tables._spanners import Spanners
 from typ_tables._stub import Stub
 from typ_tables._style import DefaultStyles, Sides, StyleHolder
 
-TITLE_TEMPLATE = Template(
-    """
-  table.header(
-$cell_block
-  ),
-  """
-)
-
 
 @dataclass(frozen=True)
 class Heading:
-    """Table heading metadata rendered above the main header row.
+    """Table heading metadata used to build the top header row.
 
     Attributes:
         _title: Optional heading title text or raw Typst.
@@ -41,47 +32,43 @@ class Heading:
 
     @cached_property
     def title(self) -> str | Typst | None:
-        """Return the escaped title text."""
+        """Return title text escaped for use in renderable content."""
         if self._title is None:
             return self._title
         return escape_value(self._title)
 
     @cached_property
     def subtitle(self) -> str | Typst | None:
-        """Return the escaped subtitle text."""
+        """Return subtitle text escaped for use in renderable content."""
         if self._subtitle is None:
             return self._subtitle
         return escape_value(self._subtitle)
 
-    def to_typst(self, n_col: int, styles: StyleHolder) -> str:
-        """Render heading content as Typst header rows.
+    def to_typst(self, n_col: int, styles: StyleHolder) -> Header | None:
+        """Build a renderable heading header.
 
         Args:
             n_col: Number of table columns to span.
             styles: Additional styles applied to the heading cell.
 
         Returns:
-            A Typst string for the heading block, or an empty string when no
-            title is set.
+            A `Header`, or `None` when no title is set.
         """
         if not self.title:
-            return ""
+            return None
         if not self.subtitle:
             title_contents = self.title
         else:
-            title_contents = Typst(
-                f"== {escape_value(self.title)} \\\n  {escape_value(self.subtitle)}"
-            )
+            title_contents = Typst(f"== {self.title} \\\n  {self.subtitle}")
 
-        cell_block = styles.to_typst(title_contents, n_col)
-        cell_block = indent(cell_block, " " * 4)
-
-        return TITLE_TEMPLATE.substitute(title_contents=title_contents, cell_block=cell_block)
+        return Header(
+            [Cell(Content(title_contents, styles.text), colspan=n_col, cell_style=styles.cell)]
+        )
 
 
 @dataclass(frozen=True)
-class Figure:
-    """Figure metadata used to optionally wrap the table in `#figure`.
+class FigureArgs:
+    """Figure metadata used to wrap the renderable table in `#figure`.
 
     Attributes:
         _caption: Optional figure caption text or raw Typst.
@@ -91,27 +78,14 @@ class Figure:
 
     @cached_property
     def caption(self) -> str | Typst | None:
-        """Return the escaped figure caption text."""
+        """Return caption text escaped for the renderable figure wrapper."""
         if self._caption is None:
             return self._caption
         return escape_value(self._caption)
 
-    def add_figure_args(self, table_str: str) -> str:
-        """Wrap a Typst table in a figure block when a caption is set.
-
-        Args:
-            table_str: Typst table string beginning with `#table`.
-
-        Returns:
-            The original table string when no caption is present, otherwise a
-            `#figure(...)` wrapper containing the table and caption.
-        """
-        if caption := self.caption:
-            table_str = table_str.removeprefix("#")
-            table_str = indent(table_str, "  ").rstrip()
-            table_str = f"#figure(\n{table_str},\n  caption: [{caption}],\n)"
-
-        return table_str
+    def to_typst(self, body: Renderable) -> Figure:
+        """Build a renderable figure around an already-built table body."""
+        return Figure(body, caption=self.caption)
 
 
 @dataclass(kw_only=True)
@@ -135,12 +109,12 @@ class TypData:
     formats: list[Formatter]
     substitute: list[Formatter]
     heading: Heading
-    figure: Figure
+    figure: FigureArgs
     spanners: Spanners = field(default_factory=Spanners)
     styles: list[_locators.StyledLoc] = field(default_factory=list)
-    stubhead: str | Typst | None = None
-    inset: str | Sides[ttypes.Relative] = "0% + 5pt"
-    stroke: str = "none"
+    stubhead: str | Typst = ""
+    inset: str | Sides[ttypes.Relative] | None = None
+    stroke: str | None = "none"
     gutters: Gutters = field(default_factory=Gutters)
 
     @classmethod
@@ -165,7 +139,7 @@ class TypData:
             formats=[],
             substitute=[],
             heading=Heading(),
-            figure=Figure(),
+            figure=FigureArgs(),
         )
 
     def format_df(self, df: ttypes.Data[IntoDataFrameT]) -> ttypes.Data[IntoDataFrameT]:
@@ -204,38 +178,41 @@ class TypData:
         """
         return str(len(self.boxhead))
 
-    def header(self, original_data: ttypes.Data[IntoDataFrame]) -> str:
-        """Render table header rows, including optional title and stub divider.
+    def header(self, original_data: ttypes.Data[IntoDataFrame]) -> list[Header]:
+        """Build renderable table header rows.
 
         Args:
             original_data: Unformatted data.
 
         Returns:
-            Typst header block containing heading rows, column labels, and
-            header rules.
+            Header rows containing optional heading, spanners, and column labels.
         """
         columns = self.boxhead.get_stub_and_default_columns()
-        header = self._render_column_label_header(original_data, columns)
-        formatted_title = self._render_heading(len(columns))
-        spanner_text = self._render_spanner_headers(columns)
 
-        return f"{formatted_title}{spanner_text}table.header({header})"
+        headers: list[Header] = []
+        if title_header := self._get_heading(len(columns)):
+            headers.append(title_header)
+        if spanners := self._get_spanner_headers(columns):
+            headers.extend(spanners)
+        headers.append(self._get_column_label_header(original_data, columns))
 
-    def _render_column_label_header(
+        return headers
+
+    def _get_column_label_header(
         self,
         original_data: ttypes.Data[IntoDataFrame],
         columns: list[ColInfo],
-    ) -> str:
-        """Render the header row containing the stub head and column labels."""
+    ) -> Header:
+        """Build the header row containing the stub head and column labels."""
         column_label_styles = self._build_column_label_styles(original_data)
         stub_head_style = self._build_stub_head_style()
 
-        header_cells = [
-            self._render_column_label_cell(col, column_label_styles, stub_head_style)
-            for col in columns
-        ]
-
-        return " ".join(header_cells)
+        return Header(
+            [
+                self._get_column_label_cell(col, column_label_styles, stub_head_style)
+                for col in columns
+            ]
+        )
 
     def _build_column_label_styles(
         self, original_data: ttypes.Data[IntoDataFrame]
@@ -264,21 +241,26 @@ class TypData:
 
         return stub_head_style
 
-    def _render_column_label_cell(
+    def _get_column_label_cell(
         self,
         col: ColInfo,
         column_label_styles: dict[str, StyleHolder],
         stub_head_style: StyleHolder,
-    ) -> str:
-        """Render one cell in the column-label header row."""
+    ) -> Cell:
+        """Build one cell in the column-label header row."""
         if col.col_type == "stub":
-            return stub_head_style.to_typst(self.stubhead or "")
+            return Cell(
+                Content(self.stubhead, text_style=stub_head_style.text),
+                cell_style=stub_head_style.cell,
+            )
 
         header_cell_style = column_label_styles.get(col.var, self.default_styles.header_cells)
-        return header_cell_style.to_typst(col.name)
+        return Cell(
+            Content(col.name, text_style=header_cell_style.text), cell_style=header_cell_style.cell
+        )
 
-    def _render_heading(self, n_col: int) -> str:
-        """Render optional title/subtitle rows above the column labels."""
+    def _get_heading(self, n_col: int) -> Header | None:
+        """Build the optional title/subtitle row above the column labels."""
         header_style = self.default_styles.header
         for style_info in self.styles:
             if isinstance(style_info, _locators.StyledLocHeader):
@@ -286,24 +268,24 @@ class TypData:
 
         return self.heading.to_typst(n_col, header_style)
 
-    def _render_spanner_headers(self, columns: list[ColInfo]) -> str:
-        """Render all configured spanner rows above the column labels."""
+    def _get_spanner_headers(self, columns: list[ColInfo]) -> list[Header]:
+        """Build all configured spanner rows above the column labels."""
         spanners = list(reversed(self.spanners.build_spanners([col.var for col in columns])))
         if not spanners:
-            return ""
+            return []
 
         spanner_styles = self._build_spanner_styles()
-        spanner_rows = [
-            " ".join(
-                span_cell.to_typst(
-                    spanner_styles.get(span_cell.id_, self.default_styles.spanner_cells)
-                )
-                for span_cell in row
+        return [
+            Header(
+                [
+                    span_cell.to_typst(
+                        spanner_styles.get(span_cell.id_, self.default_styles.spanner_cells)
+                    )
+                    for span_cell in row
+                ]
             )
             for row in spanners
         ]
-
-        return ", ".join(f"table.header({cells})" for cells in spanner_rows) + ", "
 
     def _build_spanner_styles(self) -> dict[str | None, StyleHolder]:
         """Collect merged styles keyed by spanner id."""
@@ -326,33 +308,32 @@ class TypData:
 
     def body(
         self, data: ttypes.Data[IntoDataFrame], original_data: ttypes.Data[IntoDataFrame]
-    ) -> str:
-        """Render Typst rows for table body data.
+    ) -> list[list[Cell]]:
+        """Build renderable rows for the table body.
 
         Args:
             data: Formatted data with table row index intact.
             original_data: Unformatted data.
 
         Returns:
-            Typst string containing data rows and horizontal rules, including
-            optional group heading rows.
+            Rows of renderable table cells.
         """
         columns = self.boxhead.get_stub_and_default_columns()
         n_cols = len(columns)
-        rows = []
         cell_styles = self._build_cell_style_index(original_data, columns)
         row_group_styles = self._build_row_group_styles(original_data)
 
+        body_cells = []
         prev_group_info = None
         ordered_index = self.stub.group_indices_map()
         for i, group_info in ordered_index:
             if group_info is not None and group_info is not prev_group_info:
-                rows.append(self._render_group_row(group_info, n_cols, row_group_styles))
+                body_cells.append(self._get_group_row(group_info, n_cols, row_group_styles))
                 prev_group_info = group_info
 
-            rows.append(self._render_data_row(data, i, columns, cell_styles))
+            body_cells.append(self._get_data_row(data, i, columns, cell_styles))
 
-        return "\n  ".join(rows)
+        return body_cells
 
     def _build_cell_style_index(
         self, data: ttypes.Data[IntoDataFrame], columns: list[ColInfo]
@@ -397,49 +378,47 @@ class TypData:
 
         return row_group_styles
 
-    def _render_group_row(
+    def _get_group_row(
         self,
         group_info: t.Any,
         n_cols: int,
         row_group_styles: _locators.RowGroupStyles,
-    ) -> str:
-        """Render a row-group heading with top and bottom separator lines."""
+    ) -> list[Cell]:
+        """Build a row-group heading row."""
         group_cell_style = row_group_styles.get_style(
             group_info.group_id, self.default_styles.row_group
         )
-        return group_cell_style.to_typst(group_info.name, colspan=n_cols)
+        return [
+            Cell(
+                Content(group_info.name, text_style=group_cell_style.text),
+                colspan=n_cols,
+                cell_style=group_cell_style.cell,
+            )
+        ]
 
-    def _render_data_row(
+    def _get_data_row(
         self,
         data: ttypes.Data[IntoDataFrame],
         row_idx: int,
         columns: list[ColInfo],
         cell_styles: dict[_locators.CellPos, StyleHolder],
-    ) -> str:
-        """Render a single data row using precomputed per-cell styles."""
+    ) -> list[Cell]:
+        """Build a single data row."""
         body_cells = []
         for col in columns:
             if col.col_type == "stub":
                 default_style = self.default_styles.stub_cell
             else:
                 default_style = self.default_styles.body_cell
-            cell_style = default_style | cell_styles.get(
+            body_cell_style = default_style | cell_styles.get(
                 _locators.CellPos(row=row_idx, column=col.var)
             )
             cell_content = data[row_idx][col.var].item()
-            body_cells.append(cell_style.to_typst(cell_content, 1))
+            body_cells.append(
+                Cell(
+                    Content(cell_content, text_style=body_cell_style.text),
+                    cell_style=body_cell_style.cell,
+                )
+            )
 
-        return " ".join(body_cells)
-
-
-TABLE_TEMPLATE = Template("""#table(
-  columns: $columns,
-  column-gutter: $column_gutter,
-  row-gutter: $row_gutter,
-  stroke: $stroke,
-  align: $alignment,
-  inset: $inset,
-  $header,
-  $body
-)
-""")
+        return body_cells

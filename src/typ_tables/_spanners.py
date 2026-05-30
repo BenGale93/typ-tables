@@ -5,7 +5,8 @@ from copy import deepcopy
 from dataclasses import dataclass
 
 from typ_tables._escape import Typst, escape_value
-from typ_tables._style import CellStyleForCell, StyleHolder
+from typ_tables._rendering import Cell, Content
+from typ_tables._style import StyleHolder
 from typ_tables._utils import OrderedSet
 
 
@@ -41,10 +42,8 @@ class SpannerCell:
     id_: str | None
     colspan: int
 
-    def to_typst(self, styling: StyleHolder) -> str:
+    def to_typst(self, styling: StyleHolder) -> Cell:
         styling_copy = deepcopy(styling)
-        if styling_copy.cell is None:
-            styling_copy.cell = CellStyleForCell()
         if not self.label:
             styling_copy.cell.stroke = None
             label = self.label
@@ -54,7 +53,11 @@ class SpannerCell:
             )
             styling_copy.cell.stroke = None
 
-        return styling_copy.to_typst(label, colspan=self.colspan)
+        return Cell(
+            Content(label, text_style=styling_copy.text),
+            colspan=self.colspan,
+            cell_style=styling_copy.cell,
+        )
 
 
 def _bottom_rule_stroke(stroke_style: object) -> str:
@@ -68,7 +71,7 @@ def _bottom_rule_stroke(stroke_style: object) -> str:
 
 def _label_with_bottom_rule(label: Typst | str, stroke_text: str) -> Typst:
     return Typst(
-        f"{escape_value(label)}\n#v(5pt)\n#place(bottom + center, "
+        f"\n  {escape_value(label)}\n  #v(5pt)\n  #place(bottom + center, "
         f"line(length: 100%, stroke: {stroke_text}))"
     )
 
