@@ -20,6 +20,13 @@ from typ_tables._style import DefaultStyles, Sides, StyleHolder
 
 
 @dataclass(frozen=True)
+class TabOptions:
+    """Table options collection."""
+
+    column_labels_hidden: bool = False
+
+
+@dataclass(frozen=True)
 class Heading:
     """Table heading metadata used to build the top header row.
 
@@ -119,6 +126,7 @@ class TypData:
     inset: str | Sides[ttypes.Relative] | None = None
     stroke: str | None = "none"
     gutters: Gutters = field(default_factory=Gutters)
+    tab_options: TabOptions = field(default_factory=TabOptions)
 
     @classmethod
     def from_data(
@@ -197,7 +205,9 @@ class TypData:
             headers.append(title_header)
         if spanners := self._get_spanner_headers(columns):
             headers.extend(spanners)
-        headers.append(self._get_column_label_header(original_data, columns))
+
+        if not self.tab_options.column_labels_hidden:
+            headers.append(self._get_column_label_header(original_data, columns))
 
         return headers
 

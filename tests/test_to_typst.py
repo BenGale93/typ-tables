@@ -453,3 +453,27 @@ class TestEdgeCases:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+
+class TestTabOptions:
+    def test_hide_column_labels(self, table_check, basic_data):
+        table = TypTable(basic_data).tab_options(column_labels_hidden=True)
+        result = table.to_typst()
+
+        assert result == external("uuid:5c79abae-d40d-406c-a0ca-3ca65710925e.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_hide_column_labels_with_header(self, table_check, basic_data):
+        table = (
+            TypTable(basic_data).tab_options(column_labels_hidden=True).tab_header("Title header")
+        )
+        result = table.to_typst()
+
+        assert result == external("uuid:a8715af7-60ce-44db-99a4-55524f3ea27f.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
