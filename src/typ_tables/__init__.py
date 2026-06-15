@@ -1189,6 +1189,17 @@ class TypTable:
         self._typ_data.figure = replace(self._typ_data.figure, _id=id)
         return self
 
+    def tab_options(self, *, column_labels_hidden: bool = False) -> t.Self:
+        """Modify the table output options.
+
+        Args:
+            column_labels_hidden: An option to hide the column labels.
+        """
+        options = locals()
+        del options["self"]
+        self._typ_data.tab_options = replace(self._typ_data.tab_options, **options)
+        return self
+
 
 __all__ = [
     "ColumnSelector",
