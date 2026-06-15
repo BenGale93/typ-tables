@@ -98,6 +98,8 @@ typst = (
 
 ::: typ_tables.TypTable.with_id
 
+::: typ_tables.TypTable.tab_options
+
 ## Pipeline
 
 ::: typ_tables.TypTable.pipe
