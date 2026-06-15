@@ -76,6 +76,7 @@ class FigureArgs:
     """
 
     _caption: str | Typst | None = None
+    _id: str | None = None
 
     @cached_property
     def caption(self) -> str | Typst | None:
@@ -86,7 +87,7 @@ class FigureArgs:
 
     def to_typst(self, body: Renderable) -> Figure:
         """Build a renderable figure around an already-built table body."""
-        return Figure(body, caption=self.caption)
+        return Figure(body, caption=self.caption, id=self._id)
 
 
 @dataclass(kw_only=True)

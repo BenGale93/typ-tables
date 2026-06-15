@@ -96,6 +96,7 @@ typst = (
 
 ::: typ_tables.TypTable.clear_defaults
 
+::: typ_tables.TypTable.with_id
 
 ## Pipeline
 
