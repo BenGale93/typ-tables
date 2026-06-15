@@ -289,6 +289,63 @@ class TypTable:
 
         return self
 
+    def tab_spanner_delim(
+        self,
+        columns: ColumnSelector | None = None,
+        *,
+        delim: str = ".",
+        split: t.Literal["first", "last"] = "last",
+        limit: int = -1,
+    ) -> t.Self:
+        """Insert spanners by splitting column names with a delimiter.
+
+        This generates one or more spanners (and sets column labels), by
+        splitting the column name by the specified delimiter text (delim) and
+        placing the fragments from top to bottom (i.e., higher-level spanners
+        to the column labels) or vice versa.
+
+        Args:
+            delim: Delimiter for splitting the column labels.
+            columns: Optional selector for columns to target. Defaults to all columns.
+            split: Should the delimiter splitting occur from the “last”
+                instance of the delim character or from the “first”? The default
+                here uses the “last” keyword, and splitting begins at the last
+                instance of the delimiter in the column name. This option only has
+                some consequence when there is a limit value applied that is lesser
+                than the number of delimiter characters for a given column name
+                (i.e., number of splits is not the maximum possible number).
+            limit: Limit for splitting. An optional limit to place on the splitting procedure.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        sel_columns = resolve_columns(self._df, columns)
+
+        labels = []
+        for col in sel_columns:
+            splitter = col.rsplit if split == "last" else col.split
+            splits: list[str] = splitter(sep=delim, maxsplit=limit)
+            splits.reverse()
+            labels.append(splits)
+
+        try:
+            labels: list[list[str]] = list(map(list, zip(*labels, strict=True)))
+        except ValueError:
+            msg = f"Splitting the column names resulted in different length lists: {labels}"
+            raise ValueError(msg) from None
+
+        column_labels = labels[0]
+        new_spanners = labels[1:]
+
+        self.cols_label(cases=dict(zip(sel_columns, column_labels, strict=True)))
+        for spanners in new_spanners:
+            unique_labels = OrderedSet(spanners)
+            for label in unique_labels:
+                cols = [sel_columns[i] for i, x in enumerate(spanners) if x == label]
+                self.tab_spanner(label=label, columns=cols, gather=False)
+
+        return self
+
     # Formatting Methods ----
     def sub_missing(
         self,

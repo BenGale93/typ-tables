@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * `with_id` for labelling tables for referencing purposes.
 * `column_labels_hidden` in the `tab_options` method. For hiding the header.
+* `tab_spanner_delim` for programmatically creating spanners from column names.
 
 ## 0.2.0 - 2026-05-30
 

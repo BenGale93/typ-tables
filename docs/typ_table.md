@@ -42,6 +42,8 @@ typst = (
 
 ::: typ_tables.TypTable.tab_spanner
 
+::: typ_tables.TypTable.tab_spanner_delim
+
 ::: typ_tables.TypTable.tab_footer
 
 ## Styling the Table
