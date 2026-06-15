@@ -1,3 +1,4 @@
+import polars as pl
 import pytest
 from inline_snapshot import external, snapshot
 
@@ -410,3 +411,71 @@ class TestTabSpanner:
 
         with pytest.raises(ValueError, match="Spanner id 'Value' already exists"):
             table.tab_spanner("Value", columns="float")
+
+
+@pytest.fixture
+def delim_df():
+    data = {
+        "province.NL_ZH.pop": [1, 2, 3],
+        "province.NL_ZH.gdp": [4, 5, 6],
+        "province.NL_NH.pop": [7, 8, 9],
+        "province.NL_NH.gdp": [10, 11, 12],
+    }
+    return pl.DataFrame(data)
+
+
+class TestTabSpannerDelim:
+    def test_basic_usage(self, table_check, delim_df):
+        table = TypTable(delim_df).tab_spanner_delim()
+
+        result = table.to_typst()
+
+        assert result == external("uuid:a7820bd5-2407-4eb3-800b-94f37a598e9c.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_limit_one(self, table_check, delim_df):
+        table = TypTable(delim_df).tab_spanner_delim(limit=1)
+
+        result = table.to_typst()
+
+        assert result == external("uuid:1854e8cd-b350-474f-bece-ac9ca2cf8462.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_split_first(self, table_check, delim_df):
+        table = TypTable(delim_df).tab_spanner_delim(split="first", limit=1)
+
+        result = table.to_typst()
+
+        assert result == external("uuid:25c899c1-1631-4225-9360-3302fac85405.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_number_of_delim_does_not_match(self):
+        data = {
+            "province.NL_ZH.pop": [1, 2, 3],
+            "NL_ZH.gdp": [4, 5, 6],
+        }
+        df = pl.DataFrame(data)
+
+        with pytest.raises(ValueError, match="different length"):
+            # pyrefly: ignore [bad-argument-type]
+            _ = TypTable(df).tab_spanner_delim()
+
+    def test_no_splits_does_nothing(self, table_check, delim_df):
+        table = TypTable(delim_df).tab_spanner_delim(delim="/")
+
+        result = table.to_typst()
+
+        assert result == external("uuid:6e67941e-c8ec-48ca-ad9f-46309375f305.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
