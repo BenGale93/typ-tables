@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* `with_id` for labelling tables for referencing purposes.
+
+## 0.2.0 - 2026-05-30
+
+### Added
+
 * `tab_spanner` method for adding grouped column headers.
 * `LocSpanner` for targeting spanners for styling.
 * `cols_move` method for moving table columns after another column.

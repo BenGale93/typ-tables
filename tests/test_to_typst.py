@@ -162,6 +162,16 @@ class TestBasic:
 
         assert len(warnings) == 0
 
+    def test_with_id(self, table_check, basic_data):
+        table = TypTable(basic_data).with_id("test")
+        result = table.to_typst()
+
+        assert result == external("uuid:c2754f0b-c027-4f0e-9699-85101d338c26.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
 
 class TestPipe:
     def test_pipe_applies_styling(self, table_check, basic_data):

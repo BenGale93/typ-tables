@@ -20,13 +20,19 @@ class Figure:
     body: Renderable
 
     caption: Typst | str | None = None
+    id: str | None = None
 
     def render(self) -> str:
         args: list[str] = []
         if self.caption:
             args.append(f"caption: [{escape_value(self.caption)}]")
         rendered_body = self.body.render()
-        if not args:
+        if not args and not self.id:
             return rendered_body
-        joined_args = ",\n  ".join(args)
-        return f"#figure({joined_args})[\n{indent(rendered_body, '  ')}]\n"
+        if args:
+            joined_args = ",\n  ".join(args)
+            joined_args = f"({joined_args})"
+        else:
+            joined_args = ""
+        label = "" if not self.id else f'#label("{self.id}")'
+        return f"#figure{joined_args}[\n{indent(rendered_body, '  ')}]{label}\n"

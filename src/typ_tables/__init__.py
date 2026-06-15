@@ -1,6 +1,7 @@
 """Package for creating Typst Tables from DataFrames."""
 
 import typing as t
+from dataclasses import replace
 
 import narwhals as nw
 from narwhals.typing import IntoDataFrame
@@ -28,7 +29,7 @@ from typ_tables._gutter import GutterContainer
 from typ_tables._location import ColumnSelector, RowSelector, resolve_columns
 from typ_tables._rendering import Table
 from typ_tables._spanners import Spanner
-from typ_tables._typ_data import FigureArgs, Heading, TypData
+from typ_tables._typ_data import Heading, TypData
 from typ_tables._utils import OrderedSet
 from typ_tables.style import CellStyle, Sides, TextStyle
 
@@ -167,7 +168,7 @@ class TypTable:
         Returns:
             The current table instance for chaining.
         """
-        self._typ_data.figure = FigureArgs(caption)
+        self._typ_data.figure = replace(self._typ_data.figure, _caption=caption)
         return self
 
     def tab_stubhead(self, label: str | Typst) -> t.Self:
@@ -1174,6 +1175,18 @@ class TypTable:
         """
         self._typ_data.default_styles.clear()
         self._typ_data.stroke = "1pt + black"
+        return self
+
+    def with_id(self, id: str | None = None) -> t.Self:  # noqa: A002
+        """Set the id for this table.
+
+        Args:
+            id: The label to add to the table figure. By default it will be left blank.
+
+        Returns:
+            The current table instance for chaining.
+        """
+        self._typ_data.figure = replace(self._typ_data.figure, _id=id)
         return self
 
 
