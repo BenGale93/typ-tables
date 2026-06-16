@@ -420,10 +420,7 @@ class DefaultStyles:
 
     def clear(self) -> None:
         """Sets text and cell styles to None for all style holders."""
-        self.header.clear()
-        self.header_cells.clear()
-        self.spanner_cells.clear()
-        self.stub_header_cell.clear()
-        self.stub_cell.clear()
-        self.body_cell.clear()
-        self.row_group.clear()
+        for f in fields(self):
+            name = f.name
+            current: StyleHolder = getattr(self, name)
+            current.clear()
