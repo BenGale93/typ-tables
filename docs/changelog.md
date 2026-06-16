@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+* `clear_defaults` now clears all default styles.
+
+## 0.3.0 - 2026-06-15
+
 ### Added
 
 * `with_id` for labelling tables for referencing purposes.

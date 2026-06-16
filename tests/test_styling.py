@@ -752,7 +752,9 @@ def test_apply_multiple_cell_styles(table_check, basic_data) -> None:
 
 
 def test_clear_style(table_check, basic_data):
-    table = TypTable(basic_data).clear_defaults().tab_header("Table Header")
+    table = (
+        TypTable(basic_data).clear_defaults().tab_header("Table Header").tab_footer("Test Footer")
+    )
 
     result = table.to_typst()
 
@@ -761,6 +763,10 @@ def test_clear_style(table_check, basic_data):
     warnings = table_check(result)
 
     assert len(warnings) == 0
+    assert "top" not in result
+    assert "right" not in result
+    assert "bottom" not in result
+    assert "center" not in result
 
 
 def test_multiple_components_that_are_styled(table_check, group_data):
