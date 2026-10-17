@@ -363,6 +363,10 @@ class TypTable:
 
         Returns:
             The current table instance for chaining.
+
+        Note:
+            Missing values render as an empty cell by default. Use this method to
+            substitute them with different text, for example `missing_text="-"`.
         """
         self._typ_data.substitute.append(
             fmt(self._df, SubMissing(missing_text=missing_text), columns, rows)

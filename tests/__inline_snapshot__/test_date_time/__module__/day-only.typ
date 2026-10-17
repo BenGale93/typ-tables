@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[25]],
   [#table.cell(stroke: (bottom: 0.6pt))[04]],
   [#table.cell(stroke: (bottom: 0.6pt))[01]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

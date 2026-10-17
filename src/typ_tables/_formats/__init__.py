@@ -109,7 +109,7 @@ def _format_by_cell(
         new_col = nw.new_series(
             name=col,
             values=[
-                fmt_value(value) if i in unique_rows else str(value)
+                fmt_value(value) if i in unique_rows else (None if value is None else str(value))
                 for i, value in enumerate(data[col])
             ],
             backend=data.implementation,

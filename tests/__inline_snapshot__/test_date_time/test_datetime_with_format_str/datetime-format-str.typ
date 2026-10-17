@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[2023/12/25 09:00]],
   [#table.cell(stroke: (bottom: 0.6pt))[1999/07/04 23:59]],
   [#table.cell(stroke: (bottom: 0.6pt))[2024/01/01 00:00]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

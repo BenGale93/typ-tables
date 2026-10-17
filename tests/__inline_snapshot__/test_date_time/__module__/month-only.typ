@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[December]],
   [#table.cell(stroke: (bottom: 0.6pt))[July]],
   [#table.cell(stroke: (bottom: 0.6pt))[January]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

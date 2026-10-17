@@ -6,5 +6,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[^a\*]], [#table.cell(stroke: (bottom: 0.6pt))[10]],
   [#table.cell(stroke: (bottom: 0.6pt))[^b\*]], [#table.cell(stroke: (bottom: 0.6pt))[10000]],
   [#table.cell(stroke: (bottom: 0.6pt))[^c\*]], [#table.cell(stroke: (bottom: 0.6pt))[1000000]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]], [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]], [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

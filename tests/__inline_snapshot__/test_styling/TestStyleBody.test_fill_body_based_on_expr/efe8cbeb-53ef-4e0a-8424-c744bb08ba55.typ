@@ -8,5 +8,5 @@
   [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[b]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[10000]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[1e-06]]],
   [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[c]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[1000000]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[0.1368753]]],
   [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[random\-letters]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[568282638583]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[163985.8374]]],
-  [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[None]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[None]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[None]]],
+  [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[]]], [#table.cell(align: left, stroke: (bottom: 0.6pt))[#text(fill: red)[]]],
 )

@@ -10,7 +10,7 @@
   [#table.cell(stroke: (bottom: 0.6pt))[1000000000.00%]],
   [#table.cell(stroke: (bottom: 0.6pt))[10000000000000000000000.00%]],
   [#table.cell(stroke: (bottom: 0.6pt))[0.05%]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
   [#table.cell(stroke: (bottom: 0.6pt))[-1000.00%]],
   [#table.cell(stroke: (bottom: 0.6pt))[-135.72%]],
   [#table.cell(stroke: (bottom: 0.6pt))[-100.00%]],

@@ -70,6 +70,34 @@ class TestBasic:
 
         assert len(warnings) == 0
 
+    def test_to_typst_null_values_render_empty(self, table_check) -> None:
+        df = pl.DataFrame({"a": [1, None, 3], "s": ["x", None, "z"]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df)
+        result = table.to_typst()
+
+        assert "[None]" not in result
+        assert result.count("[#table.cell(stroke: (bottom: 0.6pt))[]]") == 2
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_null_in_unformatted_rows_render_empty(self, table_check) -> None:
+        df = pl.DataFrame({"a": [1.0, None, 3.0]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).fmt_number(columns="a", rows=[0], decimals=1)
+        result = table.to_typst()
+
+        assert "[None]" not in result
+        assert result.count("[#table.cell(stroke: (bottom: 0.6pt))[]]") == 1
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
     def test_to_typst_rowname_col_reorders_columns(self, table_check) -> None:
         df = pl.DataFrame(
             {

@@ -35,7 +35,7 @@ class Content:
 
             args.append(f"{name}: {v}")
 
-        content = "None" if self.value is None else f"{escape_value(self.value)}"
+        content = "" if self.value is None else f"{escape_value(self.value)}"
         if args:
             joined_args = ", ".join(args)
             content = f"#text({joined_args})[{content}]"

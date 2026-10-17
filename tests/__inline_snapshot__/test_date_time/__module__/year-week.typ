@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[2023-W52]],
   [#table.cell(stroke: (bottom: 0.6pt))[1999-W26]],
   [#table.cell(stroke: (bottom: 0.6pt))[2024-W01]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

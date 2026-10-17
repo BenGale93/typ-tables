@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[09:00 AM]],
   [#table.cell(stroke: (bottom: 0.6pt))[11:59 PM]],
   [#table.cell(stroke: (bottom: 0.6pt))[12:00 AM]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

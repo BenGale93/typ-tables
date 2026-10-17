@@ -10,7 +10,7 @@
   [#table.cell(stroke: (bottom: 0.6pt))[\$10,000,000.00000]],
   [#table.cell(stroke: (bottom: 0.6pt))[\$100,000,000,000,000,000,000.00000]],
   [#table.cell(stroke: (bottom: 0.6pt))[\$0.00050]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
   [#table.cell(stroke: (bottom: 0.6pt))[-\$10.00000]],
   [#table.cell(stroke: (bottom: 0.6pt))[-\$1.35724]],
   [#table.cell(stroke: (bottom: 0.6pt))[-\$1.00000]],

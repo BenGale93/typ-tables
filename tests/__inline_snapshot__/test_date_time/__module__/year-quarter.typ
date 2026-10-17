@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[2023-Q4]],
   [#table.cell(stroke: (bottom: 0.6pt))[1999-Q3]],
   [#table.cell(stroke: (bottom: 0.6pt))[2024-Q1]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )
