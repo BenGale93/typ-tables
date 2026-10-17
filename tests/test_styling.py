@@ -230,6 +230,20 @@ class TestStyleBody:
 
         assert len(warnings) == 0
 
+    def test_fill_body_by_column_index(self, table_check, column_selector_data) -> None:
+        table = TypTable(column_selector_data).tab_style(
+            cell=style.CellStyle(fill="red"),
+            locator=locators.LocBody(columns=1),
+        )
+        result = table.to_typst()
+
+        assert "[#table.cell(fill: red, stroke: (bottom: 0.6pt))[North]]" in result
+        assert "[#table.cell(fill: red, stroke: (bottom: 0.6pt))[Apples]]" not in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
     def test_fill_body_based_on_list(self, table_check, basic_data) -> None:
         alignment: list[ttypes.Auto | ttypes.Alignment] = [
             "left",
@@ -438,6 +452,19 @@ class TestStyleColumnLabels:
         result = table.to_typst()
 
         assert result == external("uuid:a320710c-9285-46cb-9e07-2efeae2333f7.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_fill_column_label_by_index(self, table_check, column_selector_data) -> None:
+        table = TypTable(column_selector_data).tab_style(
+            text=style.TextStyle(fill="red"),
+            locator=locators.LocColumnLabels(columns=1),
+        )
+        result = table.to_typst()
+
+        assert "#text(fill: red)[region]" in result
 
         warnings = table_check(result)
 

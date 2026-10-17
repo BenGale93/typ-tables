@@ -1,7 +1,5 @@
 """Module for resolving which cells to apply formatters, stylers etc. to."""
 
-from contextlib import suppress
-
 import narwhals as nw
 from narwhals import selectors as ncs
 from narwhals.typing import IntoDataFrame
@@ -34,27 +32,20 @@ def resolve_columns(
     data: ttypes.Data[IntoDataFrame], selector: ColumnSelector | None = None
 ) -> list[str]:
     """Resolve the column names and positions based on the selection expression."""
+    source_columns = [col for col in data.columns if col != ROW_INDEX]
+
     if isinstance(selector, int):
         selector = [selector]
 
     if isinstance(selector, list):
-        new_selector = []
-        for s in selector:
-            if isinstance(s, int):
-                new_selector.append(data.columns[s])
-            else:
-                new_selector.append(s)
+        new_selector = [source_columns[s] if isinstance(s, int) else s for s in selector]
     elif selector is None:
         new_selector = nw.all()
     else:
         new_selector = selector
 
     sub_data = data.select(new_selector)
-
-    columns = sub_data.columns
-    with suppress(ValueError):
-        columns.remove(ROW_INDEX)
-    return columns
+    return [col for col in sub_data.columns if col != ROW_INDEX]
 
 
 def resolve_rows(

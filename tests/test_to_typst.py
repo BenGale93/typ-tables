@@ -206,6 +206,24 @@ class TestAlignColumns:
 
         assert len(warnings) == 0
 
+    def test_align_by_column_index(self, table_check, column_selector_data):
+        table = TypTable(column_selector_data).cols_align(align="right", columns=1)
+        result = table.to_typst()
+
+        assert "align: (auto, right, auto, auto, auto)" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_align_hidden_column_by_index(self, column_selector_data):
+        table = TypTable(column_selector_data).cols_hide("region").cols_align("right", columns=1)
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert align_by_column["region"] == "right"
+        assert "region" in table._df.columns
+
 
 class TestHideColumns:
     def test_hide_given_columns(self, table_check, basic_data):
@@ -217,6 +235,31 @@ class TestHideColumns:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+    def test_hide_by_column_index(self, table_check, column_selector_data):
+        table = TypTable(column_selector_data).cols_hide(columns=1)
+        result = table.to_typst()
+
+        assert "[region]" not in result
+        assert "[product]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_hide_first_column_by_index(self, column_selector_data):
+        table = TypTable(column_selector_data).cols_hide(columns=0)
+        result = table.to_typst()
+
+        assert "[product]" not in result
+        assert "[region]" in result
+
+    def test_hide_by_column_index_pandas(self, column_selector_data):
+        table = TypTable(column_selector_data.to_pandas()).cols_hide(columns=1)
+        result = table.to_typst()
+
+        assert "[region]" not in result
+        assert "[product]" in result
 
 
 class TestMoveColumns:
@@ -305,6 +348,16 @@ class TestMoveColumns:
         result = table.to_typst()
 
         self._assert_labels_in_order(result, ["string", "float", "int"])
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_by_column_index_matches_source_order(self, table_check, column_selector_data):
+        table = TypTable(column_selector_data).cols_move(columns=1, after="units")
+        result = table.to_typst()
+
+        self._assert_labels_in_order(result, ["product", "revenue", "margin", "units", "region"])
 
         warnings = table_check(result)
 

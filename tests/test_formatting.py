@@ -53,6 +53,21 @@ class TestSubMissing:
         assert len(warnings) == 0
 
 
+class TestColumnIndex:
+    def test_fmt_number_by_column_index(self, table_check, column_selector_data) -> None:
+        table = TypTable(column_selector_data).fmt_number(columns=2)
+        result = table.to_typst()
+
+        assert "1,200.50" in result
+        # Only the selected column is formatted.
+        assert "0.42" in result
+        assert "105" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 class TestFString:
     def test_add_text(self, table_check):
         df = pl.DataFrame(
