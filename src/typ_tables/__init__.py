@@ -228,7 +228,7 @@ class TypTable:
         self._typ_data.styles.append(styled_loc)
         return self
 
-    def tab_spanner(  # noqa: PLR0913
+    def tab_spanner(  # noqa: PLR0913, PLR0917
         self,
         label: str | Typst,
         columns: ColumnSelector | None = None,

@@ -13,6 +13,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering :: Visualization",
 ]
 keywords = ["tables", "Typst"]
@@ -28,23 +29,23 @@ dev = [
   { include-group = "typing" },
 ]
 docs = [
-  "mkdocstrings>=1.0.4",
-  "mkdocstrings-python>=2.0.3",
+  "mkdocstrings>=1.0.7",
+  "mkdocstrings-python>=2.0.9",
   "pillow>=12.2.0",
-  "zensical>=0.0.38",
+  "zensical>=0.0.71",
 ]
-lint = ["ruff==0.15.6"]
+lint = ["ruff==0.17.0"]
 test = [
-  "pytest>=9.0.3",
-  "pytest-randomly>=4.0.1",
-  "pytest-cov>=7.0.0",
-  "inline-snapshot>=0.32.5",
-  "polars>=1.39.3",
-  "typst>=0.14.8",
-  "pandas>=3.0.0",
-  "pyarrow>=23.0.1",
+  "pytest>=9.1.1",
+  "pytest-randomly>=5.0.0",
+  "pytest-cov>=7.1.0",
+  "inline-snapshot>=0.36.1",
+  "polars>=2.0.0",
+  "typst>=0.15.0",
+  "pandas>=3.0.6",
+  "pyarrow>=26.0.0",
 ]
-typing = ["pyrefly>=1.0.0"]
+typing = ["pyrefly>=1.4.0"]
 typing-test = [{ include-group = "test" }, { include-group = "typing" }]
 
 [build-system]
@@ -66,7 +67,7 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "ISC001", "ANN401", "SLF001", "DTZ"]
+ignore = ["COM812", "ISC001", "ANN401", "SLF001", "DTZ", "CPY001"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore all directories named `tests`.

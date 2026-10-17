@@ -8,12 +8,9 @@ from narwhals import selectors as ncs
 
 from typ_tables import TypTable, locators, style
 
-table = (
-    TypTable(df)
-    .tab_style(
-        locator=locators.LocBody(columns=ncs.numeric()),
-        cell=style.CellStyle(align="right"),
-    )
+table = TypTable(df).tab_style(
+    locator=locators.LocBody(columns=ncs.numeric()),
+    cell=style.CellStyle(align="right"),
 )
 ```
 
