@@ -1,5 +1,10 @@
 # typ-tables
 
+[![CI](https://github.com/BenGale93/typ-tables/actions/workflows/ci.yml/badge.svg)](https://github.com/BenGale93/typ-tables/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/typ-tables)](https://pypi.org/project/typ-tables/)
+[![Python versions](https://img.shields.io/pypi/pyversions/typ-tables)](https://pypi.org/project/typ-tables/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/BenGale93/typ-tables/blob/master/LICENSE)
+
 Inspired by great-tables, a way to turn DataFrames into Typst tables.
 
 To install, run `uv add typ-tables`

@@ -21,6 +21,7 @@ keywords = ["tables", "Typst"]
 [project.urls]
 homepage = "https://github.com/BenGale93/typ-tables"
 documentation = "https://bengale93.github.io/typ-tables/"
+changelog = "https://github.com/BenGale93/typ-tables/blob/master/CHANGELOG.md"
 
 [dependency-groups]
 dev = [

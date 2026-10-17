@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* Added support for Python 3.15.
+* Updated development tooling and dependencies.
 * Missing values (nulls) now render as empty cells instead of the literal text
   `None`, matching the `sub_missing` default. `sub_missing` can still substitute
   custom text.
