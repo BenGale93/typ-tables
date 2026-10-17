@@ -52,6 +52,23 @@ class TestSubMissing:
 
         assert len(warnings) == 0
 
+    def test_to_typst_string_containing_nan_is_not_replaced(self, table_check) -> None:
+        # `"financial"` and `"banana"` contain `"nan"` as a substring but are not missing.
+        df = pl.DataFrame({"s": ["financial", "banana", "nan", "hello"]})
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).sub_missing(columns="s", missing_text="<MISSING>")
+        result = table.to_typst()
+
+        assert "[financial]" in result
+        assert "[banana]" in result
+        assert "[hello]" in result
+
+        assert result.count(r"[\<MISSING\>]") == 1
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
 
 class TestColumnIndex:
     def test_fmt_number_by_column_index(self, table_check, column_selector_data) -> None:

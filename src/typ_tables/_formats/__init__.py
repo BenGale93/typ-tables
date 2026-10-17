@@ -76,7 +76,7 @@ class SubMissing:
             if data.select(nw.col(col)).schema[col].is_numeric():
                 cond = nw.col(col).is_null() | nw.col(col).is_nan()
             else:
-                cond = nw.col(col).is_null() | (nw.col(col).str.contains("nan"))
+                cond = nw.col(col).is_null() | nw.col(col).is_in(["nan", formatted("nan")])
 
             when = _create_when(col, rows, nw.lit(self.missing_text), cond)
             whens.append(when)

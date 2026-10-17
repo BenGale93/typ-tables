@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   internal `__row_index` column no longer shifts positions. `columns=0` selects
   the first source column, negative indices still select from the end, and every
   method agrees with `cols_move`.
+* `sub_missing` now only substitutes the exact `"nan"` token in string columns
+  instead of any value containing `"nan"` as a substring (e.g. `"financial"` or
+  `"banana"`). Formatted `NaN` values are still replaced.
 
 ## 0.3.1 - 2026-06-16
 
