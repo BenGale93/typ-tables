@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<typst>`/`</typst>` markers no longer raise `ValueError`, and multiple
   formatted regions in a single value are all preserved instead of only the
   first.
+* `cols_align` no longer emits the row-group warning when aligning other columns.
+  The warning now only fires when the row-group column is selected explicitly,
+  and the default selection skips it.
 
 ## 0.3.1 - 2026-06-16
 

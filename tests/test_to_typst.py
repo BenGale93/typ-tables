@@ -1,3 +1,5 @@
+import warnings
+
 import narwhals as nw
 import polars as pl
 import pytest
@@ -205,6 +207,40 @@ class TestAlignColumns:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+    def test_align_non_group_column_does_not_warn(self, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            table = table.cols_align("right", columns="count")
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert align_by_column["count"] == "right"
+        assert align_by_column["group"] == "auto"
+
+    def test_align_default_columns_does_not_warn(self, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            table = table.cols_align("right")
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert align_by_column["fruit"] == "right"
+        assert align_by_column["count"] == "right"
+        assert align_by_column["group"] == "auto"
+
+    def test_align_default_columns_without_group_column(self, basic_data):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            table = TypTable(basic_data).cols_align("right")
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert set(align_by_column.values()) == {"right"}
 
     def test_align_by_column_index(self, table_check, column_selector_data):
         table = TypTable(column_selector_data).cols_align(align="right", columns=1)

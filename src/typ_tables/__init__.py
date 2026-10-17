@@ -1044,12 +1044,18 @@ class TypTable:
 
         Args:
             align: Target alignment value.
-            columns: Optional column selector; defaults to all columns.
+            columns: Optional column selector; defaults to all alignable columns.
+                The row-group column cannot be aligned, so it is excluded from the
+                default selection (selecting it explicitly warns).
 
         Returns:
             The current table instance for chaining.
         """
         columns_to_align = resolve_columns(self._df, columns)
+        if columns is None:
+            group_col = self._typ_data.boxhead.get_group_column_name()
+            if group_col is not None:
+                columns_to_align = [col for col in columns_to_align if col != group_col]
         self._typ_data.boxhead.set_cols_align(columns_to_align, align)
         return self
 
