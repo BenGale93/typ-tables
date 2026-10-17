@@ -245,8 +245,8 @@ class TextStyle:
         """Resolve the text style into a list of text styles for each cell in a column."""
         resolved_fields = _resolve_style_to_list_of_styles(self, data)
         return [
-            TextStyleForCell(**dict(zip(resolved_fields, t, strict=True)))
-            for t in zip(*resolved_fields.values(), strict=True)
+            TextStyleForCell(**dict(zip(resolved_fields, value, strict=True)))
+            for value in zip(*resolved_fields.values(), strict=True)
         ]
 
     def get_single(self) -> TextStyleForCell:
@@ -321,8 +321,8 @@ class CellStyle:
         """Resolve the cell style into a list of cell styles for each cell in a column."""
         resolved_fields = _resolve_style_to_list_of_styles(self, data)
         return [
-            CellStyleForCell(**dict(zip(resolved_fields, t, strict=True)))
-            for t in zip(*resolved_fields.values(), strict=True)
+            CellStyleForCell(**dict(zip(resolved_fields, value, strict=True)))
+            for value in zip(*resolved_fields.values(), strict=True)
         ]
 
     def get_single(self) -> CellStyleForCell:
