@@ -24,6 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Check the changelog is ready
+        run: |
+          if ! grep -q "^## ${GITHUB_REF_NAME} " CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## ${GITHUB_REF_NAME}' section. Run 'just release ${GITHUB_REF_NAME}' before tagging."
+            exit 1
+          fi
+
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
