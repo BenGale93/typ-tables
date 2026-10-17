@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `sub_missing` now only substitutes the exact `"nan"` token in string columns
   instead of any value containing `"nan"` as a substring (e.g. `"financial"` or
   `"banana"`). Formatted `NaN` values are still replaced.
+* Column-label styles are now resolved against the source data, so dtype-based
+  selectors (for example `ncs.numeric()`) keep matching columns after a formatter
+  such as `fmt_number` has converted them to strings.
 * `fmt_currency(use_subunits=False)` now drops the subunits and rounds to whole
   currency units instead of being silently ignored.
 * `fmt_date`/`fmt_datetime` with `date_style="year_quarter"` now render the

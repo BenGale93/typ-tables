@@ -54,7 +54,7 @@ def _create_table_string(original_data: ttypes.Data[IntoDataFrame], typ: TypData
         stroke=typ.stroke,
         alignment=typ.alignment(),
         inset=typ.inset,
-        headers=typ.header(data),
+        headers=typ.header(original_data),
         footer=typ.footer(),
         body=typ.body(data, original_data),
     )

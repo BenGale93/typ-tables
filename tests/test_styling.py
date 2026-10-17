@@ -470,6 +470,27 @@ class TestStyleColumnLabels:
 
         assert len(warnings) == 0
 
+    def test_fill_column_label_dtype_selector_after_formatting(self, table_check) -> None:
+        df = pl.DataFrame({"n": [1.0, 2.0], "s": ["a", "b"]})
+
+        table = (
+            # pyrefly: ignore [bad-argument-type]
+            TypTable(df)
+            .fmt_number(columns="n")
+            .tab_style(
+                text=style.TextStyle(fill="red"),
+                locator=locators.LocColumnLabels(columns=ncs.numeric()),
+            )
+        )
+        result = table.to_typst()
+
+        assert "#text(fill: red)[n]" in result
+        assert "#text(fill: red)[s]" not in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
 
 class TestStyleStubhead:
     def test_fill_stub_head(self, table_check, group_data) -> None:
