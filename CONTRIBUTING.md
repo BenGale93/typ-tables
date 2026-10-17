@@ -8,3 +8,5 @@ first. Then, when you write your code, make sure you:
 * Add useful tests that also keep the package at 100% coverage;
 * Add a changelog entry; and
 * Update or add to the documentation.
+
+Run `just check` to run the linting, type checking, and tests in one go.

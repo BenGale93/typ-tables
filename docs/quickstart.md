@@ -154,15 +154,12 @@ import narwhals as nw
 from typ_tables import TypTable, locators, style
 
 
-table = (
-    TypTable(df, rowname_col="product")
-    .tab_style(
-        locator=locators.LocBody(
-            columns="revenue",
-            rows=nw.col("region") == "North",
-        ),
-        cell=style.CellStyle(fill="rgb(240, 248, 255)"),
-    )
+table = TypTable(df, rowname_col="product").tab_style(
+    locator=locators.LocBody(
+        columns="revenue",
+        rows=nw.col("region") == "North",
+    ),
+    cell=style.CellStyle(fill="rgb(240, 248, 255)"),
 )
 ```
 
@@ -192,10 +189,5 @@ typ-tables' defaults, call `clear_defaults()` before applying your own table
 options and style rules.
 
 ```python
-table = (
-    TypTable(df)
-    .clear_defaults()
-    .set_table_stroke("none")
-    .set_table_inset("3pt")
-)
+table = TypTable(df).clear_defaults().set_table_stroke("none").set_table_inset("3pt")
 ```
