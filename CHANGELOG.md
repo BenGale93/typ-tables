@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   currency units instead of being silently ignored.
 * `fmt_date`/`fmt_datetime` with `date_style="year_quarter"` now render the
   quarter (for example `2026-Q4`) instead of a literal `%q`.
+* `fmt_number(decimals=0, drop_trailing_zeros=True)` no longer strips zeros from
+  the integer part, so `100` renders as `100` rather than `1` and `1000` as
+  `1,000` rather than `1,`.
 
 ## 0.3.1 - 2026-06-16
 

@@ -183,9 +183,12 @@ def format_number_fixed_decimals(  # noqa: PLR0913
     # Combine the integer and decimal parts
     result = formatted_integer + formatted_decimal
 
-    # Drop any trailing zeros if option is taken (this purposefully doesn't apply to numbers
-    # formatted to a specific number of significant digits)
-    if drop_trailing_zeros:
+    # Drop any trailing zeros from the fractional part only if the option is taken.
+    # Guarding on a non-empty decimal part prevents the strip from eating zeros that
+    # belong to the integer part when `decimals == 0` (e.g. `1000` -> `1,`). This
+    # purposefully doesn't apply to numbers formatted to a specific number of
+    # significant digits.
+    if drop_trailing_zeros and decimal_part:
         result = result.rstrip("0")
 
     return result

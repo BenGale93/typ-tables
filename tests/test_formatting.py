@@ -4,6 +4,7 @@ from inline_snapshot import external
 from narwhals import selectors as ncs
 
 from typ_tables import TypTable
+from typ_tables._formats._numeric import format_number_fixed_decimals
 
 
 class TestSubMissing:
@@ -132,6 +133,10 @@ class TestFString:
         ({"n_sigfig": 3}, external("uuid:three-sigfig.typ")),
         ({"drop_trailing_zeros": True}, external("uuid:drop-trailing-zeros.typ")),
         (
+            {"decimals": 0, "drop_trailing_zeros": True},
+            external("uuid:decimals-0-drop-trailing-zeros.typ"),
+        ),
+        (
             {"drop_trailing_dec_mark": False, "decimals": 0},
             external("uuid:drop-trailing-dec-mark.typ"),
         ),
@@ -151,6 +156,7 @@ class TestFString:
         "five-decimals",
         "three-sigfig",
         "drop-trailing-zeros",
+        "decimals-0-drop-trailing-zeros",
         "drop-trailing-dec-mark",
         "no-separators",
         "accounting",
@@ -212,6 +218,42 @@ def test_numeric(table_check, args, result):
     warnings = table_check(typst_table)
 
     assert len(warnings) == 0
+
+
+class TestNumericHelpers:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (0.0, "0"),
+            (10.0, "10"),
+            (100.0, "100"),
+            (1000.0, "1,000"),
+            (-100.0, "-100"),
+            (-1000.0, "-1,000"),
+        ],
+    )
+    def test_fixed_decimals_zero_with_drop_trailing_zeros_keeps_integer_zeros(
+        self, value, expected
+    ):
+        result = format_number_fixed_decimals(value, decimals=0, drop_trailing_zeros=True)
+
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        ("value", "decimals", "expected"),
+        [
+            (1.20, 2, "1.2"),
+            (1.00, 2, "1."),
+            (100.00, 2, "100."),
+            (1000.50, 2, "1,000.5"),
+        ],
+    )
+    def test_fixed_decimals_drop_trailing_zeros_only_strips_fraction(
+        self, value, decimals, expected
+    ):
+        result = format_number_fixed_decimals(value, decimals=decimals, drop_trailing_zeros=True)
+
+        assert result == expected
 
 
 def test_numeric_string_column(table_check):
