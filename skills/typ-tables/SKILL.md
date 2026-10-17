@@ -87,7 +87,9 @@ Prefer the specialized `fmt_*` method for the data type:
 - `fmt_scientific()`, `fmt_engineering()`, `fmt_bytes()`
 - `fmt_date()`, `fmt_time()`, `fmt_datetime()`
 - `fmt_tf()` for booleans
-- `fmt(f_string="{x}")` for simple custom f-string formatting
+- `fmt(f_string="{}")` for simple custom f-string formatting; the format string
+  uses Narwhals/Polars `{}` placeholders (unlike the `pattern="{x}"` argument of
+  the `fmt_*` methods)
 - `sub_missing(missing_text="")` for missing-value replacement
 
 Apply formatting before or after labels and styles as convenient; the builder
