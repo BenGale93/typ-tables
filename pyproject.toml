@@ -47,8 +47,6 @@ test = [
 typing = ["pyrefly>=1.0.0"]
 typing-test = [{ include-group = "test" }, { include-group = "typing" }]
 
-[project.scripts]
-
 [build-system]
 requires = ["pdm-backend==2.4.7"]
 build-backend = "pdm.backend"
