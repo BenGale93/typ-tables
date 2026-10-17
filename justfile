@@ -56,6 +56,9 @@ check: lint_check type_check test
     rm -rf dist site htmlcov .coverage .pytest_cache .ruff_cache
 
 release version:
+    uv run scripts/bump_changelog.py {{ version }}
+    just sync_changelog
+    git add CHANGELOG.md docs/changelog.md
+    git commit -m "Update changelog for {{ version }}"
     git tag {{ version }}
-    uv build --clear
-    uv publish --token $UV_PUBLISH_TOKEN
+    git push origin HEAD {{ version }}
