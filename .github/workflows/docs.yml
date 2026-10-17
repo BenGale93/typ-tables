@@ -7,6 +7,9 @@ permissions:
   contents: read
   pages: write
   id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
 jobs:
   deploy:
     environment:
@@ -23,8 +26,8 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           # Install a specific version of uv.
-          version: "0.11.8"
-      - run: uv sync --group docs
+          version: "0.13.1"
+      - run: uv sync --locked --group docs
       - run: cp CHANGELOG.md docs/changelog.md
       - run: uv run --no-sync zensical build --clean
       - uses: actions/upload-pages-artifact@v5
