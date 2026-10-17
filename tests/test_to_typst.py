@@ -507,6 +507,32 @@ class TestEdgeCases:
 
         assert len(warnings) == 0
 
+    def test_body_cell_with_unmatched_sentinel_marker_is_escaped(self, table_check):
+        df = pl.DataFrame({"value": ["x <typst> y"]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df)
+        result = table.to_typst()
+
+        assert r"[x \<typst\> y]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_pattern_using_placeholder_twice_renders_both_values(self, table_check):
+        df = pl.DataFrame({"value": [1.5]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).fmt_number(columns="value", pattern="{x} and {x}")
+        result = table.to_typst()
+
+        assert "[1.50 and 1.50]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
 
 class TestTabOptions:
     def test_hide_column_labels(self, table_check, basic_data):

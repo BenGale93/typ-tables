@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `fmt_number(decimals=0, drop_trailing_zeros=True)` no longer strips zeros from
   the integer part, so `100` renders as `100` rather than `1` and `1000` as
   `1,000` rather than `1,`.
+* Escaping of formatted values is now robust: values containing unbalanced
+  `<typst>`/`</typst>` markers no longer raise `ValueError`, and multiple
+  formatted regions in a single value are all preserved instead of only the
+  first.
 
 ## 0.3.1 - 2026-06-16
 
