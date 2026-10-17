@@ -1251,6 +1251,9 @@ class TypTable:
 
         Args:
             column_labels_hidden: An option to hide the column labels.
+
+        Returns:
+            The current table instance for chaining.
         """
         options = locals()
         del options["self"]
