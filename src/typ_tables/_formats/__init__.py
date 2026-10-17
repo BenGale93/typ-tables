@@ -453,7 +453,7 @@ class Currency(CellFormatter):
                 currency_symbol = r"\$"
 
             sub_config = NumericSubConfig(
-                decimals=self.decimals,
+                decimals=self.decimals if self.use_subunits else 0,
                 n_sigfig=None,
                 drop_trailing_zeros=False,
                 drop_trailing_dec_mark=self.drop_trailing_dec_mark,

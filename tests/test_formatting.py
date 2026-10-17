@@ -582,6 +582,10 @@ def test_engineering(table_check, args, result):
             {"currency": "USD", "force_sign": True, "placement": "right"},
             external("uuid:force-sign-and-currency.typ"),
         ),
+        (
+            {"currency": "USD", "use_subunits": False},
+            external("uuid:use-subunits-false.typ"),
+        ),
     ],
     ids=[
         "default-usd",
@@ -599,6 +603,7 @@ def test_engineering(table_check, args, result):
         "placement-right",
         "include-space",
         "force-sign-and-currency",
+        "use-subunits-false",
     ],
 )
 def test_currency(table_check, args, result):
@@ -643,6 +648,25 @@ def test_currency_bad_code():
 
     with pytest.raises(ValueError, match=r"'TST' is not a recognised"):
         table.to_typst()
+
+
+def test_currency_use_subunits_false(table_check):
+    df = pl.DataFrame({"float": [1234.56, 0.6, 2.5, 1e20, None]})
+
+    # pyrefly: ignore [bad-argument-type]
+    table = TypTable(df).fmt_currency(currency="USD", use_subunits=False)
+    typst_table = table.to_typst()
+
+    # Subunits are dropped and the value is rounded to a whole number.
+    assert r"[\$1,235]" in typst_table
+    assert r"[\$1]" in typst_table
+    assert r"[\$2]" in typst_table
+    assert r"[\$100,000,000,000,000,000,000]" in typst_table
+    assert "1,234.56" not in typst_table
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
 
 
 @pytest.mark.parametrize(
