@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `cols_align` no longer emits the row-group warning when aligning other columns.
   The warning now only fires when the row-group column is selected explicitly,
   and the default selection skips it.
+* Row selectors now accept negative indices (`-1` selects the last row, matching
+  column selection) and raise a clear `IndexError` for out-of-range indices
+  instead of silently doing nothing.
 
 ## 0.3.1 - 2026-06-16
 

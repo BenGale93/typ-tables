@@ -25,6 +25,10 @@ A RowSelector can be either:
         that filters a DataFrame.
     - A list of row indices.
     - A row index.
+
+Row indices are zero-based positions into the source data. Negative indices
+select from the end (`-1` is the last row), matching column selection. An index
+outside the valid range raises `IndexError`.
 """
 
 
@@ -53,9 +57,17 @@ def resolve_rows(
 ) -> list[int]:
     """Resolve the rows the selector expression is selecting."""
     if isinstance(selector, int):
-        return [selector]
+        selector = [selector]
     if isinstance(selector, list):
-        return selector
+        n_rows = len(data)
+        resolved_rows = []
+        for index in selector:
+            position = index + n_rows if index < 0 else index
+            if not 0 <= position < n_rows:
+                msg = f"Row index {index} is out of range: the table has {n_rows} rows."
+                raise IndexError(msg)
+            resolved_rows.append(position)
+        return resolved_rows
     if selector is None:
         return data.with_row_index()["index"].to_list()
     return data.with_row_index().filter(selector)["index"].to_list()

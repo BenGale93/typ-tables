@@ -86,6 +86,21 @@ class TestColumnIndex:
         assert len(warnings) == 0
 
 
+class TestRowIndex:
+    def test_fmt_number_by_negative_row_index(self, table_check, column_selector_data) -> None:
+        table = TypTable(column_selector_data).fmt_number(columns="revenue", rows=-1, decimals=0)
+        result = table.to_typst()
+
+        # Only the last row's `revenue` is formatted.
+        assert "[1,432]" in result
+        assert "[1200.5]" in result
+        assert "[950.0]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
 class TestFString:
     def test_add_text(self, table_check):
         df = pl.DataFrame(

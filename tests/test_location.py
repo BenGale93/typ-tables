@@ -140,3 +140,18 @@ class TestResolveRows:
 
     def test_resolve_rows_list_int(self, row_data):
         assert _location.resolve_rows(row_data, [1, 3]) == [1, 3]
+
+    def test_resolve_rows_negative_int(self, row_data):
+        assert _location.resolve_rows(row_data, -1) == [4]
+        assert _location.resolve_rows(row_data, -5) == [0]
+
+    def test_resolve_rows_negative_int_list(self, row_data):
+        assert _location.resolve_rows(row_data, [0, -1]) == [0, 4]
+
+    def test_resolve_rows_positive_out_of_range(self, row_data):
+        with pytest.raises(IndexError):
+            _location.resolve_rows(row_data, 5)
+
+    def test_resolve_rows_negative_out_of_range(self, row_data):
+        with pytest.raises(IndexError):
+            _location.resolve_rows(row_data, -6)
