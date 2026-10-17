@@ -64,6 +64,33 @@ def test_date(table_check, args, result):
     assert len(warnings) == 0
 
 
+def test_date_year_quarter(table_check):
+    df = pl.DataFrame(
+        {
+            "date": [
+                date(2000, 2, 29),
+                date(2023, 12, 25),
+                date(1999, 7, 4),
+                date(2024, 1, 1),
+            ],
+        }
+    )
+
+    # pyrefly: ignore [bad-argument-type]
+    table = TypTable(df).fmt_date(date_style="year_quarter")
+    typst_table = table.to_typst()
+
+    assert "[2000-Q1]" in typst_table
+    assert "[2023-Q4]" in typst_table
+    assert "[1999-Q3]" in typst_table
+    assert "[2024-Q1]" in typst_table
+    assert "%q" not in typst_table
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
+
+
 def test_date_from_string(table_check):
     df = pl.DataFrame(
         {
@@ -189,6 +216,10 @@ def test_time_invalid_object():
         ({"date_style": "wd_m_day_year", "time_style": "h_m_p"}, external("uuid:wdmdy-hmp.typ")),
         ({"date_style": "day_month_year", "time_style": "h_p"}, external("uuid:dmy-hp.typ")),
         ({"date_style": "year", "time_style": "iso"}, external("uuid:year-iso.typ")),
+        (
+            {"date_style": "year_quarter", "time_style": "iso"},
+            external("uuid:year-quarter-datetime.typ"),
+        ),
         ({"sep": " - "}, external("uuid:sep-dash.typ")),
         ({"sep": "T"}, external("uuid:sep-t.typ")),
         ({"pattern": "Datetime: {x}"}, external("uuid:datetime-pattern.typ")),
@@ -200,6 +231,7 @@ def test_time_invalid_object():
         "wdmdy-hmp",
         "dmy-hp",
         "year-iso",
+        "year-quarter",
         "sep-dash",
         "sep-t",
         "pattern",
@@ -223,6 +255,33 @@ def test_datetime(table_check, args, result):
     typst_table = table.to_typst()
 
     assert typst_table == result
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
+
+
+def test_datetime_year_quarter(table_check):
+    df = pl.DataFrame(
+        {
+            "datetime": [
+                datetime(2000, 2, 29, 14, 35, 0),
+                datetime(2023, 12, 25, 9, 0, 0),
+                datetime(1999, 7, 4, 23, 59, 59),
+                datetime(2024, 1, 1, 0, 0, 0),
+            ],
+        }
+    )
+
+    # pyrefly: ignore [bad-argument-type]
+    table = TypTable(df).fmt_datetime(date_style="year_quarter")
+    typst_table = table.to_typst()
+
+    assert "[2000-Q1 14:35:00]" in typst_table
+    assert "[2023-Q4 09:00:00]" in typst_table
+    assert "[1999-Q3 23:59:59]" in typst_table
+    assert "[2024-Q1 00:00:00]" in typst_table
+    assert "%q" not in typst_table
 
     warnings = table_check(typst_table)
 

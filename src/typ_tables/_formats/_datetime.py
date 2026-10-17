@@ -1,5 +1,7 @@
 """Datetime formatting helper functions."""
 
+from datetime import date
+
 from typ_tables import ttypes
 
 
@@ -22,7 +24,6 @@ def get_date_format(date_style: ttypes.DateStyle) -> str:
         "year.mn.day": "%Y/%m/%d",
         "y.mn.day": "%y/%m/%d",
         "year_week": "%Y-W%W",
-        "year_quarter": "%Y-Q%q",
     }
 
     if date_style not in date_formats:
@@ -30,6 +31,20 @@ def get_date_format(date_style: ttypes.DateStyle) -> str:
         raise ValueError(msg)
 
     return date_formats[date_style]
+
+
+def format_date(value: date, date_style: ttypes.DateStyle) -> str:
+    """Format the date portion of a value using the given date style.
+
+    `strftime` has no portable quarter directive (`%q` is not a Python format
+    code), so the `year_quarter` style is computed explicitly rather than via
+    `get_date_format`.
+    """
+    if date_style == "year_quarter":
+        quarter = (value.month - 1) // 3 + 1
+        return f"{value.year}-Q{quarter}"
+
+    return value.strftime(get_date_format(date_style))
 
 
 def get_time_format(time_style: ttypes.TimeStyle) -> str:

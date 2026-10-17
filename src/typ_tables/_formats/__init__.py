@@ -511,11 +511,9 @@ class Date(CellFormatter):
             msg = f"Invalid date object: '{value}'. The object must be a date object."
             raise ValueError(msg)  # noqa: TRY004
 
-        # Get the date format string based on the `date_style` value
-        date_format_str = _datetime.get_date_format(self.date_style)
-
-        # Format the date object to a string using strftime
-        value_formatted = value.strftime(date_format_str)
+        # Format the date object using the `date_style`; this also handles the
+        # `year_quarter` style, which `strftime` cannot express
+        value_formatted = _datetime.format_date(value, self.date_style)
 
         return _apply_pattern(value_formatted, self.pattern)
 
@@ -590,17 +588,17 @@ class Datetime(CellFormatter):
         if self.format_str is not None:
             value_formatted = value.strftime(self.format_str)
         else:
-            # Get the date format string based on the `date_style` value
-            date_format_str = _datetime.get_date_format(self.date_style)
+            # Format the date component; this also handles the `year_quarter`
+            # style, which `strftime` cannot express
+            date_formatted = _datetime.format_date(value, self.date_style)
 
             # Get the time format string based on the `time_style` value
             time_format_str = _datetime.get_time_format(self.time_style)
 
-            # From the date and time format strings, create a datetime format string
-            datetime_format_str = f"{date_format_str}{self.sep}{time_format_str}"
+            # Format the time component and join it to the date component
+            time_formatted = value.strftime(time_format_str)
 
-            # Format the datetime object to a string using strftime
-            value_formatted = value.strftime(datetime_format_str)
+            value_formatted = f"{date_formatted}{self.sep}{time_formatted}"
 
         return _apply_pattern(value_formatted, self.pattern)
 

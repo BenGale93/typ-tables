@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `"banana"`). Formatted `NaN` values are still replaced.
 * `fmt_currency(use_subunits=False)` now drops the subunits and rounds to whole
   currency units instead of being silently ignored.
+* `fmt_date`/`fmt_datetime` with `date_style="year_quarter"` now render the
+  quarter (for example `2026-Q4`) instead of a literal `%q`.
 
 ## 0.3.1 - 2026-06-16
 
