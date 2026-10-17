@@ -61,3 +61,17 @@ def group_data() -> pl.DataFrame:
             "count": [10, 73, 3, 477],
         }
     )
+
+
+@pytest.fixture
+def column_selector_data() -> pl.DataFrame:
+    """Data with a known column order, for testing integer column selectors."""
+    return pl.DataFrame(
+        {
+            "product": ["Apples", "Bananas", "Pears"],
+            "region": ["North", "South", "North"],
+            "revenue": [1200.5, 950.0, 1432.25],
+            "margin": [0.42, 0.38, 0.45],
+            "units": [105, 98, 121],
+        }
+    )

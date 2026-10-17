@@ -1,3 +1,5 @@
+import warnings
+
 import narwhals as nw
 import polars as pl
 import pytest
@@ -63,6 +65,34 @@ class TestBasic:
         result = table.to_typst()
 
         assert result == external("uuid:f944eeb4-ed3d-44aa-ad20-0e29e69356cc.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_null_values_render_empty(self, table_check) -> None:
+        df = pl.DataFrame({"a": [1, None, 3], "s": ["x", None, "z"]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df)
+        result = table.to_typst()
+
+        assert "[None]" not in result
+        assert result.count("[#table.cell(stroke: (bottom: 0.6pt))[]]") == 2
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_null_in_unformatted_rows_render_empty(self, table_check) -> None:
+        df = pl.DataFrame({"a": [1.0, None, 3.0]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).fmt_number(columns="a", rows=[0], decimals=1)
+        result = table.to_typst()
+
+        assert "[None]" not in result
+        assert result.count("[#table.cell(stroke: (bottom: 0.6pt))[]]") == 1
 
         warnings = table_check(result)
 
@@ -206,6 +236,58 @@ class TestAlignColumns:
 
         assert len(warnings) == 0
 
+    def test_align_non_group_column_does_not_warn(self, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            table = table.cols_align("right", columns="count")
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert align_by_column["count"] == "right"
+        assert align_by_column["group"] == "auto"
+
+    def test_align_default_columns_does_not_warn(self, group_data):
+        table = TypTable(group_data, rowname_col="fruit", groupname_col="group")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            table = table.cols_align("right")
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert align_by_column["fruit"] == "right"
+        assert align_by_column["count"] == "right"
+        assert align_by_column["group"] == "auto"
+
+    def test_align_default_columns_without_group_column(self, basic_data):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            table = TypTable(basic_data).cols_align("right")
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert set(align_by_column.values()) == {"right"}
+
+    def test_align_by_column_index(self, table_check, column_selector_data):
+        table = TypTable(column_selector_data).cols_align(align="right", columns=1)
+        result = table.to_typst()
+
+        assert "align: (auto, right, auto, auto, auto)" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_align_hidden_column_by_index(self, column_selector_data):
+        table = TypTable(column_selector_data).cols_hide("region").cols_align("right", columns=1)
+
+        align_by_column = {col.var: col.column_align for col in table._typ_data.boxhead}
+
+        assert align_by_column["region"] == "right"
+        assert "region" in table._df.columns
+
 
 class TestHideColumns:
     def test_hide_given_columns(self, table_check, basic_data):
@@ -217,6 +299,31 @@ class TestHideColumns:
         warnings = table_check(result)
 
         assert len(warnings) == 0
+
+    def test_hide_by_column_index(self, table_check, column_selector_data):
+        table = TypTable(column_selector_data).cols_hide(columns=1)
+        result = table.to_typst()
+
+        assert "[region]" not in result
+        assert "[product]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_hide_first_column_by_index(self, column_selector_data):
+        table = TypTable(column_selector_data).cols_hide(columns=0)
+        result = table.to_typst()
+
+        assert "[product]" not in result
+        assert "[region]" in result
+
+    def test_hide_by_column_index_pandas(self, column_selector_data):
+        table = TypTable(column_selector_data.to_pandas()).cols_hide(columns=1)
+        result = table.to_typst()
+
+        assert "[region]" not in result
+        assert "[product]" in result
 
 
 class TestMoveColumns:
@@ -305,6 +412,16 @@ class TestMoveColumns:
         result = table.to_typst()
 
         self._assert_labels_in_order(result, ["string", "float", "int"])
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_move_by_column_index_matches_source_order(self, table_check, column_selector_data):
+        table = TypTable(column_selector_data).cols_move(columns=1, after="units")
+        result = table.to_typst()
+
+        self._assert_labels_in_order(result, ["product", "revenue", "margin", "units", "region"])
 
         warnings = table_check(result)
 
@@ -449,6 +566,32 @@ class TestEdgeCases:
         result = table.to_typst()
 
         assert result == external("uuid:ebeb174f-9dfd-4dcf-800d-71d00af6e936.typ")
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_body_cell_with_unmatched_sentinel_marker_is_escaped(self, table_check):
+        df = pl.DataFrame({"value": ["x <typst> y"]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df)
+        result = table.to_typst()
+
+        assert r"[x \<typst\> y]" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+    def test_pattern_using_placeholder_twice_renders_both_values(self, table_check):
+        df = pl.DataFrame({"value": [1.5]})
+
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).fmt_number(columns="value", pattern="{x} and {x}")
+        result = table.to_typst()
+
+        assert "[1.50 and 1.50]" in result
 
         warnings = table_check(result)
 

@@ -13,7 +13,7 @@
   [#table.cell(stroke: (bottom: 0.6pt))[1.1GB]],
   [#table.cell(stroke: (bottom: 0.6pt))[1TB]],
   [#table.cell(stroke: (bottom: 0.6pt))[1.1TB]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
   [#table.cell(stroke: (bottom: 0.6pt))[-100B]],
   [#table.cell(stroke: (bottom: 0.6pt))[-1kB]],
   [#table.cell(stroke: (bottom: 0.6pt))[-1MB]],

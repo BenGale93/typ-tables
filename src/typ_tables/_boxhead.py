@@ -56,14 +56,16 @@ class Boxhead(list[ColInfo]):
 
     def set_cols_align(self, col_names: t.Iterable[str], align: ttypes.Alignment) -> None:
         """Sets the alignment of the given columns."""
+        col_names = list(col_names)
         for col in self:
+            if col.var not in col_names:
+                continue
             if col.col_type == "row_group":
                 warnings.warn(
                     "Setting alignment on the row group column, this will do nothing.", stacklevel=2
                 )
                 continue
-            if col.var in col_names:
-                col.column_align = align
+            col.column_align = align
 
     def set_cols_label(self, col_labels: dict[str, str | _escape.Typst]) -> None:
         """Sets the labels of the columns using the given map."""

@@ -7,5 +7,5 @@
   [#table.cell(stroke: (bottom: 0.6pt))[Mon, Dec 25, 2023]],
   [#table.cell(stroke: (bottom: 0.6pt))[Sun, Jul 04, 1999]],
   [#table.cell(stroke: (bottom: 0.6pt))[Mon, Jan 01, 2024]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

@@ -17,6 +17,18 @@ def test_content_renders_raw_typst_without_escaping() -> None:
     assert content.render() == snapshot("#strong[Growth #1]")
 
 
+def test_content_renders_missing_value_as_empty_string() -> None:
+    content = Content(value=None)
+
+    assert content.render() == snapshot("")
+
+
+def test_cell_renders_missing_value_as_empty_cell() -> None:
+    cell = Cell(content=Content(value=None))
+
+    assert cell.render() == snapshot("[]")
+
+
 def test_content_renders_text_style_arguments() -> None:
     content = Content(
         value="1/2",

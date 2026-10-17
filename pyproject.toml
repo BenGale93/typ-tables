@@ -33,7 +33,7 @@ docs = [
   "pillow>=12.2.0",
   "zensical>=0.0.38",
 ]
-lint = ["ruff>=0.15.6"]
+lint = ["ruff==0.15.6"]
 test = [
   "pytest>=9.0.3",
   "pytest-randomly>=4.0.1",
@@ -46,8 +46,6 @@ test = [
 ]
 typing = ["pyrefly>=1.0.0"]
 typing-test = [{ include-group = "test" }, { include-group = "typing" }]
-
-[project.scripts]
 
 [build-system]
 requires = ["pdm-backend==2.4.7"]

@@ -1,7 +1,5 @@
 """Module for resolving which cells to apply formatters, stylers etc. to."""
 
-from contextlib import suppress
-
 import narwhals as nw
 from narwhals import selectors as ncs
 from narwhals.typing import IntoDataFrame
@@ -27,6 +25,10 @@ A RowSelector can be either:
         that filters a DataFrame.
     - A list of row indices.
     - A row index.
+
+Row indices are zero-based positions into the source data. Negative indices
+select from the end (`-1` is the last row), matching column selection. An index
+outside the valid range raises `IndexError`.
 """
 
 
@@ -34,27 +36,20 @@ def resolve_columns(
     data: ttypes.Data[IntoDataFrame], selector: ColumnSelector | None = None
 ) -> list[str]:
     """Resolve the column names and positions based on the selection expression."""
+    source_columns = [col for col in data.columns if col != ROW_INDEX]
+
     if isinstance(selector, int):
         selector = [selector]
 
     if isinstance(selector, list):
-        new_selector = []
-        for s in selector:
-            if isinstance(s, int):
-                new_selector.append(data.columns[s])
-            else:
-                new_selector.append(s)
+        new_selector = [source_columns[s] if isinstance(s, int) else s for s in selector]
     elif selector is None:
         new_selector = nw.all()
     else:
         new_selector = selector
 
     sub_data = data.select(new_selector)
-
-    columns = sub_data.columns
-    with suppress(ValueError):
-        columns.remove(ROW_INDEX)
-    return columns
+    return [col for col in sub_data.columns if col != ROW_INDEX]
 
 
 def resolve_rows(
@@ -62,9 +57,17 @@ def resolve_rows(
 ) -> list[int]:
     """Resolve the rows the selector expression is selecting."""
     if isinstance(selector, int):
-        return [selector]
+        selector = [selector]
     if isinstance(selector, list):
-        return selector
+        n_rows = len(data)
+        resolved_rows = []
+        for index in selector:
+            position = index + n_rows if index < 0 else index
+            if not 0 <= position < n_rows:
+                msg = f"Row index {index} is out of range: the table has {n_rows} rows."
+                raise IndexError(msg)
+            resolved_rows.append(position)
+        return resolved_rows
     if selector is None:
         return data.with_row_index()["index"].to_list()
     return data.with_row_index().filter(selector)["index"].to_list()

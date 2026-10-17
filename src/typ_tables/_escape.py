@@ -20,6 +20,12 @@ class Typst(str):
 START = "<typst>"
 END = "</typst>"
 
+# Formatters wrap already-rendered values in `<typst>...</typst>` sentinels so that
+# `escape_value` can pass them through as raw Typst. Only well-formed pairs are
+# treated as markup; anything else (including stray start/end markers) is escaped
+# like ordinary text.
+SENTINEL_PATTERN = re.compile(re.escape(START) + ".*?" + re.escape(END), re.DOTALL)
+
 
 def formatted(string: str) -> str:
     """Tag a string as formatted with typst."""
@@ -27,21 +33,25 @@ def formatted(string: str) -> str:
 
 
 def escape_value(value: object) -> Typst | str:
-    """Escape special characters."""
+    """Escape special characters.
+
+    Well-formed `<typst>...</typst>` sentinels (produced by `formatted`) are
+    preserved as raw Typst, while all surrounding text is escaped. Multiple
+    sentinel pairs in a single string are all preserved, and unmatched or
+    otherwise malformed sentinels are escaped as ordinary text instead of
+    raising an error.
+    """
     if not isinstance(value, str):
         return str(value)
     if isinstance(value, Typst):
         return value
-    if START in value:
-        start_index = value.index(START)
-        end_index = value.index(END) + len(END)
-        before = value[:start_index]
-        mid = value[start_index + len(START) : end_index - len(END)]
-        after = value[end_index:]
 
-        escaped_before = ESCAPE_PATTERN.sub(r"\\\1", before)
-        escaped_after = ESCAPE_PATTERN.sub(r"\\\1", after)
+    parts: list[str] = []
+    last = 0
+    for match in SENTINEL_PATTERN.finditer(value):
+        parts.append(ESCAPE_PATTERN.sub(r"\\\1", value[last : match.start()]))
+        parts.append(value[match.start() + len(START) : match.end() - len(END)])
+        last = match.end()
+    parts.append(ESCAPE_PATTERN.sub(r"\\\1", value[last:]))
 
-        return f"{escaped_before}{mid}{escaped_after}"
-
-    return ESCAPE_PATTERN.sub(r"\\\1", value)
+    return "".join(parts)

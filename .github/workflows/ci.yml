@@ -20,6 +20,7 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           args: check
+          version-file: "pyproject.toml"
 
   format:
     runs-on: ubuntu-latest
@@ -29,6 +30,7 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           args: format
+          version-file: "pyproject.toml"
 
   typing:
     runs-on: ubuntu-latest
@@ -54,8 +56,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        python: [ 3.11, 3.12, 3.13, 3.14 ]
+        os: [ubuntu-latest]
+        python: [3.11, 3.12, 3.13, 3.14]
 
     env:
       PYTHON: ${{ matrix.python }}

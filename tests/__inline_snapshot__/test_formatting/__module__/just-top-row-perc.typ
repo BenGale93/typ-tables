@@ -10,7 +10,7 @@
   [#table.cell(stroke: (bottom: 0.6pt))[10000000.0]],
   [#table.cell(stroke: (bottom: 0.6pt))[1e\+20]],
   [#table.cell(stroke: (bottom: 0.6pt))[0.0005009]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
   [#table.cell(stroke: (bottom: 0.6pt))[\-10.0000001]],
   [#table.cell(stroke: (bottom: 0.6pt))[\-1.3572354]],
   [#table.cell(stroke: (bottom: 0.6pt))[\-1.0]],

@@ -4,6 +4,7 @@ from inline_snapshot import external
 from narwhals import selectors as ncs
 
 from typ_tables import TypTable
+from typ_tables._formats._numeric import format_number_fixed_decimals
 
 
 class TestSubMissing:
@@ -49,6 +50,53 @@ class TestSubMissing:
         assert pandas_result == external("uuid:4e42ced7-d53a-44bc-b9e2-266b334abed2.typ")
 
         warnings = table_check(pandas_result)
+
+        assert len(warnings) == 0
+
+    def test_to_typst_string_containing_nan_is_not_replaced(self, table_check) -> None:
+        # `"financial"` and `"banana"` contain `"nan"` as a substring but are not missing.
+        df = pl.DataFrame({"s": ["financial", "banana", "nan", "hello"]})
+        # pyrefly: ignore [bad-argument-type]
+        table = TypTable(df).sub_missing(columns="s", missing_text="<MISSING>")
+        result = table.to_typst()
+
+        assert "[financial]" in result
+        assert "[banana]" in result
+        assert "[hello]" in result
+
+        assert result.count(r"[\<MISSING\>]") == 1
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
+class TestColumnIndex:
+    def test_fmt_number_by_column_index(self, table_check, column_selector_data) -> None:
+        table = TypTable(column_selector_data).fmt_number(columns=2)
+        result = table.to_typst()
+
+        assert "1,200.50" in result
+        # Only the selected column is formatted.
+        assert "0.42" in result
+        assert "105" in result
+
+        warnings = table_check(result)
+
+        assert len(warnings) == 0
+
+
+class TestRowIndex:
+    def test_fmt_number_by_negative_row_index(self, table_check, column_selector_data) -> None:
+        table = TypTable(column_selector_data).fmt_number(columns="revenue", rows=-1, decimals=0)
+        result = table.to_typst()
+
+        # Only the last row's `revenue` is formatted.
+        assert "[1,432]" in result
+        assert "[1200.5]" in result
+        assert "[950.0]" in result
+
+        warnings = table_check(result)
 
         assert len(warnings) == 0
 
@@ -100,6 +148,10 @@ class TestFString:
         ({"n_sigfig": 3}, external("uuid:three-sigfig.typ")),
         ({"drop_trailing_zeros": True}, external("uuid:drop-trailing-zeros.typ")),
         (
+            {"decimals": 0, "drop_trailing_zeros": True},
+            external("uuid:decimals-0-drop-trailing-zeros.typ"),
+        ),
+        (
             {"drop_trailing_dec_mark": False, "decimals": 0},
             external("uuid:drop-trailing-dec-mark.typ"),
         ),
@@ -119,6 +171,7 @@ class TestFString:
         "five-decimals",
         "three-sigfig",
         "drop-trailing-zeros",
+        "decimals-0-drop-trailing-zeros",
         "drop-trailing-dec-mark",
         "no-separators",
         "accounting",
@@ -180,6 +233,42 @@ def test_numeric(table_check, args, result):
     warnings = table_check(typst_table)
 
     assert len(warnings) == 0
+
+
+class TestNumericHelpers:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (0.0, "0"),
+            (10.0, "10"),
+            (100.0, "100"),
+            (1000.0, "1,000"),
+            (-100.0, "-100"),
+            (-1000.0, "-1,000"),
+        ],
+    )
+    def test_fixed_decimals_zero_with_drop_trailing_zeros_keeps_integer_zeros(
+        self, value, expected
+    ):
+        result = format_number_fixed_decimals(value, decimals=0, drop_trailing_zeros=True)
+
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        ("value", "decimals", "expected"),
+        [
+            (1.20, 2, "1.2"),
+            (1.00, 2, "1."),
+            (100.00, 2, "100."),
+            (1000.50, 2, "1,000.5"),
+        ],
+    )
+    def test_fixed_decimals_drop_trailing_zeros_only_strips_fraction(
+        self, value, decimals, expected
+    ):
+        result = format_number_fixed_decimals(value, decimals=decimals, drop_trailing_zeros=True)
+
+        assert result == expected
 
 
 def test_numeric_string_column(table_check):
@@ -550,6 +639,10 @@ def test_engineering(table_check, args, result):
             {"currency": "USD", "force_sign": True, "placement": "right"},
             external("uuid:force-sign-and-currency.typ"),
         ),
+        (
+            {"currency": "USD", "use_subunits": False},
+            external("uuid:use-subunits-false.typ"),
+        ),
     ],
     ids=[
         "default-usd",
@@ -567,6 +660,7 @@ def test_engineering(table_check, args, result):
         "placement-right",
         "include-space",
         "force-sign-and-currency",
+        "use-subunits-false",
     ],
 )
 def test_currency(table_check, args, result):
@@ -611,6 +705,25 @@ def test_currency_bad_code():
 
     with pytest.raises(ValueError, match=r"'TST' is not a recognised"):
         table.to_typst()
+
+
+def test_currency_use_subunits_false(table_check):
+    df = pl.DataFrame({"float": [1234.56, 0.6, 2.5, 1e20, None]})
+
+    # pyrefly: ignore [bad-argument-type]
+    table = TypTable(df).fmt_currency(currency="USD", use_subunits=False)
+    typst_table = table.to_typst()
+
+    # Subunits are dropped and the value is rounded to a whole number.
+    assert r"[\$1,235]" in typst_table
+    assert r"[\$1]" in typst_table
+    assert r"[\$2]" in typst_table
+    assert r"[\$100,000,000,000,000,000,000]" in typst_table
+    assert "1,234.56" not in typst_table
+
+    warnings = table_check(typst_table)
+
+    assert len(warnings) == 0
 
 
 @pytest.mark.parametrize(

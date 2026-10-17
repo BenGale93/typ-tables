@@ -195,12 +195,12 @@ class LocColumnLabels:
         """Build a styled column label locator.
 
         Args:
-            data: Source data used for row-level style resolution.
-            text: Optional text style selector for body rows.
-            cell: Optional cell style selector for body rows.
+            data: Source data used for style resolution.
+            text: Optional text style selector for column labels.
+            cell: Optional cell style selector for column labels.
 
         Returns:
-            Styled column labels locator with per-row style holders.
+            Styled column labels locator with resolved style values.
         """
         text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
         cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
@@ -235,12 +235,12 @@ class LocStubhead:
         """Build a styled stub head locator.
 
         Args:
-            data: Source data used for row-level style resolution.
-            text: Optional text style selector for body rows.
-            cell: Optional cell style selector for body rows.
+            data: Source data used for style resolution.
+            text: Optional text style selector for the stub head cell.
+            cell: Optional cell style selector for the stub head cell.
 
         Returns:
-            Styled stub head locator with per-row style holders.
+            Styled stub head locator with resolved style values.
         """
         text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
         cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
@@ -446,12 +446,12 @@ class LocSpanner:
         """Build a styled spanner locator.
 
         Args:
-            data: Source data used for row-level style resolution.
-            text: Optional text style selector for stub rows.
-            cell: Optional cell style selector for stub rows.
+            data: Source data used for style resolution.
+            text: Optional text style selector for spanners.
+            cell: Optional cell style selector for spanners.
 
         Returns:
-            Styled stub locator with per-row style holders.
+            Styled spanner locator with resolved style values.
         """
         text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
         cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()
@@ -482,12 +482,12 @@ class LocFooter:
         """Build a styled footer locator.
 
         Args:
-            data: Source data used for row-level style resolution.
-            text: Optional text style selector for body rows.
-            cell: Optional cell style selector for body rows.
+            data: Source data used for style resolution.
+            text: Optional text style selector for the footer cell.
+            cell: Optional cell style selector for the footer cell.
 
         Returns:
-            Styled stub head locator with per-row style holders.
+            Styled footer locator with resolved style values.
         """
         text_style_for_cell = text.get_single() if text is not None else TextStyleForCell()
         cell_style_for_cell = cell.get_single() if cell is not None else CellStyleForCell()

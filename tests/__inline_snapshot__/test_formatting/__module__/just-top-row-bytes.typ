@@ -13,7 +13,7 @@
   [#table.cell(stroke: (bottom: 0.6pt))[1073741824]],
   [#table.cell(stroke: (bottom: 0.6pt))[1000000000000]],
   [#table.cell(stroke: (bottom: 0.6pt))[1099511627776]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
   [#table.cell(stroke: (bottom: 0.6pt))[\-100]],
   [#table.cell(stroke: (bottom: 0.6pt))[\-1000]],
   [#table.cell(stroke: (bottom: 0.6pt))[\-1048576]],

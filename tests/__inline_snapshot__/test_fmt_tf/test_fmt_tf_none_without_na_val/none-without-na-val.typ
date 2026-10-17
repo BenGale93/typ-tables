@@ -5,5 +5,5 @@
   table.header[#table.cell(stroke: (bottom: 1.2pt))[bool]],
   [#table.cell(stroke: (bottom: 0.6pt))[true]],
   [#table.cell(stroke: (bottom: 0.6pt))[false]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]],
 )

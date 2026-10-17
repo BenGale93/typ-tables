@@ -36,6 +36,6 @@ string to a file and include it.
 ## Documentation
 
 For more, check out the
-[documentation](https://bengale93.github.io/typ-tables/changelog/). The
+[documentation](https://bengale93.github.io/typ-tables/). The
 [great_tables](https://posit-dev.github.io/great-tables/articles/intro.html)
 documentation is also useful as many of the examples work in `typ-tables`.

@@ -1096,7 +1096,7 @@ dev = [
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "pytest-randomly", specifier = ">=4.0.1" },
-    { name = "ruff", specifier = ">=0.15.6" },
+    { name = "ruff", specifier = "==0.15.6" },
     { name = "typst", specifier = ">=0.14.8" },
 ]
 docs = [
@@ -1105,7 +1105,7 @@ docs = [
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "zensical", specifier = ">=0.0.38" },
 ]
-lint = [{ name = "ruff", specifier = ">=0.15.6" }]
+lint = [{ name = "ruff", specifier = "==0.15.6" }]
 test = [
     { name = "inline-snapshot", specifier = ">=0.32.5" },
     { name = "pandas", specifier = ">=3.0.0" },

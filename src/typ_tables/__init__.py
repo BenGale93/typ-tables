@@ -54,7 +54,7 @@ def _create_table_string(original_data: ttypes.Data[IntoDataFrame], typ: TypData
         stroke=typ.stroke,
         alignment=typ.alignment(),
         inset=typ.inset,
-        headers=typ.header(data),
+        headers=typ.header(original_data),
         footer=typ.footer(),
         body=typ.body(data, original_data),
     )
@@ -363,6 +363,10 @@ class TypTable:
 
         Returns:
             The current table instance for chaining.
+
+        Note:
+            Missing values render as an empty cell by default. Use this method to
+            substitute them with different text, for example `missing_text="-"`.
         """
         self._typ_data.substitute.append(
             fmt(self._df, SubMissing(missing_text=missing_text), columns, rows)
@@ -1044,12 +1048,18 @@ class TypTable:
 
         Args:
             align: Target alignment value.
-            columns: Optional column selector; defaults to all columns.
+            columns: Optional column selector; defaults to all alignable columns.
+                The row-group column cannot be aligned, so it is excluded from the
+                default selection (selecting it explicitly warns).
 
         Returns:
             The current table instance for chaining.
         """
         columns_to_align = resolve_columns(self._df, columns)
+        if columns is None:
+            group_col = self._typ_data.boxhead.get_group_column_name()
+            if group_col is not None:
+                columns_to_align = [col for col in columns_to_align if col != group_col]
         self._typ_data.boxhead.set_cols_align(columns_to_align, align)
         return self
 
@@ -1251,6 +1261,9 @@ class TypTable:
 
         Args:
             column_labels_hidden: An option to hide the column labels.
+
+        Returns:
+            The current table instance for chaining.
         """
         options = locals()
         del options["self"]

@@ -7,6 +7,6 @@
   [#table.cell(stroke: (bottom: 0.6pt))[b]], [#table.cell(stroke: (bottom: 0.6pt))[10000]], [#table.cell(stroke: (bottom: 0.6pt))[1e-06]],
   [#table.cell(stroke: (bottom: 0.6pt))[c]], [#table.cell(stroke: (bottom: 0.6pt))[1000000]], [#table.cell(stroke: (bottom: 0.6pt))[0.1368753]],
   [#table.cell(stroke: (bottom: 0.6pt))[random\-letters]], [#table.cell(stroke: (bottom: 0.6pt))[568282638583]], [#table.cell(stroke: (bottom: 0.6pt))[163985.8374]],
-  [#table.cell(stroke: (bottom: 0.6pt))[None]], [#table.cell(stroke: (bottom: 0.6pt))[None]], [#table.cell(stroke: (bottom: 0.6pt))[None]],
+  [#table.cell(stroke: (bottom: 0.6pt))[]], [#table.cell(stroke: (bottom: 0.6pt))[]], [#table.cell(stroke: (bottom: 0.6pt))[]],
   table.footer[#table.cell(colspan: 3, inset: (top: 5pt, bottom: 5pt), stroke: (top: red + 1pt, bottom: 1.2pt))[#text(weight: "bold", fill: blue)[Note here]]],
 )
